@@ -13,15 +13,21 @@ agent_specification = AgentSpecification(sensor_radius, station_radius,
 
 agents = generate_coverage_agents(agent_specification, num_agents)
 
+f(x) = mean_area_coverage(x, 100)
+problem = PartitionProblem(f, agents)
+
+solution = solve_optimal(problem)
+
 figure()
 xlim([0, 1])
 ylim([0, 1])
 
 colors = generate_colors(agents)
 visualize_agents(agents, colors)
-solution = ones(Int64, length(agents))
-visualize_solution(agents, solution, colors)
 
-coverage = mean_area_coverage(map((agent, index)->get_block(agent)[index], agents, solution), 1000)
+
+visualize_solution(problem, solution, colors)
+
+coverage = solution.value
 
 @show coverage

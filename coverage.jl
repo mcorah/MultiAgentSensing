@@ -7,8 +7,7 @@ export Circle, AgentSpecification,
   generate_coverage_agents,
   generate_colors,
   mean_area_coverage,
-  visualize_agents,
-  visualize_solution
+  visualize_agents
 
 # evaluation of the area coverage objective
 type Circle
@@ -30,13 +29,16 @@ end
 get_block(agent::Agent) = agent.sensors
 get_center(agent::Agent) = agent.center
 
+# returns a vector of vectors of element indices abstracting the partition
+# matroid
 
 point_in_circle(center, radius, point) = norm(point - center) < radius
 point_in_circle(circle::Circle, point) =
   point_in_circle(circle.center, circle.radius, point)
 
-point_covered(circles, point) =
-  maximum(map(circle->point_in_circle(circle, point), circles))
+function point_covered(circles, point)
+  any(map(circle->point_in_circle(circle, point), circles))
+end
 
 mean_coverage(circles, points) =
   mean(map(point->point_covered(circles, point), points))
@@ -114,10 +116,8 @@ function visualize_agents(agents::Array{Agent,1}, colors)
   Void
 end
 
-function visualize_solution(agents, solution, colors)
-  map(agents, colors, solution) do agent, color, selection
-    circle = get_block(agent)[selection]
-
+function visualize_solution(circles::Array{Circle}, colors)
+  map(circles, colors) do circle, color
     plot_filled_circle(circle, color = rgb_tuple(color), alpha=0.3)
   end
   Void
