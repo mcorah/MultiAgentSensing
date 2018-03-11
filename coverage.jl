@@ -36,8 +36,15 @@ point_in_circle(center, radius, point) = norm(point - center) < radius
 point_in_circle(circle::Circle, point) =
   point_in_circle(circle.center, circle.radius, point)
 
-function point_covered(circles, point)
-  any(map(circle->point_in_circle(circle, point), circles))
+function point_covered(circles, x, y)
+  covered = false
+
+  #optimized point_in_circle code runs about ten times faster
+  @inbounds @simd for circle in circles
+    covered |= (x - circle.center[1])^2 + (y - circle.center[2])^2 < circle.radius^2
+  end
+
+  covered
 end
 
 mean_coverage(circles, points) =
@@ -46,7 +53,7 @@ mean_coverage(circles, points) =
 function mean_area_coverage(circles, discretization)
   num_covered = 0
   for x in linspace(0, 1, discretization), y in linspace(0, 1, discretization)
-    num_covered += point_covered(circles, [x; y])
+    num_covered += point_covered(circles, x, y)
   end
 
   num_covered / (discretization * discretization)
