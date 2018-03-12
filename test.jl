@@ -16,18 +16,26 @@ agents = generate_coverage_agents(agent_specification, num_agents)
 f(x) = mean_area_coverage(x, 100)
 problem = PartitionProblem(f, agents)
 
-solution = solve_optimal(problem)
+function evaluate_solver(solver, name)
+  println("$name solver running")
+  @time solution = solver(problem)
 
-figure()
-xlim([0, 1])
-ylim([0, 1])
+  figure()
+  xlim([0, 1])
+  ylim([0, 1])
+  colors = generate_colors(agents)
+  visualize_agents(agents, colors)
+  visualize_solution(problem, solution, colors)
 
-colors = generate_colors(agents)
-visualize_agents(agents, colors)
+  coverage = solution.value
 
+  title("$name Solver ($coverage)")
 
-visualize_solution(problem, solution, colors)
+  @show coverage
+end
 
-coverage = solution.value
-
-@show coverage
+evaluate_solver(solve_optimal, "Optimal")
+evaluate_solver(solve_worst, "Worst-case")
+evaluate_solver(solve_myopic, "Myopic")
+evaluate_solver(solve_random, "Random")
+evaluate_solver(solve_sequential, "Sequential")

@@ -9,7 +9,7 @@ export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
   get_element_indices,
   visualize_solution
 
-export solve_optimal
+export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
 
 # f({x} | Y)
 # the objective takes in an array of elements of the blocks
@@ -51,6 +51,8 @@ compute_weight(f, X::Array, Y::Array) =
 # indexing and solver tools
 
 # construct index set to ease manipulation of the matroid
+# note that the resulting index is an array of arrays whereas each array is a
+# block of the partition matroid
 get_element_indices(agents) = map(agents, 1:length(agents)) do agent, agent_index
   map(1:length(get_block(agent))) do block_index
     (agent_index, block_index)
@@ -78,6 +80,50 @@ function solve_optimal(p::PartitionProblem)
 end
 
 # anti-optimal solver
+function solve_worst(p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  v0 = Solution(Inf, empty())
+
+  # collect because product returns a tuple
+  op(s::Solution, b) = min(s, evaluate_solution(p, collect(b)))
+
+  foldl(op, v0, product(indices...))
+end
+
+# myopic solver
+function solve_myopic(p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  selection = map(indices) do block
+    i = indmax(map(x->objective(p, [x]), block))
+    block[i]
+  end
+
+  evaluate_solution(p, selection)
+end
+
+# random solver
+function solve_random(p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  evaluate_solution(p, map(x->rand(x), indices))
+end
+
+# sequential solver
+function solve_sequential(p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  selection = ElementArray()
+
+  for block in indices
+    i = indmax(map(x->objective(p, [selection; x]), block))
+
+    push!(selection, block[i])
+  end
+
+  evaluate_solution(p, selection)
+end
 
 # generic visualization
 function visualize_solution(p::PartitionProblem, X::ElementArray, agent_colors)
