@@ -5,11 +5,16 @@ using Iterators
 import Base.<
 
 export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
-  objective, evaluate_solution, marginal_gain, compute_weight,
+  get_element, objective, evaluate_solution, marginal_gain, compute_weight,
+  compute_weight_matrix, mean_weight, total_weight,
   get_element_indices,
   visualize_solution
 
-export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
+export DAGSolver, PartitionSolver,
+  sequence, in_neighbors
+
+export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential,
+  solve_dag, solve_n_partitions
 
 # f({x} | Y)
 # the objective takes in an array of elements of the blocks
@@ -41,12 +46,43 @@ objective(p::PartitionProblem, X::ElementArray) =
 evaluate_solution(p::PartitionProblem, X::ElementArray) =
   Solution(objective(p, X), X)
 
-marginal_gain(f, x, Y) = f(vcat([x], y)) - f(y)
+marginal_gain(f, x, Y) = f(vcat([x], Y)) - f(Y)
 
-compute_weight(f, x, y) = f(x) - marginal_gain(f, x, [y])
+compute_weight(f, x, y) = f([x]) - marginal_gain(f, x, [y])
 
 compute_weight(f, X::Array, Y::Array) =
   maximum([compute_weight(f, x, y) for x in X, y in Y])
+
+function compute_weight_matrix(p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  n = length(p.partition_matroid)
+  weights = zeros(n, n)
+
+  f(x) = objective(p, x)
+
+  for ii in 2:n, jj in 1:ii-1
+    w = compute_weight(f, indices[ii], indices[jj])
+
+    weights[ii, jj] = w
+    weights[jj, ii] = w
+  end
+
+  weights
+end
+
+function mean_weight(W::Array)
+  n = size(W,1)
+
+  twice_edges = n * (n - 1)
+
+  sum(W) / twice_edges
+end
+
+total_weight(W::Array) = sum(W) / 2
+
+mean_weight(p::PartitionProblem) = mean_weight(compute_weight_matrix(p))
+total_weight(p::PartitionProblem) = total_weight(compute_weight_matrix(p))
 
 # indexing and solver tools
 
@@ -96,8 +132,8 @@ function solve_myopic(p::PartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
   selection = map(indices) do block
-    i = indmax(map(x->objective(p, [x]), block))
-    block[i]
+    ii = indmax(map(x->objective(p, [x]), block))
+    block[ii]
   end
 
   evaluate_solution(p, selection)
@@ -117,13 +153,89 @@ function solve_sequential(p::PartitionProblem)
   selection = ElementArray()
 
   for block in indices
-    i = indmax(map(x->objective(p, [selection; x]), block))
+    ii = indmax(map(x->objective(p, [selection; x]), block))
 
-    push!(selection, block[i])
+    push!(selection, block[ii])
   end
 
   evaluate_solution(p, selection)
 end
+
+# dag solver
+abstract DAGSolver
+# in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
+# sequence(d::DAGSolver) = <sequence of agent ids>
+
+function solve_dag(d::DAGSolver, p::PartitionProblem)
+  indices = get_element_indices(p.partition_matroid)
+
+  # selection is a mapping from agent indices to block_indices
+  selection = Dict{Int64, Int64}()
+
+  for agent_index in sequence(d)
+    neighbor_selection::ElementArray = map(x->(x, selection[x]), in_neighbors(d, agent_index))
+
+    values = map(indices[agent_index]) do x
+      objective(p, [neighbor_selection; x])
+    end
+
+    selection[agent_index] = indmax(values)
+  end
+
+  selection_tuples::ElementArray = map(x->(x, selection[x]), sequence(d))
+
+  evaluate_solution(p, selection_tuples)
+end
+
+# Generic partition solver
+
+# helper function to construct the partitions for the solver
+function construct_partitions(partition_numbers)
+  num_partitions = maximum(partition_numbers)
+
+  partitions = [Int64[] for x in 1:num_partitions]
+
+  for agent_index in 1:length(partition_numbers)
+    partition_index = partition_numbers[agent_index]
+
+    push!(partitions[partition_index], agent_index)
+  end
+
+  partitions
+end
+
+type PartitionSolver <: DAGSolver
+  # Array partitioning agents
+  # Inner arrays are blocks and elements are agent ids
+  partitions::Array{Array{Int64,1},1}
+  # the index of the block in "partitions" containing a given agent_index
+  agent_partition_numbers::Array{Int64,1}
+
+  # Construct the dag using just the partition numbers
+  PartitionSolver(x) = new(construct_partitions(x), x)
+end
+
+sequence(p::PartitionSolver) = vcat(p.partitions...)
+
+function in_neighbors(p::PartitionSolver, agent_index)
+  partition_index = p.agent_partition_numbers[agent_index]
+
+  vcat(p.partitions[1:(partition_index-1)]...)
+end
+
+# fixed number of partitions
+function solve_n_partitions(num_partitions, p::PartitionProblem)
+  num_agents = length(p.partition_matroid)
+
+  partition_numbers = map(x->rand(1:num_partitions), 1:num_agents)
+
+  partition_solver = PartitionSolver(partition_numbers)
+
+  solve_dag(partition_solver, p)
+end
+
+# global adaptive number of partitions
+# local adaptive number of partitions
 
 # generic visualization
 function visualize_solution(p::PartitionProblem, X::ElementArray, agent_colors)

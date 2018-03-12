@@ -39,3 +39,11 @@ evaluate_solver(solve_worst, "Worst-case")
 evaluate_solver(solve_myopic, "Myopic")
 evaluate_solver(solve_random, "Random")
 evaluate_solver(solve_sequential, "Sequential")
+
+for num_partitions in [2, 4, 6]
+  solve_n(p) = solve_n_partitions(num_partitions, p)
+  evaluate_solver(solve_n, "Partition-$num_partitions")
+end
+
+@show mean_weight(problem)
+@show total_weight(problem)
