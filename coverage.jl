@@ -76,12 +76,6 @@ function make_agent(agent_specification::CircleAgentSpecification)
   CircleAgent(agent_center, sensors)
 end
 
-function generate_agents(agent_specification::CircleAgentSpecification,
-                         num_agents)
-  [make_agent(agent_specification) for agent in 1:num_agents]
-end
-
-
 # visualization
 function circle_points(p; radius=1, scale=1, dth=0.1)
   scale*hcat(map(x->p+[radius*cos(x);radius*sin(x)], 0:dth:(2*pi)+dth)...)
