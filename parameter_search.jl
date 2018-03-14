@@ -23,7 +23,7 @@ function coverage_performance_ratio(params::CoverageParams)
   sensor_radius = sqrt(params.nominal_area / (num_agents * pi))
   station_radius = 2 * sensor_radius
 
-  agent_specification = AgentSpecification(sensor_radius, station_radius,
+  agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                            params.num_sensors)
 
   problems = map(1:num_trials) do unused

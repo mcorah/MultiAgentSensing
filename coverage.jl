@@ -1,7 +1,7 @@
 using PyPlot
 using Colors
 
-export Circle, AgentSpecification,
+export Circle, CircleAgentSpecification,
   get_block,
   mean_coverage,
   generate_coverage_agents,
@@ -15,7 +15,7 @@ type Circle
   radius::Float64
 end
 
-type AgentSpecification
+type CircleAgentSpecification
   sensor_radius
   station_radius
   num_sensors

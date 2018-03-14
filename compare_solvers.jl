@@ -11,7 +11,7 @@ nominal_area = 2.0
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 2 * sensor_radius
 
-agent_specification = AgentSpecification(sensor_radius, station_radius,
+agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                          num_sensors)
 
 f(x) = mean_area_coverage(x, 100)
