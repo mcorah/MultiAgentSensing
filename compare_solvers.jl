@@ -51,8 +51,56 @@ for trial_num in 1:length(problems)
   end
 end
 
-mean_value = mean(results, 2)
+# now analyze weights
+weight_matrices = map(problems, 1:length(problems)) do problem, ii
+  println("Weight matrix $ii")
+  compute_weight_matrix(problem)
+end
+
+total_weights = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
+  println("Total weights $ii")
+  total_weight(weight_matrix)
+end
+
+function extract_triangle(A)
+  values = Float64[]
+  for ii in 2:size(A, 1), jj in 1:ii-1
+    push!(values, A[ii, jj])
+  end
+  values
+end
+
+edge_sets = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
+  println("Triangle $ii")
+  extract_triangle(weight_matrix)
+end
+
 
 figure()
 boxplot(results, notch=false, vert=false)
 yticks(1:length(solvers), map(x->x[2], solvers))
+
+# plot histograms of edge weights
+
+figure()
+PyPlot.plt[:hist](total_weights, 20)
+title("Total Graph Weight Frequency")
+
+figure()
+PyPlot.plt[:hist](vcat(edge_sets...), 20)
+title("Edge Weight Frequency")
+
+# sequential solutions and edge weights
+sequential_mean = mean(results[:,end][:])
+
+partition_values = mean(results[:,3:end-1],1)[:]
+
+mean_weight = mean(total_weights)
+println("Mean weight: $mean_weight")
+bounds = map(x->mean_weight/x, partitions)
+
+#figure()
+#plot([partitions[1], partitions[end]], [sequential_mean, sequential_mean])
+#plot(partitions, partition_values)
+#plot(partitions, partition_values + bounds)
+#legend(["Sequential", "Partition-n"])
