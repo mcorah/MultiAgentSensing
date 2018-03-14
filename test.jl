@@ -3,7 +3,7 @@ using SubmodularMaximization
 
 num_agents = 10
 num_sensors = 3
-nominal_area = 1.0
+nominal_area = 2.0
 
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 2 * sensor_radius
@@ -40,7 +40,7 @@ evaluate_solver(solve_myopic, "Myopic")
 evaluate_solver(solve_random, "Random")
 evaluate_solver(solve_sequential, "Sequential")
 
-for num_partitions in [2, 4, 6]
+for num_partitions in [2, 4, 8]
   solve_n(p) = solve_n_partitions(num_partitions, p)
   evaluate_solver(solve_n, "Partition-$num_partitions")
 end

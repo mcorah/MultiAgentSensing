@@ -2,8 +2,8 @@ using SubmodularMaximization
 using ProfileView
 
 num_agents = 4
-num_sensors = 3
-nominal_area = 1.0
+num_sensors = 6
+nominal_area = 2.0
 
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 2 * sensor_radius
