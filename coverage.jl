@@ -4,7 +4,6 @@ using Colors
 export Circle, CircleAgentSpecification,
   get_block,
   mean_coverage,
-  generate_coverage_agents,
   generate_colors,
   mean_area_coverage,
   visualize_agents
@@ -79,7 +78,8 @@ function make_agent(agent_specification)
   Agent(agent_center, sensors)
 end
 
-function generate_coverage_agents(agent_specification, num_agents)
+function generate_agents(agent_specification::CircleAgentSpecification,
+                         num_agents)
   [make_agent(agent_specification) for agent in 1:num_agents]
 end
 

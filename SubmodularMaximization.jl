@@ -10,6 +10,8 @@ export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
   get_element_indices,
   visualize_solution
 
+export generate_agents
+
 export DAGSolver, PartitionSolver,
   sequence, in_neighbors
 

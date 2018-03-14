@@ -27,7 +27,7 @@ function coverage_performance_ratio(params::CoverageParams)
                                            params.num_sensors)
 
   problems = map(1:num_trials) do unused
-    agents = generate_coverage_agents(agent_specification, num_agents)
+    agents = generate_agents(agent_specification, num_agents)
     PartitionProblem(f, agents)
   end
 

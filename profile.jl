@@ -11,7 +11,7 @@ station_radius = 2 * sensor_radius
 agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                          num_sensors)
 
-agents = generate_coverage_agents(agent_specification, num_agents)
+agents = generate_agents(agent_specification, num_agents)
 
 f(x) = mean_area_coverage(x, 100)
 problem = PartitionProblem(f, agents)
@@ -22,7 +22,7 @@ times = Float64[]
 
 Profile.clear()
 @profile for i in 1:50
-  agents = generate_coverage_agents(agent_specification, num_agents)
+  agents = generate_agents(agent_specification, num_agents)
   problem = PartitionProblem(f, agents)
 
   time = @elapsed solution = solve_optimal(problem)

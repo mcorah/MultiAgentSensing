@@ -34,7 +34,7 @@ push!(solvers, (solve_sequential, "Sequential"))
 results = zeros(num_trials, length(solvers))
 
 problems = map(1:num_trials) do unused
-  agents = generate_coverage_agents(agent_specification, num_agents)
+  agents = generate_agents(agent_specification, num_agents)
   problem = PartitionProblem(f, agents)
 end
 
