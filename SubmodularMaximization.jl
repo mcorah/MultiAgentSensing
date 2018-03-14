@@ -10,13 +10,24 @@ export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
   get_element_indices,
   visualize_solution
 
-export generate_agents
+export Agent, generate_agents,
+  generate_colors,
+  visualize_agents
 
 export DAGSolver, PartitionSolver,
   sequence, in_neighbors
 
 export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential,
   solve_dag, solve_n_partitions
+
+# Interface
+# get_block(Agent) = <array of objects associated with agents' block of the
+#                     partition matroid>
+# get_center(Agent) = <agent center>
+#   (Note really a general property but currently defined for all agents)
+# plot_element(x) = <Void>
+abstract Agent
+
 
 # f({x} | Y)
 # the objective takes in an array of elements of the blocks
@@ -97,6 +108,7 @@ get_element_indices(agents) = map(agents, 1:length(agents)) do agent, agent_inde
   end
 end
 
+include("visualization.jl")
 include("coverage.jl")
 
 # solvers
@@ -238,18 +250,5 @@ end
 
 # global adaptive number of partitions
 # local adaptive number of partitions
-
-# generic visualization
-function visualize_solution(p::PartitionProblem, X::ElementArray, agent_colors)
-  elements = map(X) do x
-    get_element(p.partition_matroid, x)
-  end
-
-  colors = [agent_colors[x[1]] for x in X]
-  visualize_solution(elements, colors)
-end
-
-visualize_solution(p::PartitionProblem, s::Solution, agent_colors) =
-  visualize_solution(p, s.elements, agent_colors)
 
 end

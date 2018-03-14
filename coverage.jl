@@ -4,9 +4,7 @@ using Colors
 export Circle, CircleAgentSpecification,
   get_block,
   mean_coverage,
-  generate_colors,
-  mean_area_coverage,
-  visualize_agents
+  mean_area_coverage
 
 # evaluation of the area coverage objective
 type Circle
@@ -20,13 +18,13 @@ type CircleAgentSpecification
   num_sensors
 end
 
-type Agent
+type CircleAgent <: Agent
   center::Array{Float64, 1}
   sensors::Array{Circle, 1}
 end
 
-get_block(agent::Agent) = agent.sensors
-get_center(agent::Agent) = agent.center
+get_block(agent::CircleAgent) = agent.sensors
+get_center(agent::CircleAgent) = agent.center
 
 # returns a vector of vectors of element indices abstracting the partition
 # matroid
@@ -66,7 +64,7 @@ function rand_in_circle()
   r * [cos(theta);sin(theta)]
 end
 
-function make_agent(agent_specification)
+function make_agent(agent_specification::CircleAgentSpecification)
   agent_center = rand(2)
 
   make_sensor() = Circle(agent_center + agent_specification.station_radius *
@@ -75,7 +73,7 @@ function make_agent(agent_specification)
 
   sensors = [make_sensor() for agent in 1:agent_specification.num_sensors]
 
-  Agent(agent_center, sensors)
+  CircleAgent(agent_center, sensors)
 end
 
 function generate_agents(agent_specification::CircleAgentSpecification,
@@ -85,8 +83,6 @@ end
 
 
 # visualization
-rgb_tuple(color::RGB) = (red(color), green(color), blue(color))
-
 function circle_points(p; radius=1, scale=1, dth=0.1)
   scale*hcat(map(x->p+[radius*cos(x);radius*sin(x)], 0:dth:(2*pi)+dth)...)
 end
@@ -100,27 +96,13 @@ function plot_circle(circle::Circle; x...)
   plot_circle(circle.center; radius = circle.radius, x...)
 end
 
+plot_element(circle::Circle; x...) = plot_circle(circle; x...)
+
 function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
   ps = circle_points(circle.center, scale = 1, radius = circle.radius)
   full_circle = [ps ps[:,1]]
 
   fill(ps[1,:][:], ps[2,:][:], color = color, alpha=alpha, linewidth=0.0)
-end
-
-generate_colors(agents::Array{Agent,1}) =
-  distinguishable_colors(length(agents) + 1)[2:end]
-
-function visualize_agents(agents::Array{Agent,1}, colors)
-  centers = map(get_center, agents);
-
-  map(agents, colors) do agent, color
-    center = get_center(agent)
-
-    scatter([center[1]], [center[2]], color = rgb_tuple(color), marker = (5, 2, 0))
-
-    map(circle->plot_circle(circle, color = rgb_tuple(color)), get_block(agent))
-  end
-  Void
 end
 
 function visualize_solution(circles::Array{Circle}, colors)
