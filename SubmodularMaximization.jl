@@ -114,6 +114,7 @@ end
 
 include("visualization.jl")
 include("coverage.jl")
+include("probabilistic_coverage.jl")
 
 # solvers
 
