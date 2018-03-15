@@ -45,7 +45,7 @@ end
 ###################
 
 export Gaussian, GaussianMixture, sample_pdf, pdf, visualize_pdf, dim,
-in_limits, sample_reject
+in_limits, sample_reject, standard_mixture
 
 pdf_coefficient(covariance) = sqrt((2*pi)^size(covariance,1) * det(covariance))
 
@@ -121,6 +121,15 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   imshow(density', cmap=cmap, vmin=minimum(density), vmax=maximum(density[:]),
          extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
          interpolation="nearest", origin="lower")
+end
+
+function standard_mixture()
+  w = [0.45, 0.45, 0.1]
+  g1 = Gaussian([0.2, 1.0], diagm([0.004, 0.1]))
+  g2 = Gaussian([0.8, 0.2], diagm([0.1, 0.01]))
+  g3 = Gaussian([0.7, 0.7], 0.03 * eye(2))
+
+  GaussianMixture(w, [g1, g2, g3])
 end
 
 ###############
