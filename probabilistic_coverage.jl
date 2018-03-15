@@ -14,7 +14,7 @@ type ProbabilisticAgentSpecification
 end
 
 # detection probability is of the form:
-# max_success_probability / (1 +  ||x-center||^2 / sensor_radius)
+# max_success_probability / (1 +  ||x-center||^2 / sensor_radius^2)
 type ProbabilisticSensor
   center::Array{Float64, 1}
   sensor_radius::Float64
@@ -44,7 +44,7 @@ export detection_probability, mean_detection_probability
 function detection_probability(sensor::ProbabilisticSensor, x)
   square_dist = sum((x - sensor.center).^2)
 
-  sensor.max_success_probability / (1 + square_dist / sensor_radius)
+  sensor.max_success_probability / (1 + square_dist / sensor.sensor_radius^2)
 end
 
 function detection_probability(sensors::Array{ProbabilisticSensor,1}, x)
@@ -66,7 +66,7 @@ end
 ###################
 
 export Gaussian, GaussianMixture, sample_pdf, pdf, visualize_pdf, dim,
-in_limits, sample_reject, standard_mixture
+in_limits, sample_reject, standard_mixture, generate_events
 
 pdf_coefficient(covariance) = sqrt((2*pi)^size(covariance,1) * det(covariance))
 
@@ -153,12 +153,24 @@ function standard_mixture()
   GaussianMixture(w, [g1, g2, g3])
 end
 
+function generate_events(n = 500; limits = [0 1; 0 1])
+  dist = standard_mixture()
+
+  hcat(map(x->sample_reject(dist, limits), 1:n)...)
+end
+
 ###############
 # visualization
 ###############
 import Base.convert
 
-convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, s.sensor_radius)
+convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, limit_radius(s, 0.5))
+
+
+# returns the radius of the circle corresponding to the limit surface of the
+# given probability
+limit_radius(s::ProbabilisticSensor, p) =
+  s.sensor_radius * sqrt(s.max_success_probability / p - 1)
 
 function plot_element(sensor::ProbabilisticSensor; x...)
   plot_circle(convert(Circle, sensor); x...)
