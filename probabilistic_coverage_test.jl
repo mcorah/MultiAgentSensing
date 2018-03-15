@@ -5,15 +5,15 @@ using SubmodularMaximization
 # Params
 ########
 
-num_events = 500
+num_events = 200
 
-num_agents = 5
+num_agents = 40
 num_sensors = 6
-nominal_area = 0.5
+nominal_area = 0.6
 
-max_success_probability = 0.9
+max_success_probability = 1.0
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
-station_radius = 2 * sensor_radius
+station_radius = 3*sensor_radius
 
 #############
 # environment

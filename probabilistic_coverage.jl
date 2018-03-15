@@ -14,7 +14,7 @@ type ProbabilisticAgentSpecification
 end
 
 # detection probability is of the form:
-# max_success_probability / (1 +  ||x-center||^2 / sensor_radius^2)
+# max_success_probability * exp(-||x-center||^2 / sensor_radius^2)
 type ProbabilisticSensor
   center::Array{Float64, 1}
   sensor_radius::Float64
@@ -44,7 +44,7 @@ export detection_probability, mean_detection_probability
 function detection_probability(sensor::ProbabilisticSensor, x)
   square_dist = sum((x - sensor.center).^2)
 
-  sensor.max_success_probability / (1 + square_dist / sensor.sensor_radius^2)
+  sensor.max_success_probability * exp(-square_dist / sensor.sensor_radius^2)
 end
 
 function detection_probability(sensors::Array{ProbabilisticSensor,1}, x)
@@ -146,7 +146,7 @@ end
 
 function standard_mixture()
   w = [0.45, 0.45, 0.1]
-  g1 = Gaussian([0.2, 1.0], diagm([0.004, 0.1]))
+  g1 = Gaussian([0.2, 0.8], diagm([0.001, 0.1]))
   g2 = Gaussian([0.8, 0.2], diagm([0.1, 0.01]))
   g3 = Gaussian([0.7, 0.7], 0.03 * eye(2))
 
