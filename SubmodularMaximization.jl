@@ -6,7 +6,7 @@ import Base.<
 
 export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
   get_element, objective, evaluate_solution, marginal_gain, compute_weight,
-  compute_weight_matrix, mean_weight, total_weight,
+  compute_weight_matrix, mean_weight, total_weight, extract_triangle
   get_element_indices,
   visualize_solution
 
@@ -107,6 +107,14 @@ total_weight(W::Array) = sum(W) / 2
 
 mean_weight(p::PartitionProblem) = mean_weight(compute_weight_matrix(p))
 total_weight(p::PartitionProblem) = total_weight(compute_weight_matrix(p))
+
+function extract_triangle(A)
+  values = Float64[]
+  for ii in 2:size(A, 1), jj in 1:ii-1
+    push!(values, A[ii, jj])
+  end
+  values
+end
 
 # indexing and solver tools
 

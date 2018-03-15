@@ -62,14 +62,6 @@ total_weights = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
   total_weight(weight_matrix)
 end
 
-function extract_triangle(A)
-  values = Float64[]
-  for ii in 2:size(A, 1), jj in 1:ii-1
-    push!(values, A[ii, jj])
-  end
-  values
-end
-
 edge_sets = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
   println("Triangle $ii")
   extract_triangle(weight_matrix)
