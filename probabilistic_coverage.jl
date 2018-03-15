@@ -164,6 +164,8 @@ end
 ###############
 import Base.convert
 
+export visualize_events
+
 convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, limit_radius(s, 0.5))
 
 
@@ -176,11 +178,17 @@ function plot_element(sensor::ProbabilisticSensor; x...)
   plot_circle(convert(Circle, sensor); x...)
 end
 
-function visualize_solution(sensors::Array{ProbabilisticSensor};
+function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
                             limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   xlim = limits[1,:]
   ylim = limits[2,:]
 
+  # Highlight the sensors
+  map(sensors, colors) do sensor, color
+    plot_element(sensor; color = rgb_tuple(color), linewidth = 4.0)
+  end
+
+  # Plot the actual distribution
   density = [detection_probability(sensors, [x,y])
              for x in linspace(xlim[1], xlim[2], n),
                  y in linspace(ylim[1], ylim[2], n)]
@@ -190,4 +198,8 @@ function visualize_solution(sensors::Array{ProbabilisticSensor};
          interpolation="nearest", origin="lower")
 
   Void
+end
+
+function visualize_events(events)
+  scatter(events[1,:]', events[2,:]', color = "k", marker = (5, 2, 0))
 end

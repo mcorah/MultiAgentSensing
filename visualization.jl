@@ -19,6 +19,9 @@ function visualize_agents(agents, colors)
     map(get_block(agent)) do element
       plot_element(element, color = rgb_tuple(color))
     end
+
+    plot_circle(Circle(agent.center, agent.radius);
+                linestyle="--", color = rgb_tuple(color))
   end
 
   Void
