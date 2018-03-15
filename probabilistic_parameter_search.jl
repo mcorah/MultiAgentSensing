@@ -3,8 +3,8 @@ using SubmodularMaximization
 
 num_trials = 50
 
-num_events = 200
-num_agents = 40
+num_events = 400
+num_agents = 80
 num_sensors = 6
 max_success_probability = 1.0
 
@@ -13,8 +13,8 @@ type ProbabilisticCoverageParams
   radius_factor
 end
 
-area_range = collect(0.2:0.2:2.0)
-radius_factor_range = collect(2:1.0:8.0)
+area_range = collect(0.2:0.4:3.0)
+radius_factor_range = collect(1:1.0:8.0)
 
 param_set = [ProbabilisticCoverageParams(nominal_area, radius_factor)
              for nominal_area in area_range,

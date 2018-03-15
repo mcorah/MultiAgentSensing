@@ -5,11 +5,10 @@ using SubmodularMaximization
 # Params
 ########
 
-num_events = 200
-
-num_agents = 40
+num_events = 400
+num_agents = 80
 num_sensors = 6
-nominal_area = 0.6
+nominal_area = 1.0
 
 max_success_probability = 1.0
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
@@ -79,7 +78,7 @@ evaluate_solver(solve_sequential, "Sequential")
 # evaluate partition solvers
 for num_partitions in [2, 4, 8]
   solve_n(p) = solve_n_partitions(num_partitions, p)
-  #evaluate_solver(solve_n, "Partition-$num_partitions")
+  evaluate_solver(solve_n, "Partition-$num_partitions")
 end
 
 @show mean_weight(problem)
