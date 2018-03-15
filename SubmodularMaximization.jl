@@ -195,7 +195,10 @@ function solve_sequential(p::PartitionProblem)
   evaluate_solution(p, selection)
 end
 
+############
 # dag solver
+############
+
 abstract DAGSolver
 # in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
 # sequence(d::DAGSolver) = <sequence of agent ids>
@@ -238,6 +241,10 @@ function construct_partitions(partition_numbers)
   partitions
 end
 
+###########################
+# basic partitioned solvers
+###########################
+
 type PartitionSolver <: DAGSolver
   # Array partitioning agents
   # Inner arrays are blocks and elements are agent ids
@@ -257,18 +264,87 @@ function in_neighbors(p::PartitionSolver, agent_index)
   vcat(p.partitions[1:(partition_index-1)]...)
 end
 
+# general random partition solver framework from paper
+function generate_by_local_partition_size(local_partition_sizes)
+  partition_numbers = map(x->rand(1:x), local_partition_sizes)
+
+  PartitionSolver(partition_numbers)
+end
+
+function generate_by_global_partition_size(num_agents, partition_size)
+  generate_by_local_partition_size(fill(partition_size, num_agents))
+end
+
 # fixed number of partitions
 function solve_n_partitions(num_partitions, p::PartitionProblem)
   num_agents = length(p.partition_matroid)
 
-  partition_numbers = map(x->rand(1:num_partitions), 1:num_agents)
-
-  partition_solver = PartitionSolver(partition_numbers)
+  partition_solver = generate_by_global_partition_size(num_agents,
+                                                       num_partitions)
 
   solve_dag(partition_solver, p)
 end
 
+#######################
+# Adaptive partitioning
+#######################
+
 # global adaptive number of partitions
-# local adaptive number of partitions
+function compute_global_num_partitions(desired_suboptimality,
+                                       p::PartitionProblem)
+  total_weight(p) / desired_suboptimality
+end
+
+# compute nominal local number of partitions
+function compute_local_num_partitions(desired_suboptimality,
+                                      p::PartitionProblem)
+  W  = compute_weight_matrix(p)
+
+  map(1:length(p.partition_matroid)) do ii
+    sum(W[ii,:]) / (2 * desired_suboptimality)
+  end
+end
+
+# generate planner using global adaptive number of partitions
+function generate_global_adaptive(desired_suboptimality, p::PartitionProblem)
+  num_partitions = compute_global_num_partitions(desired_suboptimality, p)
+
+  generate_by_global_partition_size(length(p.partition_matroid), num_partitions)
+end
+
+# generate planner using local adaptive number of partitions
+function generate_local_adaptive(desired_suboptimality, p::PartitionProblem)
+  local_partition_sizes = compute_local_num_partitions(desired_suboptimality, p)
+
+  generate_by_local_partition_size(local_partition_sizes)
+end
+
+#######################
+# range-limited solvers
+#######################
+
+type RangeSolver <: DAGSolver
+  problem::PartitionProblem
+  nominal_solver::DAGSolver
+  communication_range::Float64
+end
+
+sequence(x::RangeSolver) = sequence(x.nominal_solver)
+
+function in_neighbors(x::RangeSolver, agent_index)
+  agents = x.problem.partition_matroid
+  nominal_neighbors = in_neighbors(x.nominal_solver)
+
+  neighbors = Float64[]
+  for neighbor in nominal_neighbors
+    dist = norm(get_center(agents[neighbor]) - get_center(agents[agent_index]))
+
+    if dist < x.communication_range
+      push!(neighbors, neighbor)
+    end
+  end
+
+  neighbors
+end
 
 end
