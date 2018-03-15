@@ -4,6 +4,18 @@ using Colors
 ###############
 # visualization
 ###############
+
+# standard markers
+station_center = "D"
+sensor_center = "."
+selected_sensor = "*"
+event_marker = "x"
+
+agent_scale = 32.0
+
+station_style = "--"
+
+
 rgb_tuple(color::RGB) = (red(color), green(color), blue(color))
 
 generate_colors(agents) = distinguishable_colors(length(agents) + 1)[2:end]
@@ -14,14 +26,15 @@ function visualize_agents(agents, colors)
   map(agents, colors) do agent, color
     center = get_center(agent)
 
-    scatter([center[1]], [center[2]], color = rgb_tuple(color), marker = (5, 2, 0))
+    scatter([center[1]], [center[2]], color = rgb_tuple(color),
+            s = agent_scale, marker = station_center, edgecolors = "k")
 
     map(get_block(agent)) do element
-      plot_element(element, color = rgb_tuple(color))
+      plot_element(element; color = rgb_tuple(color))
     end
 
     plot_circle(Circle(agent.center, agent.radius);
-                linestyle="--", color = rgb_tuple(color))
+                linestyle=station_style, color = rgb_tuple(color))
   end
 
   Void

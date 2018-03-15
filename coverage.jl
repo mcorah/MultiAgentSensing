@@ -82,7 +82,11 @@ function plot_circle(circle::Circle; x...)
   plot_circle(circle.center; radius = circle.radius, x...)
 end
 
-plot_element(circle::Circle; x...) = plot_circle(circle; x...)
+function plot_element(circle::Circle; color = "k")
+  center = circle.center
+  scatter([center[1]], [center[2]], color = color, s = 4*agent_scale,
+          marker = sensor_center, edgecolors = "k")
+end
 
 function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
   ps = circle_points(circle.center, scale = 1, radius = circle.radius)

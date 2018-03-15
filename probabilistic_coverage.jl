@@ -162,20 +162,12 @@ end
 ###############
 # visualization
 ###############
-import Base.convert
-
 export visualize_events
 
-convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, limit_radius(s, 0.5))
-
-
-# returns the radius of the circle corresponding to the limit surface of the
-# given probability
-limit_radius(s::ProbabilisticSensor, p) =
-  s.sensor_radius * sqrt(s.max_success_probability / p - 1)
-
-function plot_element(sensor::ProbabilisticSensor; x...)
-  plot_circle(convert(Circle, sensor); x...)
+function plot_element(circle::ProbabilisticSensor; color = "k")
+  center = circle.center
+  scatter([center[1]], [center[2]], color = color, s = 4*agent_scale,
+          marker = sensor_center, edgecolors = "k")
 end
 
 function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
@@ -185,7 +177,9 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
 
   # Highlight the sensors
   map(sensors, colors) do sensor, color
-    plot_element(sensor; color = rgb_tuple(color), linewidth = 4.0)
+    center = sensor.center
+    scatter([center[1]], [center[2]], color = rgb_tuple(color), s = 4*agent_scale,
+            marker = selected_sensor, edgecolors="k")
   end
 
   # Plot the actual distribution
@@ -201,5 +195,5 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
 end
 
 function visualize_events(events)
-  scatter(events[1,:]', events[2,:]', color = "k", marker = (5, 2, 0))
+  scatter(events[1,:]', events[2,:]', color = "k", marker = event_marker)
 end

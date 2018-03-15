@@ -18,7 +18,7 @@ param_set = [CoverageParams(num_sensors, nominal_area) for num_sensors in num_ra
              nominal_area in area_range]
 
 function coverage_performance_ratio(params::CoverageParams)
-  println("Testing: sensors ($(params.num_sensors)) , nominal area ($(params.nominal_area))")
+  println("Testing: sensors ($(params.num_sensors)), nominal area ($(params.nominal_area))")
 
   sensor_radius = sqrt(params.nominal_area / (num_agents * pi))
   station_radius = 2 * sensor_radius
@@ -43,7 +43,7 @@ best_index = indmin(performance_ratios)
 best_params = param_set[best_index]
 
 println("Best ratio: $(performance_ratios[best_index])")
-println("Params: sensors ($(best_params.num_sensors)) , nominal area ($(best_params.nominal_area))")
+println("Params: sensors ($(best_params.num_sensors)), nominal area ($(best_params.nominal_area))")
 
 figure()
 PyPlot.plt[:hist](performance_ratios[:], 10)
