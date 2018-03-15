@@ -8,14 +8,16 @@ export ProbabilisticAgentSpecification, ProbabilisticSensor
 
 type ProbabilisticAgentSpecification
   max_success_probability::Float64
-  sensor_sigma::Float64
+  sensor_radius::Float64
   station_radius::Float64
   num_sensors::Float64
 end
 
+# detection probability is of the form:
+# max_success_probability / (1 +  ||x-center||^2 / sensor_radius)
 type ProbabilisticSensor
   center::Array{Float64, 1}
-  sensor_sigma::Float64
+  sensor_radius::Float64
   max_succsess_probability::Float64
 end
 
@@ -25,7 +27,7 @@ function make_agent(agent_specification::ProbabilisticAgentSpecification)
   make_sensor() = ProbabilisticSensor(agent_center
                                     + agent_specification.station_radius *
                                     rand_in_circle(),
-                                    agent_specification.sensor_sigma,
+                                    agent_specification.sensor_radius,
                                     agent_specification.max_success_probability)
 
   sensors = [make_sensor() for agent in 1:agent_specification.num_sensors]
@@ -37,8 +39,25 @@ end
 # Sensor model
 ##############
 
-#detection_probability()
-#mean_coverage()
+export detection_probability, mean_detection_probability
+
+function detection_probability(sensor::ProbabilisticSensor, x)
+  square_dist = sum((x - sensor.center).^2)
+
+  sensor.max_success_probability / (1 + square_dist / sensor_radius)
+end
+
+function detection_probability(sensors::Array{ProbabilisticSensor,1}, x)
+  p_fail = reduce(1.0, sensors) do p, sensor
+    p * (1.0 - detection_probability(sensor, x))
+  end
+
+  1.0 - p_fail
+end
+
+function mean_detection_probability(sensors, points)
+  sum(map(p->detection_probability(sensors, p), points)) / length(points)
+end
 
 ###################
 # Environment model
@@ -137,16 +156,24 @@ end
 ###############
 import Base.convert
 
-convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, s.sensor_sigma)
+convert(::Type{Circle}, s::ProbabilisticSensor) = Circle(s.center, s.sensor_radius)
 
 function plot_element(sensor::ProbabilisticSensor; x...)
   plot_circle(convert(Circle, sensor); x...)
 end
 
-function visualize_solution(sensors::Array{ProbabilisticSensor}, colors)
-  map(sensors, colors) do sensor, color
-    plot_filled_circle(convert(Circle, sensor), color = rgb_tuple(color),
-                       alpha=0.3)
-  end
+function visualize_solution(sensors::Array{ProbabilisticSensor};
+                            limits = [0 1; 0 1], n = 1000, cmap = "viridis")
+  xlim = limits[1,:]
+  ylim = limits[2,:]
+
+  density = [detection_probability(sensors, [x,y])
+             for x in linspace(xlim[1], xlim[2], n),
+                 y in linspace(ylim[1], ylim[2], n)]
+
+  imshow(density', cmap=cmap, vmin=minimum(density), vmax=maximum(density[:]),
+         extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
+         interpolation="nearest", origin="lower")
+
   Void
 end
