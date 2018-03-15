@@ -6,10 +6,9 @@ using Colors
 ###############
 rgb_tuple(color::RGB) = (red(color), green(color), blue(color))
 
-generate_colors{T <: Agent}(agents::Array{T,1}) =
-  distinguishable_colors(length(agents) + 1)[2:end]
+generate_colors(agents) = distinguishable_colors(length(agents) + 1)[2:end]
 
-function visualize_agents{T <: Agent}(agents::Array{T,1}, colors)
+function visualize_agents(agents, colors)
   centers = map(get_center, agents);
 
   map(agents, colors) do agent, color

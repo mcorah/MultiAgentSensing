@@ -18,7 +18,7 @@ end
 type ProbabilisticSensor
   center::Array{Float64, 1}
   sensor_radius::Float64
-  max_succsess_probability::Float64
+  max_success_probability::Float64
 end
 
 function make_agent(agent_specification::ProbabilisticAgentSpecification)
@@ -32,7 +32,7 @@ function make_agent(agent_specification::ProbabilisticAgentSpecification)
 
   sensors = [make_sensor() for agent in 1:agent_specification.num_sensors]
 
-  Agent(agent_center, sensors)
+  Agent(agent_center, agent_specification.station_radius, sensors)
 end
 
 ##############
@@ -56,7 +56,9 @@ function detection_probability(sensors::Array{ProbabilisticSensor,1}, x)
 end
 
 function mean_detection_probability(sensors, points)
-  sum(map(p->detection_probability(sensors, p), points)) / length(points)
+  sum(map(1:size(points, 2)) do ii
+        detection_probability(sensors, points[:,ii])
+      end) / length(points)
 end
 
 ###################

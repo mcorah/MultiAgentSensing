@@ -18,14 +18,6 @@ type CircleAgentSpecification
   num_sensors
 end
 
-type CircleAgent <: Agent
-  center::Array{Float64, 1}
-  sensors::Array{Circle, 1}
-end
-
-get_block(agent::CircleAgent) = agent.sensors
-get_center(agent::CircleAgent) = agent.center
-
 # returns a vector of vectors of element indices abstracting the partition
 # matroid
 
@@ -73,7 +65,7 @@ function make_agent(agent_specification::CircleAgentSpecification)
 
   sensors = [make_sensor() for agent in 1:agent_specification.num_sensors]
 
-  CircleAgent(agent_center, sensors)
+  Agent(agent_center, agent_specification.station_radius, sensors)
 end
 
 # visualization

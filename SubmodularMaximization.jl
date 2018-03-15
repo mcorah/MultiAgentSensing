@@ -27,7 +27,14 @@ export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential,
 #   (Note really a general property but currently defined for all agents)
 # plot_element(x) = <Void>
 # make_agent(agent_specification) = < agent >::AgentType
-abstract Agent
+type Agent{T}
+  center::Array{Float64, 1}
+  radius::Float64
+  sensors::Array{T, 1}
+end
+
+get_block(agent::Agent) = agent.sensors
+get_center(agent::Agent) = agent.center
 
 function generate_agents(agent_specification, num_agents)
   [make_agent(agent_specification) for agent in 1:num_agents]
