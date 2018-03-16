@@ -6,8 +6,8 @@ using Colors
 ###############
 
 # standard markers
-station_center = "D"
-sensor_center = "."
+station_center = "+"
+sensor_center = (5, 2, 0)
 selected_sensor = "*"
 event_marker = "x"
 
@@ -27,7 +27,7 @@ function visualize_agents(agents, colors)
     center = get_center(agent)
 
     scatter([center[1]], [center[2]], color = rgb_tuple(color),
-            s = agent_scale, marker = station_center, edgecolors = "k")
+            s = 4*agent_scale, marker = station_center)
 
     map(get_block(agent)) do element
       plot_element(element; color = rgb_tuple(color))

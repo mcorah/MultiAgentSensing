@@ -85,7 +85,7 @@ end
 function plot_element(circle::Circle; color = "k")
   center = circle.center
   scatter([center[1]], [center[2]], color = color, s = 4*agent_scale,
-          marker = sensor_center, edgecolors = "k")
+          marker = sensor_center)
 end
 
 function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
