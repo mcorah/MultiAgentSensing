@@ -5,9 +5,9 @@ using Iterators
 import Base.<
 
 export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
-  get_element, objective, evaluate_solution, marginal_gain, compute_weight,
-  compute_weight_matrix, mean_weight, total_weight, extract_triangle,
-  get_element_indices, visualize_solution
+  get_num_agents, get_element, objective, evaluate_solution, marginal_gain,
+  compute_weight, compute_weight_matrix, mean_weight, total_weight,
+  extract_triangle, get_element_indices, visualize_solution
 
 export Agent, generate_agents,
   generate_colors,
@@ -45,6 +45,8 @@ end
 # (agent_index, block_index)
 PartitionElement = Tuple{Int64,Int64}
 ElementArray = Array{PartitionElement, 1}
+
+get_num_agents(p::PartitionProblem) = length(p.partition_matroid)
 
 type Solution
   value::Float64
@@ -229,11 +231,13 @@ function deleted_edge_weight(d::DAGSolver, W::Array{Float64})
     agent_index = s[ii]
 
     nominal_neighbors = s[1:ii-1]
-    neighbors = in_neighbors(agent_index)
+    neighbors = in_neighbors(d, agent_index)
 
     deleted_edges = setdiff(nominal_neighbors, neighbors)
 
-    weight += sum(map(x->W[agent_index, x], deleted_edges))
+    weight += reduce(0.0, deleted_edges) do w, edge
+      w + W[agent_index, edge]
+    end
   end
 
   weight
@@ -319,7 +323,8 @@ export compute_global_num_partitions, compute_local_num_partitions,
 # global adaptive number of partitions
 function compute_global_num_partitions(desired_suboptimality,
                                        p::PartitionProblem)
-  total_weight(p) / desired_suboptimality
+  convert(Int64, ceil(total_weight(p)
+                      / (get_num_agents(p)*desired_suboptimality)))
 end
 
 # compute nominal local number of partitions
@@ -328,7 +333,7 @@ function compute_local_num_partitions(desired_suboptimality,
   W  = compute_weight_matrix(p)
 
   map(1:length(p.partition_matroid)) do ii
-    sum(W[ii,:]) / (2 * desired_suboptimality)
+    convert(Int64, ceil(sum(W[ii,:]) / (2 * desired_suboptimality)))
   end
 end
 
@@ -374,9 +379,9 @@ sequence(x::RangeSolver) = sequence(x.nominal_solver)
 
 function in_neighbors(x::RangeSolver, agent_index)
   agents = x.problem.partition_matroid
-  nominal_neighbors = in_neighbors(x.nominal_solver)
+  nominal_neighbors = in_neighbors(x.nominal_solver, agent_index)
 
-  neighbors = Float64[]
+  neighbors = Int64[]
   for neighbor in nominal_neighbors
     dist = norm(get_center(agents[neighbor]) - get_center(agents[agent_index]))
 

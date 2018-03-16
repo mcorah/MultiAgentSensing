@@ -77,17 +77,13 @@ end
 # Generate adaptive solvers
 ###########################
 
+dag_solver_array = []
+
 println("Generating global solvers")
 global_adaptive_solvers = map(1:length(problems)) do ii
   generate_by_global_partition_size(num_agents, global_partition_sizes[ii])
 end
 push!(dag_solver_array, global_adaptive_solvers)
-
-println("Generating local solvers")
-local_adaptive_solvers = map(1:length(problems)) do ii
-  generate_by_local_partition_size(local_partition_sizes[ii])
-end
-push!(dag_solver_array, local_adaptive_solvers)
 
 println("Generating global range solvers")
 global_range_solvers = map(1:length(problems)) do ii
@@ -95,23 +91,30 @@ global_range_solvers = map(1:length(problems)) do ii
 end
 push!(dag_solver_array, global_range_solvers)
 
+println("Generating local solvers")
+local_adaptive_solvers = map(1:length(problems)) do ii
+  generate_by_local_partition_size(local_partition_sizes[ii])
+end
+push!(dag_solver_array, local_adaptive_solvers)
+
 println("Generating local range solvers")
 local_range_solvers = map(1:length(problems)) do ii
   RangeSolver(problems[ii], local_adaptive_solvers[ii], communication_range)
 end
-
 push!(dag_solver_array, local_range_solvers)
 
 ###################################
 # Evaluate weights of deleted edges
 ###################################
 function deleted_weights(solvers)
-  map(1:length(problems)) do ii
+  println("...evaluating solver")
+  mean(map(1:length(problems)) do ii
     deleted_edge_weight(solvers[ii], weight_matrices[ii])
-  end
+  end)
 end
 
-mean_deleted = mean(map(deleted_weights, dag_solver_array))
+println("Evaluating deleted weights")
+mean_deleted = map(deleted_weights, dag_solver_array)
 
 ################
 # Obtain results
@@ -119,9 +122,10 @@ mean_deleted = mean(map(deleted_weights, dag_solver_array))
 
 function evaluate_adaptive_solver(solver_instances, title)
   values = map(1:length(problems)) do ii
-    solve_dag(solver_instances[ii], problems[ii])
+    solve_dag(solver_instances[ii], problems[ii]).value
   end
 
+  println("Evaluating $title")
   push!(titles, title)
   push!(results, values)
 end
@@ -129,22 +133,41 @@ end
 titles = String[]
 results = Array[]
 
+println("Evaluating Myopic")
 push!(titles, "Myopic")
-push!(results, map(x->solve_myopic(x).value), problems)
+push!(results, map(x->solve_myopic(x).value, problems))
 
 evaluate_adaptive_solver(global_adaptive_solvers, "Global Adaptive")
-evaluate_adaptive_solver(local_adaptive_solvers, "Local Adaptive")
 evaluate_adaptive_solver(global_range_solvers, "Global Range")
+evaluate_adaptive_solver(local_adaptive_solvers, "Local Adaptive")
 evaluate_adaptive_solver(local_range_solvers, "Local Range")
 
+println("Evaluating Sequential")
 push!(titles, "Sequential")
-push!(results, map(x->solve_sequential(x).value), problems)
+push!(results, map(x->solve_sequential(x).value, problems))
 
 results = hcat(results...)
 
 ################
 # Generate plots
 ################
+
+function compute_range_frequency(x::Array{Int64, 1})
+  range = collect(minimum(x):maximum(x))
+
+  frequencies = zeros(Int64, length(range))
+
+  for value in x
+    frequencies[value - range[1] + 1] += 1
+  end
+
+  (range, frequencies)
+end
+
+function frequency_bar(x::Array{Int64, 1})
+  r, f = compute_range_frequency(x)
+  bar(r, f)
+end
 
 figure()
 boxplot(results, notch=false, vert=false)
@@ -161,16 +184,18 @@ title("Edge Weight Frequency")
 
 # plot histograms of partition sizes
 figure()
-PyPlot.plt[:hist](global_partition_sizes)
+
+frequency_bar(global_partition_sizes)
 title("Global Partition Size Frequency")
 
 figure()
-PyPlot.plt[:hist](vcat(local_partition_sizes...))
+frequency_bar(vcat(local_partition_sizes...))
 title("Local Partition Size Frequency")
 
-# plot delted weights
+# plot deleted weights
+bar_order = [1, 2, 3, 4]
 figure()
-barh(mean_deleted)
-yticks(1:4, titles(2:5))
+barh(1:4, mean_deleted[bar_order])
+yticks(1:4, titles[2:5][bar_order])
 title("Deleted Edge Weights")
 
