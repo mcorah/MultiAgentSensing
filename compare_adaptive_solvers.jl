@@ -18,7 +18,8 @@ max_success_probability = 1.0
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 3*sensor_radius
 
-desired_suboptimality = 0.04
+acceptable_suboptimality = 0.4
+suboptimality_per_agent = acceptable_suboptimality / num_agents
 communication_range = 2 * station_radius
 
 agent_specification = ProbabilisticAgentSpecification(max_success_probability,
@@ -65,12 +66,12 @@ end
 
 println("Generating local partition sizes")
 local_partition_sizes = map(problems) do problem
-  compute_local_num_partitions(desired_suboptimality, problem)
+  compute_local_num_partitions(suboptimality_per_agent, problem)
 end
 
 println("Generating global partition sizes")
 global_partition_sizes = map(problems) do problem
-  compute_global_num_partitions(desired_suboptimality, problem)
+  compute_global_num_partitions(suboptimality_per_agent, problem)
 end
 
 ###########################
