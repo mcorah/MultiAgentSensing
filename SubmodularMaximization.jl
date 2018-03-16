@@ -323,8 +323,9 @@ export compute_global_num_partitions, compute_local_num_partitions,
 # global adaptive number of partitions
 function compute_global_num_partitions(desired_suboptimality,
                                        p::PartitionProblem)
-  convert(Int64, ceil(total_weight(p)
-                      / (get_num_agents(p)*desired_suboptimality)))
+  n = convert(Int64, ceil(total_weight(p)
+                          / (get_num_agents(p)*desired_suboptimality)))
+  max(1, n)
 end
 
 # compute nominal local number of partitions
@@ -333,7 +334,8 @@ function compute_local_num_partitions(desired_suboptimality,
   W  = compute_weight_matrix(p)
 
   map(1:length(p.partition_matroid)) do ii
-    convert(Int64, ceil(sum(W[ii,:]) / (2 * desired_suboptimality)))
+    n = convert(Int64, ceil(sum(W[ii,:]) / (2 * desired_suboptimality)))
+    max(1, n)
   end
 end
 
