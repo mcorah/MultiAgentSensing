@@ -145,7 +145,7 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
 end
 
 function standard_mixture()
-  w = [0.35, 0.6, 0.05]
+  w = [0.30, 0.6, 0.1]
   g1 = Gaussian([0.2, 0.8], diagm([0.004, 0.1]))
   g2 = Gaussian([0.8, 0.2], diagm([0.1, 0.01]))
   g3 = Gaussian([0.7, 0.7], 0.03 * eye(2))
