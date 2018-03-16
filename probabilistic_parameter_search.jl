@@ -3,9 +3,9 @@ using SubmodularMaximization
 
 num_trials = 50
 
-num_events = 400
-num_agents = 80
-num_sensors = 6
+num_events = 50
+num_agents = 50
+num_sensors = 10
 max_success_probability = 1.0
 
 type ProbabilisticCoverageParams

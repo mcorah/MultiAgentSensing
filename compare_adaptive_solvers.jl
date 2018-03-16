@@ -4,19 +4,16 @@ using SubmodularMaximization
 ########
 # Params
 ########
-#num_trials = 100
-num_trials = 2
+num_trials = 100
 
-#num_events = 400
-num_events = 100
-#num_agents = 80
-num_agents = 10
-num_sensors = 6
-nominal_area = 1.0
+num_events = 50
+num_agents = 50
+num_sensors = 10
+nominal_area = 0.6
 
 max_success_probability = 1.0
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
-station_radius = 3*sensor_radius
+station_radius = 4*sensor_radius
 
 acceptable_suboptimality = 0.4
 suboptimality_per_agent = acceptable_suboptimality / num_agents

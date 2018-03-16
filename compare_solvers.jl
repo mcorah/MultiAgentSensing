@@ -1,11 +1,10 @@
 using PyPlot
 using SubmodularMaximization
 
-#num_trials = 1000
 num_trials = 100
 
-num_agents = 20
-num_sensors = 6
+num_agents = 50
+num_sensors = 50
 nominal_area = 2.0
 
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
