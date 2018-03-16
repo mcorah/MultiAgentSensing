@@ -6,19 +6,14 @@ import Base.<
 
 export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
   get_element, objective, evaluate_solution, marginal_gain, compute_weight,
-  compute_weight_matrix, mean_weight, total_weight, extract_triangle
-  get_element_indices,
-  visualize_solution
+  compute_weight_matrix, mean_weight, total_weight, extract_triangle,
+  get_element_indices, visualize_solution
 
 export Agent, generate_agents,
   generate_colors,
   visualize_agents
 
-export DAGSolver, PartitionSolver,
-  sequence, in_neighbors
-
-export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential,
-  solve_dag, solve_n_partitions
+export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
 
 # Interface
 # get_block(Agent) = <array of objects associated with agents' block of the
@@ -199,6 +194,8 @@ end
 # dag solver
 ############
 
+export DAGSolver, solve_dag, sequence, in_neighbors, deleted_edge_weight
+
 abstract DAGSolver
 # in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
 # sequence(d::DAGSolver) = <sequence of agent ids>
@@ -224,7 +221,36 @@ function solve_dag(d::DAGSolver, p::PartitionProblem)
   evaluate_solution(p, selection_tuples)
 end
 
-# Generic partition solver
+function deleted_edge_weight(d::DAGSolver, W::Array{Float64})
+  weight = 0.0
+
+  s = sequence(d)
+  for ii in 1:length(s)
+    agent_index = s[ii]
+
+    nominal_neighbors = s[1:ii-1]
+    neighbors = in_neighbors(agent_index)
+
+    deleted_edges = setdiff(nominal_neighbors, neighbors)
+
+    weight += sum(map(x->W[agent_index, x], deleted_edges))
+  end
+
+  weight
+end
+
+function deleted_edge_weight(d::DAGSolver, p::PartitionProblem)
+  weights = compute_weight_matrix(p)
+
+  deleted_edge_weight(d, weights)
+end
+
+###########################
+# basic partitioned solvers
+###########################
+
+export PartitionSolver, generate_by_local_partition_size,
+  generate_by_global_partition_size, solve_n_partitions
 
 # helper function to construct the partitions for the solver
 function construct_partitions(partition_numbers)
@@ -241,10 +267,7 @@ function construct_partitions(partition_numbers)
   partitions
 end
 
-###########################
-# basic partitioned solvers
-###########################
-
+# Generic partition solver
 type PartitionSolver <: DAGSolver
   # Array partitioning agents
   # Inner arrays are blocks and elements are agent ids
@@ -289,6 +312,10 @@ end
 # Adaptive partitioning
 #######################
 
+export compute_global_num_partitions, compute_local_num_partitions,
+  generate_global_adaptive, generate_local_adaptive, solve_global_adaptive,
+  solve_local_adaptive
+
 # global adaptive number of partitions
 function compute_global_num_partitions(desired_suboptimality,
                                        p::PartitionProblem)
@@ -319,9 +346,23 @@ function generate_local_adaptive(desired_suboptimality, p::PartitionProblem)
   generate_by_local_partition_size(local_partition_sizes)
 end
 
+function solve_global_adaptive(desired_suboptimality, p::PartitionProblem)
+  solver = generate_global_adaptive(desired_suboptimality, p)
+
+  solve_dag(solver, p)
+end
+
+function solve_local_adaptive(desired_suboptimality, p::PartitionProblem)
+  solver = generate_local_adaptive(desired_suboptimality, p)
+
+  solve_dag(solver, p)
+end
+
 #######################
 # range-limited solvers
 #######################
+
+export RangeSolver
 
 type RangeSolver <: DAGSolver
   problem::PartitionProblem
