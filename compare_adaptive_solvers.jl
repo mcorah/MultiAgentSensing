@@ -1,0 +1,176 @@
+using PyPlot
+using SubmodularMaximization
+
+########
+# Params
+########
+#num_trials = 100
+num_trials = 2
+
+#num_events = 400
+num_events = 100
+#num_agents = 80
+num_agents = 10
+num_sensors = 6
+nominal_area = 1.0
+
+max_success_probability = 1.0
+sensor_radius = sqrt(nominal_area / (num_agents * pi))
+station_radius = 3*sensor_radius
+
+desired_suboptimality = 0.04
+communication_range = 2 * station_radius
+
+agent_specification = ProbabilisticAgentSpecification(max_success_probability,
+                                                      sensor_radius,
+                                                      station_radius,
+                                                      num_sensors)
+
+###################
+# Generate problems
+###################
+
+# each problem has a different set of agents and events
+problems = map(1:num_trials) do unused
+  agents = generate_agents(agent_specification, num_agents)
+
+  events = generate_events(num_events)
+  f(x) = mean_detection_probability(x, events)
+
+  problem = PartitionProblem(f, agents)
+end
+
+############################################
+# Do intermediate processing of each problem
+############################################
+
+# now analyze weights
+println("Generating weight matrices")
+weight_matrices = map(problems, 1:length(problems)) do problem, ii
+  println("Weight matrix $ii")
+  compute_weight_matrix(problem)
+end
+
+println("Generating total weights")
+total_weights = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
+  println("Total weights $ii")
+  total_weight(weight_matrix)
+end
+
+println("Generating edge sets")
+edge_sets = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
+  println("Triangle $ii")
+  extract_triangle(weight_matrix)
+end
+
+println("Generating local partition sizes")
+local_partition_sizes = map(problems) do problem
+  compute_local_num_partitions(desired_suboptimality, problem)
+end
+
+println("Generating global partition sizes")
+global_partition_sizes = map(problems) do problem
+  compute_global_num_partitions(desired_suboptimality, problem)
+end
+
+###########################
+# Generate adaptive solvers
+###########################
+
+println("Generating global solvers")
+global_adaptive_solvers = map(1:length(problems)) do ii
+  generate_by_global_partition_size(num_agents, global_partition_sizes[ii])
+end
+push!(dag_solver_array, global_adaptive_solvers)
+
+println("Generating local solvers")
+local_adaptive_solvers = map(1:length(problems)) do ii
+  generate_by_local_partition_size(local_partition_sizes[ii])
+end
+push!(dag_solver_array, local_adaptive_solvers)
+
+println("Generating global range solvers")
+global_range_solvers = map(1:length(problems)) do ii
+  RangeSolver(problems[ii], global_adaptive_solvers[ii], communication_range)
+end
+push!(dag_solver_array, global_range_solvers)
+
+println("Generating local range solvers")
+local_range_solvers = map(1:length(problems)) do ii
+  RangeSolver(problems[ii], local_adaptive_solvers[ii], communication_range)
+end
+
+push!(dag_solver_array, local_range_solvers)
+
+###################################
+# Evaluate weights of deleted edges
+###################################
+function deleted_weights(solvers)
+  map(1:length(problems)) do ii
+    deleted_edge_weight(solvers[ii], weight_matrices[ii])
+  end
+end
+
+mean_deleted = mean(map(deleted_weights, dag_solver_array))
+
+################
+# Obtain results
+################
+
+function evaluate_adaptive_solver(solver_instances, title)
+  values = map(1:length(problems)) do ii
+    solve_dag(solver_instances[ii], problems[ii])
+  end
+
+  push!(titles, title)
+  push!(results, values)
+end
+
+titles = String[]
+results = Array[]
+
+push!(titles, "Myopic")
+push!(results, map(x->solve_myopic(x).value), problems)
+
+evaluate_adaptive_solver(global_adaptive_solvers, "Global Adaptive")
+evaluate_adaptive_solver(local_adaptive_solvers, "Local Adaptive")
+evaluate_adaptive_solver(global_range_solvers, "Global Range")
+evaluate_adaptive_solver(local_range_solvers, "Local Range")
+
+push!(titles, "Sequential")
+push!(results, map(x->solve_sequential(x).value), problems)
+
+results = hcat(results...)
+
+################
+# Generate plots
+################
+
+figure()
+boxplot(results, notch=false, vert=false)
+yticks(1:length(titles), titles)
+
+# plot histograms of edge weights
+figure()
+PyPlot.plt[:hist](total_weights, 20)
+title("Total Graph Weight Frequency")
+
+figure()
+PyPlot.plt[:hist](vcat(edge_sets...), 20)
+title("Edge Weight Frequency")
+
+# plot histograms of partition sizes
+figure()
+PyPlot.plt[:hist](global_partition_sizes)
+title("Global Partition Size Frequency")
+
+figure()
+PyPlot.plt[:hist](vcat(local_partition_sizes...))
+title("Local Partition Size Frequency")
+
+# plot delted weights
+figure()
+barh(mean_deleted)
+yticks(1:4, titles(2:5))
+title("Deleted Edge Weights")
+
