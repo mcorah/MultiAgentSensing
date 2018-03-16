@@ -48,9 +48,9 @@ xlim([0, 1])
 ylim([0, 1])
 title("Scenario")
 
-#############
-# evaluateion
-#############
+############
+# evaluation
+############
 function evaluate_solver(solver, name)
   println("$name solver running")
   @time solution = solver(problem)
@@ -65,7 +65,7 @@ function evaluate_solver(solver, name)
 
   coverage = solution.value
 
-  title("$name Solver ($coverage)")
+  title("$name Solver ($(round(coverage, 3)))")
 
   @show coverage
 end

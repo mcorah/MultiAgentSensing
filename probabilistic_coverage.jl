@@ -1,4 +1,6 @@
 using StatsBase
+using PyCall
+@pyimport mpl_toolkits.axes_grid as ag
 
 ####################
 # Sensor definitions
@@ -132,6 +134,16 @@ function pdf{T <: Number}(gm::GaussianMixture, x::Array{T,1})
   end
 end
 
+function make_tight_colorbar(image)
+  ax = gca()
+
+  divider = ag.make_axes_locatable(ax)
+  cax = divider[:append_axes]("right", "5%", pad="3%")
+  colorbar(image, cax = cax)
+
+  sca(ax)
+end
+
 function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   xlim = limits[1,:]
   ylim = limits[2,:]
@@ -139,9 +151,15 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   density = [pdf(fun, [x,y]) for x in linspace(xlim[1], xlim[2], n),
                                  y in linspace(ylim[1], ylim[2], n)]
 
-  imshow(density', cmap=cmap, vmin=minimum(density), vmax=maximum(density[:]),
-         extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
-         interpolation="nearest", origin="lower")
+  # the density is normalized to be a proper probability density on [0, 1]^2
+  # so values can be anywhere on real+, keep zero though
+  density = length(density) * density / sum(density)
+  image = imshow(density', cmap=cmap, vmin=0.0, vmax=maximum(density[:]),
+                 extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
+                 interpolation="nearest", origin="lower")
+  make_tight_colorbar(image)
+
+  Void
 end
 
 function standard_mixture()
@@ -183,13 +201,16 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
   end
 
   # Plot the actual distribution
-  density = [detection_probability(sensors, [x,y])
-             for x in linspace(xlim[1], xlim[2], n),
-                 y in linspace(ylim[1], ylim[2], n)]
+  probabilities = [detection_probability(sensors, [x,y])
+                           for x in linspace(xlim[1], xlim[2], n),
+                           y in linspace(ylim[1], ylim[2], n)]
 
-  imshow(density', cmap=cmap, vmin=minimum(density), vmax=maximum(density[:]),
-         extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
-         interpolation="nearest", origin="lower")
+  # detection probability is a direct probability of detection at a given
+  # locationand so varies from zero to one
+  image = imshow(probabilities', cmap=cmap, vmin=0.0, vmax=1.0,
+                 extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
+                 interpolation="nearest", origin="lower")
+  make_tight_colorbar(image)
 
   Void
 end
