@@ -1,9 +1,13 @@
 using PyPlot
 using SubmodularMaximization
+using HDF5, JLD
 
 pygui(false)
-fig_path = "./fig/compare_solvers"
+name = "compare_solvers"
+fig_path = "./fig/$name"
+data_path = "./data/$name"
 mkpath(fig_path)
+mkpath(data_path)
 
 num_trials = 100
 
@@ -40,6 +44,7 @@ problems = map(1:num_trials) do unused
   agents = generate_agents(agent_specification, num_agents)
   problem = PartitionProblem(f, agents)
 end
+@save "$data_path/partition_matroids" map(x->x.partition_matroid, problems)
 
 for trial_num in 1:length(problems)
   println("Trial: $trial_num")
@@ -53,12 +58,15 @@ for trial_num in 1:length(problems)
     results[trial_num, solver_num] = solution.value
   end
 end
+@save "$data_path/results" results
 
 # now analyze weights
 weight_matrices = map(problems, 1:length(problems)) do problem, ii
   println("Weight matrix $ii")
   compute_weight_matrix(problem)
 end
+
+@save "$data_path/weights" weight_matrices
 
 total_weights = map(weight_matrices, 1:length(problems)) do weight_matrix, ii
   println("Total weights $ii")
@@ -74,6 +82,9 @@ end
 figure()
 boxplot(results, notch=false, vert=false)
 yticks(1:length(solvers), map(x->x[2], solvers))
+xlabel("Area coverage")
+tight_layout()
+
 save_fig(fig_path, "results")
 
 # plot histograms of edge weights
@@ -81,12 +92,20 @@ save_fig(fig_path, "results")
 figure()
 PyPlot.plt[:hist](total_weights, 20)
 tt = "Total Graph Weight Frequency"
+ylabel("Frequency")
+xlabel("Redundancy graph weight")
+tight_layout()
+
 save_fig(fig_path, tt)
 title(tt)
 
 figure()
 PyPlot.plt[:hist](vcat(edge_sets...), 20)
 tt = "Edge Weight Frequency"
+ylabel("Frequency")
+xlabel("Edge weight (redundancy)")
+tight_layout()
+
 save_fig(fig_path, tt)
 title(tt)
 
