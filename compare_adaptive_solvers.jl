@@ -1,6 +1,10 @@
 using PyPlot
 using SubmodularMaximization
 
+pygui(false)
+fig_path = "./fig/compare_adaptive_solvers"
+mkpath(fig_path)
+
 ########
 # Params
 ########
@@ -170,30 +174,41 @@ end
 figure()
 boxplot(results, notch=false, vert=false)
 yticks(1:length(titles), titles)
+save_fig(fig_path, "results")
 
 # plot histograms of edge weights
 figure()
 PyPlot.plt[:hist](total_weights, 20)
-title("Total Graph Weight Frequency")
+tt = "Total Graph Weight Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 figure()
 PyPlot.plt[:hist](vcat(edge_sets...), 20)
-title("Edge Weight Frequency")
+tt = "Edge Weight Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 # plot histograms of partition sizes
 figure()
 
 frequency_bar(global_partition_sizes)
-title("Global Partition Size Frequency")
+tt = "Global Partition Size Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 figure()
 frequency_bar(vcat(local_partition_sizes...))
-title("Local Partition Size Frequency")
+tt = "Local Partition Size Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 # plot deleted weights
 bar_order = [1, 2, 3, 4]
 figure()
 barh(1:4, mean_deleted[bar_order])
 yticks(1:4, titles[2:5][bar_order])
-title("Deleted Edge Weights")
+tt = "Deleted Edge Weights"
+save_fig(fig_path, tt)
+title(tt)
 

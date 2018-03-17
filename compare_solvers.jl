@@ -1,6 +1,10 @@
 using PyPlot
 using SubmodularMaximization
 
+pygui(false)
+fig_path = "./fig/compare_solvers"
+mkpath(fig_path)
+
 num_trials = 100
 
 num_agents = 50
@@ -70,16 +74,21 @@ end
 figure()
 boxplot(results, notch=false, vert=false)
 yticks(1:length(solvers), map(x->x[2], solvers))
+save_fig(fig_path, "results")
 
 # plot histograms of edge weights
 
 figure()
 PyPlot.plt[:hist](total_weights, 20)
-title("Total Graph Weight Frequency")
+tt = "Total Graph Weight Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 figure()
 PyPlot.plt[:hist](vcat(edge_sets...), 20)
-title("Edge Weight Frequency")
+tt = "Edge Weight Frequency"
+save_fig(fig_path, tt)
+title(tt)
 
 # sequential solutions and edge weights
 sequential_mean = mean(results[:,end][:])

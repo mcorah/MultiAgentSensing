@@ -1,6 +1,10 @@
 using PyPlot
 using SubmodularMaximization
 
+pygui(false)
+fig_path = "./fig/coverage_test"
+mkpath(fig_path)
+
 num_agents = 50
 num_sensors = 10
 nominal_area = 2.0
@@ -27,6 +31,8 @@ function evaluate_solver(solver, name)
   visualize_agents(agents, colors)
   visualize_solution(problem, solution, colors)
 
+  savefig("$(fig_path)/$(to_file(name)).png", pad_inches=0.00, bbox_inches="tight")
+
   coverage = solution.value
 
   title("$name Solver ($coverage)")
@@ -34,10 +40,10 @@ function evaluate_solver(solver, name)
   @show coverage
 end
 
-evaluate_solver(solve_optimal, "Optimal")
-evaluate_solver(solve_worst, "Worst-case")
-evaluate_solver(solve_myopic, "Myopic")
-evaluate_solver(solve_random, "Random")
+#evaluate_solver(solve_optimal, "Optimal")
+#evaluate_solver(solve_worst, "Worst-case")
+#evaluate_solver(solve_myopic, "Myopic")
+#evaluate_solver(solve_random, "Random")
 evaluate_solver(solve_sequential, "Sequential")
 
 for num_partitions in [2, 4, 8]
@@ -45,5 +51,5 @@ for num_partitions in [2, 4, 8]
   evaluate_solver(solve_n, "Partition-$num_partitions")
 end
 
-@show mean_weight(problem)
-@show total_weight(problem)
+#@show mean_weight(problem)
+#@show total_weight(problem)

@@ -1,9 +1,20 @@
+using PyCall
 using PyPlot
 using Colors
+@pyimport matplotlib2tikz
 
 ###############
 # visualization
 ###############
+export to_file, save_fig
+
+to_file(s) = replace(lowercase(s), " ", "_")
+
+function save_fig(fig_path, title)
+  matplotlib2tikz.save("$(fig_path)/$(to_file(title)).tex",
+                       figureheight="\\figureheight",
+                       figurewidth="\\figurewidth")
+end
 
 # standard markers
 station_center = "+"

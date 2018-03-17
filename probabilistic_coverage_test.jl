@@ -1,6 +1,10 @@
 using PyPlot
 using SubmodularMaximization
 
+pygui(false)
+fig_path = "./fig/probabilistic_coverage_test"
+mkpath(fig_path)
+
 ########
 # Params
 ########
@@ -40,12 +44,13 @@ problem = PartitionProblem(f, agents)
 # visualize scenario
 ####################
 
+figure()
 visualize_pdf(standard_mixture())
 visualize_events(events)
 colors = generate_colors(agents)
-#visualize_agents(agents, colors)
 xlim([0, 1])
 ylim([0, 1])
+savefig("$(fig_path)/scenario.png", pad_inches=0.00, bbox_inches="tight")
 title("Scenario")
 
 ############
@@ -65,6 +70,8 @@ function evaluate_solver(solver, name)
 
   coverage = solution.value
 
+  savefig("$(fig_path)/$(to_file(name)).png", pad_inches=0.00, bbox_inches="tight")
+
   title("$name Solver ($(round(coverage, 3)))")
 
   @show coverage
@@ -81,5 +88,5 @@ for num_partitions in [2, 4, 8]
   evaluate_solver(solve_n, "Partition-$num_partitions")
 end
 
-@show mean_weight(problem)
-@show total_weight(problem)
+#@show mean_weight(problem)
+#@show total_weight(problem)
