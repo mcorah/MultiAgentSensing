@@ -1,5 +1,6 @@
 using StatsBase
 using PyCall
+
 @pyimport mpl_toolkits.axes_grid as ag
 
 ####################
@@ -184,8 +185,8 @@ export visualize_events
 
 function plot_element(circle::ProbabilisticSensor; color = "k")
   center = circle.center
-  scatter([center[1]], [center[2]], color = color, s = 0.5 * agent_scale,
-          marker = sensor_center, linewidth = 0.5)
+  scatter([center[1]], [center[2]], color = color, s = agent_scale,
+          marker = sensor_center, linewidth = 1.0)
 end
 
 function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
@@ -216,5 +217,6 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
 end
 
 function visualize_events(events)
-  scatter(events[1,:]', events[2,:]', color = "k", marker = event_marker)
+  scatter(events[1,:]', events[2,:]', color = "k", marker = event_marker,
+          s = 2.0 * agent_scale, linewidth = 1.0)
 end
