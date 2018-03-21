@@ -5,12 +5,12 @@ pygui(false)
 fig_path = "./fig/coverage_test"
 mkpath(fig_path)
 
-num_agents = 50
-num_sensors = 10
+num_agents = 5
+num_sensors = 5
 nominal_area = 2.0
 
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
-station_radius = 2 * sensor_radius
+station_radius = sensor_radius
 
 agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                          num_sensors)
@@ -31,6 +31,7 @@ function evaluate_solver(solver, name)
   visualize_agents(agents, colors)
   visualize_solution(problem, solution, colors)
 
+  gca()[:set_aspect]("equal")
   savefig("$(fig_path)/$(to_file(name)).png", pad_inches=0.00, bbox_inches="tight")
 
   coverage = solution.value

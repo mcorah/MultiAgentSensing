@@ -185,8 +185,8 @@ export visualize_events
 
 function plot_element(circle::ProbabilisticSensor; color = "k")
   center = circle.center
-  scatter([center[1]], [center[2]], color = color, s = agent_scale,
-          marker = sensor_center, linewidth = 1.0)
+  scatter([center[1]], [center[2]], color = color, s = 4*agent_scale,
+          marker = sensor_center)
 end
 
 function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
@@ -197,8 +197,8 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
   # Highlight the sensors
   map(sensors, colors) do sensor, color
     center = sensor.center
-#   scatter([center[1]], [center[2]], color = rgb_tuple(color), s = 2*agent_scale,
-#           marker = selected_sensor, edgecolors="k")
+    scatter([center[1]], [center[2]], color = rgb_tuple(color), s = 4*agent_scale,
+            marker = selected_sensor, edgecolors="k")
   end
 
   # Plot the actual distribution

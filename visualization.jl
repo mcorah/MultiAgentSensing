@@ -37,15 +37,16 @@ function visualize_agents(agents, colors)
   map(agents, colors) do agent, color
     center = get_center(agent)
 
-    scatter([center[1]], [center[2]], color = rgb_tuple(color),
-            s = 4*agent_scale, marker = station_center)
+#   scatter([center[1]], [center[2]], color = rgb_tuple(color),
+#           s = 4*agent_scale, marker = station_center)
 
     map(get_block(agent)) do element
       plot_element(element; color = rgb_tuple(color))
     end
 
     plot_circle(Circle(agent.center, agent.radius);
-                linestyle=station_style, color = rgb_tuple(color))
+                linestyle=station_style, color = rgb_tuple(color),
+                linewidth = 3.0)
   end
 
   Void

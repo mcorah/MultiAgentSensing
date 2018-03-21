@@ -93,11 +93,17 @@ function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
   full_circle = [ps ps[:,1]]
 
   fill(ps[1,:][:], ps[2,:][:], color = color, alpha=alpha, linewidth=0.0)
+
+  plot_circle(circle, color="k", linewidth = 1.0)
 end
 
 function visualize_solution(circles::Array{Circle}, colors)
   map(circles, colors) do circle, color
-    plot_filled_circle(circle, color = rgb_tuple(color), alpha=0.3)
+    plot_filled_circle(circle, color = rgb_tuple(color), alpha=0.2)
+
+    center = circle.center
+    scatter([center[1]], [center[2]], color = rgb_tuple(color), s = 4*agent_scale,
+            marker = selected_sensor, edgecolors="k")
   end
   Void
 end
