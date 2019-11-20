@@ -147,6 +147,10 @@ println("Evaluating Myopic")
 push!(titles, "Myopic")
 push!(results, map(x->solve_myopic(x).value, problems))
 
+println("Evaluating Random")
+push!(titles, "Random")
+push!(results, map(x->solve_random(x).value, problems))
+
 evaluate_adaptive_solver(global_adaptive_solvers, "Global Adaptive")
 evaluate_adaptive_solver(global_range_solvers, "Global Range")
 evaluate_adaptive_solver(local_adaptive_solvers, "Local Adaptive")
