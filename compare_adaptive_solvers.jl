@@ -1,6 +1,9 @@
 using PyPlot
-using SubmodularMaximization
 using HDF5, JLD
+using Statistics
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 pygui(false)
 name = "compare_adaptive_solvers"
@@ -194,14 +197,14 @@ save_fig(fig_path, "results")
 
 # plot histograms of edge weights
 figure()
-PyPlot.plt[:hist](total_weights, 20)
+PyPlot.plt.hist(total_weights, 20)
 tt = "Total Graph Weight Frequency"
 
 save_fig(fig_path, tt)
 title(tt)
 
 figure()
-PyPlot.plt[:hist](vcat(edge_sets...), 20)
+PyPlot.plt.hist(vcat(edge_sets...), 20)
 tt = "Edge Weight Frequency"
 save_fig(fig_path, tt)
 title(tt)
@@ -239,3 +242,5 @@ tight_layout()
 
 save_fig(fig_path, tt)
 title(tt)
+
+nothing

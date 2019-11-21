@@ -1,5 +1,7 @@
 using PyPlot
-using SubmodularMaximization
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 pygui(false)
 fig_path = "./fig/probabilistic_coverage_test"
@@ -72,7 +74,7 @@ function evaluate_solver(solver, name)
 
   savefig("$(fig_path)/$(to_file(name)).png", pad_inches=0.00, bbox_inches="tight")
 
-  title("$name Solver ($(round(coverage, 3)))")
+  title("$name Solver ($(round(coverage, digits=3)))")
 
   @show coverage
 end
@@ -90,3 +92,5 @@ end
 
 #@show mean_weight(problem)
 #@show total_weight(problem)
+
+nothing

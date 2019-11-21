@@ -1,5 +1,8 @@
 using PyPlot
-using SubmodularMaximization
+using Statistics
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 num_trials = 100
 
@@ -13,7 +16,7 @@ station_radius = 2 * sensor_radius
 agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                          num_sensors)
 
-f(x) = mean_area_coverage(x, 20 * num_agents / 4)
+f(x) = mean_area_coverage(x, floor(Integer, 20 * num_agents / 4))
 
 solvers = Any[]
 
@@ -43,8 +46,10 @@ for trial_num in 1:num_trials
   end
 end
 
-mean_value = mean(results, 2)
+mean_value = mean(results; dims=2)
 
 figure()
 boxplot(results, notch=false, vert=false)
 yticks(1:length(solvers), map(x->x[2], solvers))
+
+nothing

@@ -1,5 +1,8 @@
 using PyPlot
-using SubmodularMaximization
+using Statistics
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 num_trials = 50
 
@@ -8,7 +11,7 @@ num_agents = 50
 num_sensors = 10
 max_success_probability = 1.0
 
-type ProbabilisticCoverageParams
+struct ProbabilisticCoverageParams
   nominal_area
   radius_factor
 end
@@ -48,17 +51,19 @@ end
 
 performance_ratios = map(performance_ratio, param_set)
 
-best_index = indmin(performance_ratios)
+_, best_index = findmin(performance_ratios)
 best_params = param_set[best_index]
 
 println("Best ratio: $(performance_ratios[best_index])")
 println("Params: area ($(best_params.nominal_area)), radius-factor ($(best_params.radius_factor))")
 
 figure()
-PyPlot.plt[:hist](performance_ratios[:], 10)
+PyPlot.plt.hist(performance_ratios[:], 10)
 
 figure()
 pcolormesh(area_range, radius_factor_range, performance_ratios', cmap="Blues")
 colorbar()
 xlabel("nominal area")
 ylabel("radius factor")
+
+nothing

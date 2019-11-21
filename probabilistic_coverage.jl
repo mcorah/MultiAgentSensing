@@ -1,7 +1,8 @@
 using StatsBase
+using LinearAlgebra
 using PyCall
 
-@pyimport mpl_toolkits.axes_grid as ag
+ag = pyimport("mpl_toolkits.axes_grid1")
 
 ####################
 # Sensor definitions
@@ -9,7 +10,7 @@ using PyCall
 
 export ProbabilisticAgentSpecification, ProbabilisticSensor
 
-type ProbabilisticAgentSpecification
+struct ProbabilisticAgentSpecification
   max_success_probability::Float64
   sensor_radius::Float64
   station_radius::Float64
@@ -18,7 +19,7 @@ end
 
 # detection probability is of the form:
 # max_success_probability * exp(-||x-center||^4 / sensor_radius^4)
-type ProbabilisticSensor
+struct ProbabilisticSensor
   center::Array{Float64, 1}
   sensor_radius::Float64
   max_success_probability::Float64
@@ -51,7 +52,7 @@ function detection_probability(sensor::ProbabilisticSensor, x)
 end
 
 function detection_probability(sensors::Array{ProbabilisticSensor,1}, x)
-  p_fail = reduce(1.0, sensors) do p, sensor
+  p_fail = reduce(sensors; init=1.0) do p, sensor
     p * (1.0 - detection_probability(sensor, x))
   end
 
@@ -73,7 +74,7 @@ in_limits, sample_reject, standard_mixture, generate_events
 
 pdf_coefficient(covariance) = sqrt((2*pi)^size(covariance,1) * det(covariance))
 
-type Gaussian
+struct Gaussian
   mean::Array{Float64,1}
   covariance::Array{Float64,2}
   chol_covariance # result of cholesky decomposition
@@ -82,12 +83,12 @@ type Gaussian
   pdf_coefficient::Float64 # result of pdf_coefficient
 
   function Gaussian(mean, covariance)
-    new(mean, covariance, chol(covariance), inv(covariance), det(covariance),
+    new(mean, covariance, cholesky(covariance), inv(covariance), det(covariance),
         pdf_coefficient(covariance))
   end
 end
 
-type GaussianMixture
+struct GaussianMixture
   weights::Array{Float64,1}
   components::Array{Gaussian,1}
 end
@@ -97,7 +98,7 @@ dim(g::Gaussian) = length(g.mean)
 dim(gm::GaussianMixture) = dim(gm.components[1])
 
 function sample_pdf(g::Gaussian)
-  g.mean + (randn(1,size(g.covariance,1)) * g.chol_covariance)'
+  g.mean + (randn(1,size(g.covariance,1)) * g.chol_covariance.U)'
 end
 
 function sample_pdf(gm::GaussianMixture)
@@ -123,14 +124,14 @@ function sample_reject(p, limits)
 end
 
 
-function pdf{T <: Number}(g::Gaussian, x::Array{T,1})
+function pdf(g::Gaussian, x::Array{T,1}) where T <: Number
   d = x - g.mean
 
   exp(- d' * g.inv_covariance * d / 2)[1] * g.pdf_coefficient
 end
 
-function pdf{T <: Number}(gm::GaussianMixture, x::Array{T,1})
-  reduce(0.0, zip(gm.weights, gm.components)) do value, w_c
+function pdf(gm::GaussianMixture, x::Array{T,1}) where T <: Number
+  reduce(zip(gm.weights, gm.components); init=0.0) do value, w_c
     value + w_c[1] * pdf(w_c[2], x)
   end
 end
@@ -139,7 +140,7 @@ function make_tight_colorbar(image)
   ax = gca()
 
   divider = ag.make_axes_locatable(ax)
-  cax = divider[:append_axes]("right", "5%", pad="3%")
+  cax = divider.append_axes("right", "5%", pad="3%")
   colorbar(image, cax = cax)
 
   sca(ax)
@@ -149,8 +150,8 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   xlim = limits[1,:]
   ylim = limits[2,:]
 
-  density = [pdf(fun, [x,y]) for x in linspace(xlim[1], xlim[2], n),
-                                 y in linspace(ylim[1], ylim[2], n)]
+  density = [pdf(fun, [x,y]) for x in range(xlim[1], stop=xlim[2], length=n),
+                                 y in range(ylim[1], stop=ylim[2], length=n)]
 
   # the density is normalized to be a proper probability density on [0, 1]^2
   # so values can be anywhere on real+, keep zero though
@@ -160,14 +161,14 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
                  interpolation="nearest", origin="lower")
   make_tight_colorbar(image)
 
-  Void
+  nothing
 end
 
 function standard_mixture()
   w = [0.30, 0.6, 0.1]
-  g1 = Gaussian([0.2, 0.8], diagm([0.004, 0.1]))
-  g2 = Gaussian([0.8, 0.2], diagm([0.1, 0.01]))
-  g3 = Gaussian([0.7, 0.7], 0.03 * eye(2))
+  g1 = Gaussian([0.2, 0.8], Diagonal([0.004, 0.1]))
+  g2 = Gaussian([0.8, 0.2], Diagonal([0.1, 0.01]))
+  g3 = Gaussian([0.7, 0.7], Diagonal([0.03, 0.03]))
 
   GaussianMixture(w, [g1, g2, g3])
 end
@@ -203,8 +204,8 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
 
   # Plot the actual distribution
   probabilities = [detection_probability(sensors, [x,y])
-                           for x in linspace(xlim[1], xlim[2], n),
-                           y in linspace(ylim[1], ylim[2], n)]
+                           for x in range(xlim[1], stop=xlim[2], length=n),
+                           y in range(ylim[1], stop=ylim[2], length=n)]
 
   # detection probability is a direct probability of detection at a given
   # locationand so varies from zero to one
@@ -213,7 +214,7 @@ function visualize_solution(sensors::Array{ProbabilisticSensor}, colors;
                  interpolation="nearest", origin="lower")
   make_tight_colorbar(image)
 
-  Void
+  nothing
 end
 
 function visualize_events(events)

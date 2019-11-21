@@ -1,5 +1,7 @@
 using PyPlot
-using SubmodularMaximization
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 pygui(false)
 fig_path = "./fig/coverage_test"
@@ -31,7 +33,7 @@ function evaluate_solver(solver, name)
   visualize_agents(agents, colors)
   visualize_solution(problem, solution, colors)
 
-  gca()[:set_aspect]("equal")
+  gca().set_aspect("equal")
   savefig("$(fig_path)/$(to_file(name)).png", pad_inches=0.00, bbox_inches="tight")
 
   coverage = solution.value

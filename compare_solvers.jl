@@ -1,6 +1,9 @@
 using PyPlot
-using SubmodularMaximization
 using HDF5, JLD
+using Statistics
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 pygui(false)
 name = "compare_solvers"
@@ -90,7 +93,7 @@ save_fig(fig_path, "results")
 # plot histograms of edge weights
 
 figure()
-PyPlot.plt[:hist](total_weights, 20)
+PyPlot.plt.hist(total_weights, 20)
 tt = "Total Graph Weight Frequency"
 ylabel("Frequency")
 xlabel("Redundancy graph weight")
@@ -100,7 +103,7 @@ save_fig(fig_path, tt)
 title(tt)
 
 figure()
-PyPlot.plt[:hist](vcat(edge_sets...), 20)
+PyPlot.plt.hist(vcat(edge_sets...), 20)
 tt = "Edge Weight Frequency"
 ylabel("Frequency")
 xlabel("Edge weight (redundancy)")
@@ -112,7 +115,7 @@ title(tt)
 # sequential solutions and edge weights
 sequential_mean = mean(results[:,end][:])
 
-partition_values = mean(results[:,3:end-1],1)[:]
+partition_values = mean(results[:,3:end-1]; dims=1)[:]
 
 mean_weight = mean(total_weights)
 println("Mean weight: $mean_weight")
@@ -123,3 +126,5 @@ bounds = map(x->mean_weight/x, partitions)
 #plot(partitions, partition_values)
 #plot(partitions, partition_values + bounds)
 #legend(["Sequential", "Partition-n"])
+
+nothing

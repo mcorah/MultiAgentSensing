@@ -7,12 +7,12 @@ export Circle, CircleAgentSpecification,
   mean_area_coverage
 
 # evaluation of the area coverage objective
-type Circle
+struct Circle
   center::Array{Float64, 1}
   radius::Float64
 end
 
-type CircleAgentSpecification
+struct CircleAgentSpecification
   sensor_radius
   station_radius
   num_sensors
@@ -41,7 +41,9 @@ mean_coverage(circles, points) =
 
 function mean_area_coverage(circles, discretization)
   num_covered = 0
-  for x in linspace(0, 1, discretization), y in linspace(0, 1, discretization)
+  for x in range(0, stop=1, length=discretization),
+    y in range(0, stop=1, length=discretization)
+
     num_covered += point_covered(circles, x, y)
   end
 
@@ -105,5 +107,5 @@ function visualize_solution(circles::Array{Circle}, colors)
     scatter([center[1]], [center[2]], color = rgb_tuple(color), s = 4*agent_scale,
             marker = selected_sensor, edgecolors="k")
   end
-  Void
+  nothing
 end

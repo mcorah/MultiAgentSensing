@@ -1,12 +1,15 @@
 using PyPlot
-using SubmodularMaximization
+using Statistics
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 num_trials = 100
 num_agents = 20
 
-f(x) = mean_area_coverage(x, 20 * num_agents / 4)
+f(x) = mean_area_coverage(x, floor(Integer, 20 * num_agents / 4))
 
-type CoverageParams
+struct CoverageParams
   num_sensors
   nominal_area
 end
@@ -39,15 +42,17 @@ end
 
 performance_ratios = map(coverage_performance_ratio, param_set)
 
-best_index = indmin(performance_ratios)
+_, best_index = findmin(performance_ratios)
 best_params = param_set[best_index]
 
 println("Best ratio: $(performance_ratios[best_index])")
 println("Params: sensors ($(best_params.num_sensors)), nominal area ($(best_params.nominal_area))")
 
 figure()
-PyPlot.plt[:hist](performance_ratios[:], 10)
+PyPlot.plt.hist(performance_ratios[:], 10)
 
 figure()
-pcolor(performance_ratios, cmap = PyPlot.cm[:Blues])
+pcolor(performance_ratios, cmap = PyPlot.cm.Blues)
 colorbar()
+
+nothing

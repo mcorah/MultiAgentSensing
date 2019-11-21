@@ -1,19 +1,20 @@
 using PyCall
 using PyPlot
 using Colors
-@pyimport matplotlib2tikz
+matplotlib2tikz = pyimport("matplotlib2tikz")
 
 ###############
 # visualization
 ###############
 export to_file, save_fig
 
-to_file(s) = replace(lowercase(s), " ", "_")
+to_file(s) = replace(lowercase(s), " " => "_")
 
 function save_fig(fig_path, title)
   matplotlib2tikz.save("$(fig_path)/$(to_file(title)).tex",
                        figureheight="\\figureheight",
-                       figurewidth="\\figurewidth")
+                       figurewidth="\\figurewidth",
+                       show_info=false)
 end
 
 # standard markers
@@ -49,7 +50,7 @@ function visualize_agents(agents, colors)
                 linewidth = 3.0)
   end
 
-  Void
+  nothing
 end
 
 function visualize_solution(p::PartitionProblem, X::ElementArray, agent_colors)

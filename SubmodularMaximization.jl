@@ -1,6 +1,6 @@
 module SubmodularMaximization
 
-using Iterators
+using Base.Iterators
 
 import Base.<
 
@@ -15,14 +15,20 @@ export Agent, generate_agents,
 
 export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
 
+# Max now uses isless to exclude types that do not have a total order. We would
+# like to have something like this defined for solutions but probably should not
+# break things. This is a good compromise
+partial_max(a, b) = ifelse(b < a, a, b)
+partial_min(a, b) = ifelse(b > a, a, b)
+
 # Interface
 # get_block(Agent) = <array of objects associated with agents' block of the
 #                     partition matroid>
 # get_center(Agent) = <agent center>
 #   (Note really a general property but currently defined for all agents)
-# plot_element(x) = <Void>
+# plot_element(x) = <Nothing>
 # make_agent(agent_specification) = < agent >::AgentType
-type Agent{T}
+struct Agent{T}
   center::Array{Float64, 1}
   radius::Float64
   sensors::Array{T, 1}
@@ -37,7 +43,7 @@ end
 
 # f({x} | Y)
 # the objective takes in an array of elements of the blocks
-type PartitionProblem
+struct PartitionProblem
   objective
   partition_matroid::Array
 end
@@ -48,7 +54,7 @@ ElementArray = Array{PartitionElement, 1}
 
 get_num_agents(p::PartitionProblem) = length(p.partition_matroid)
 
-type Solution
+struct Solution
   value::Float64
   elements::ElementArray
 end
@@ -141,9 +147,9 @@ function solve_optimal(p::PartitionProblem)
   v0 = evaluate_solution(p, empty())
 
   # collect because product returns a tuple
-  op(s::Solution, b) = max(s, evaluate_solution(p, collect(b)))
+  op(s::Solution, b) = partial_max(s, evaluate_solution(p, collect(b)))
 
-  foldl(op, v0, product(indices...))
+  foldl(op, product(indices...); init=v0)
 end
 
 # anti-optimal solver
@@ -153,9 +159,9 @@ function solve_worst(p::PartitionProblem)
   v0 = Solution(Inf, empty())
 
   # collect because product returns a tuple
-  op(s::Solution, b) = min(s, evaluate_solution(p, collect(b)))
+  op(s::Solution, b) = partial_min(s, evaluate_solution(p, collect(b)))
 
-  foldl(op, v0, product(indices...))
+  foldl(op, product(indices...), init=v0)
 end
 
 # myopic solver
@@ -163,7 +169,7 @@ function solve_myopic(p::PartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
   selection = map(indices) do block
-    ii = indmax(map(x->objective(p, [x]), block))
+    _, ii = findmax(map(x->objective(p, [x]), block))
     block[ii]
   end
 
@@ -184,7 +190,7 @@ function solve_sequential(p::PartitionProblem)
   selection = ElementArray()
 
   for block in indices
-    ii = indmax(map(x->objective(p, [selection; x]), block))
+    _, ii = findmax(map(x->objective(p, [selection; x]), block))
 
     push!(selection, block[ii])
   end
@@ -198,7 +204,7 @@ end
 
 export DAGSolver, solve_dag, sequence, in_neighbors, deleted_edge_weight
 
-abstract DAGSolver
+abstract type DAGSolver end
 # in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
 # sequence(d::DAGSolver) = <sequence of agent ids>
 
@@ -215,7 +221,7 @@ function solve_dag(d::DAGSolver, p::PartitionProblem)
       objective(p, [neighbor_selection; x])
     end
 
-    selection[agent_index] = indmax(values)
+    _, selection[agent_index] = findmax(values)
   end
 
   selection_tuples::ElementArray = map(x->(x, selection[x]), sequence(d))
@@ -235,7 +241,7 @@ function deleted_edge_weight(d::DAGSolver, W::Array{Float64})
 
     deleted_edges = setdiff(nominal_neighbors, neighbors)
 
-    weight += reduce(0.0, deleted_edges) do w, edge
+    weight += reduce(deleted_edges; init=0.0) do w, edge
       w + W[agent_index, edge]
     end
   end
@@ -272,7 +278,7 @@ function construct_partitions(partition_numbers)
 end
 
 # Generic partition solver
-type PartitionSolver <: DAGSolver
+struct PartitionSolver <: DAGSolver
   # Array partitioning agents
   # Inner arrays are blocks and elements are agent ids
   partitions::Array{Array{Int64,1},1}
@@ -371,7 +377,7 @@ end
 
 export RangeSolver
 
-type RangeSolver <: DAGSolver
+struct RangeSolver <: DAGSolver
   problem::PartitionProblem
   nominal_solver::DAGSolver
   communication_range::Float64

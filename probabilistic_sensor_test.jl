@@ -1,4 +1,7 @@
-using SubmodularMaximization
+using PyPlot
+
+include("SubmodularMaximization.jl")
+using .SubmodularMaximization
 
 discretization = 1000
 
@@ -13,10 +16,12 @@ station_radius = 10 * sensor_radius
 sensor = ProbabilisticSensor([0.5, 0.5], sensor_radius, max_success_probability)
 
 density = [detection_probability(sensor, [x,y])
-           for x in linspace(0, 1, discretization),
-           y in linspace(0, 1, discretization)]
+           for x in range(0, stop=1, length=discretization),
+           y in range(0, stop=1, length=discretization)]
 
 figure()
 imshow(density', cmap="viridis", vmin=minimum(density), vmax=maximum(density[:]),
        extent=[0, 1, 0, 1], interpolation="nearest", origin="lower")
 colorbar()
+
+nothing
