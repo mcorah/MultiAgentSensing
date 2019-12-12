@@ -1,8 +1,7 @@
 using PyPlot
 using Statistics
 
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 num_trials = 100
 

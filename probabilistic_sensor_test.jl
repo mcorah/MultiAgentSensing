@@ -1,7 +1,6 @@
 using PyPlot
 
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 discretization = 1000
 

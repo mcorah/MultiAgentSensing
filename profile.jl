@@ -1,8 +1,7 @@
 using ProfileView
 using Statistics
 
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 num_agents = 4
 num_sensors = 6

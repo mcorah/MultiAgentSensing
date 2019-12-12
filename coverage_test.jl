@@ -1,7 +1,6 @@
 using PyPlot
 
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 pygui(false)
 fig_path = "./fig/coverage_test"

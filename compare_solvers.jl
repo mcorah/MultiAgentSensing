@@ -2,8 +2,7 @@ using PyPlot
 using HDF5, JLD
 using Statistics
 
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 pygui(false)
 name = "compare_solvers"

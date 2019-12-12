@@ -1,5 +1,4 @@
-include("SubmodularMaximization.jl")
-using .SubmodularMaximization
+using SubmodularMaximization
 
 using PyPlot
 using LinearAlgebra
