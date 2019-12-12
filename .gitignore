@@ -3,4 +3,6 @@
 *.swo
 *.swn
 *.mem
+*.zip
+data/
 fig/
