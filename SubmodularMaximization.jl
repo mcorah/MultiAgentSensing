@@ -130,9 +130,9 @@ get_element_indices(agents) = map(agents, 1:length(agents)) do agent, agent_inde
   end
 end
 
-include("visualization.jl")
-include("coverage.jl")
-include("probabilistic_coverage.jl")
+include("src/visualization.jl")
+include("src/coverage/coverage.jl")
+include("src/coverage/probabilistic_coverage.jl")
 
 # solvers
 
