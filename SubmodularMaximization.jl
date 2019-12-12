@@ -133,6 +133,7 @@ end
 include("src/visualization.jl")
 include("src/coverage/coverage.jl")
 include("src/coverage/probabilistic_coverage.jl")
+include("src/target_tracking/target_tracking.jl")
 
 # solvers
 
