@@ -70,16 +70,6 @@ function make_agent(agent_specification::CircleAgentSpecification)
   Agent(agent_center, agent_specification.station_radius, sensors)
 end
 
-# visualization
-function circle_points(p; radius=1, scale=1, dth=0.1)
-  scale*hcat(map(x->p+[radius*cos(x);radius*sin(x)], 0:dth:(2*pi)+dth)...)
-end
-
-function plot_circle(p; scale=1, radius=1, color="k", linestyle="-", linewidth=1.0)
-  c = circle_points(p, scale=scale, radius=radius)
-  plot(c[1,:][:], c[2,:][:], color=color, linestyle=linestyle, linewidth=linewidth)
-end
-
 function plot_circle(circle::Circle; x...)
   plot_circle(circle.center; radius = circle.radius, x...)
 end
