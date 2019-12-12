@@ -1,4 +1,5 @@
 using Base.Iterators
+using Statistics
 
 export Grid, get_states, dims, neighbors, random_state, target_dynamics
 
