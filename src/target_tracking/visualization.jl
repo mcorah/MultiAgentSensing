@@ -33,7 +33,6 @@ function plot_robot(state; color=:blue, kwargs...)
            s=object_scale)]
 end
 
-
 function plot_observation(state, range; linestyle="-", kwargs...)
   plot_circle([state...]; radius=range, linestyle=linestyle, kwargs...)
 end
