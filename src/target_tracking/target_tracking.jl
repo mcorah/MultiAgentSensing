@@ -27,3 +27,11 @@ end
 
 random_state(g::Grid) = sample(get_states(g))
 target_dynamics(g::Grid, s) = sample(neighbors(g, s))
+
+# variance of observations is: constant + scaling * norm_squared
+struct RangingSensor
+  variance_constant::Real
+  variance_scaling_factor::Real
+end
+
+variance(r::RangingSensor, distance) = r.variance_constant + r.variance_scaling_factor
