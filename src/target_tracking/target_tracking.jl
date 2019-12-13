@@ -1,7 +1,8 @@
 using Base.Iterators
 using Statistics
 
-export Grid, get_states, dims, neighbors, random_state, target_dynamics
+export Grid, get_states, dims, neighbors, random_state, target_dynamics,
+  RangingSensor, generate_observation
 
 abstract type StateSpace end
 # methods
@@ -34,4 +35,15 @@ struct RangingSensor
   variance_scaling_factor::Real
 end
 
-variance(r::RangingSensor, distance) = r.variance_constant + r.variance_scaling_factor
+variance(r::RangingSensor, distance) =
+  r.variance_constant + r.variance_scaling_factor * distance^2
+
+stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
+
+mean(r::RangingSensor, a, b) = norm(a .- b)
+
+# sample a ranging observation
+function generate_observation(r::RangingSensor, a, b)
+  m = mean(r,a,b)
+  m + randn() * stddev(r, m)
+end
