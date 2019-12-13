@@ -1,3 +1,5 @@
+# Show grid and random walk target trajectory
+
 using SubmodularMaximization
 using PyPlot
 
