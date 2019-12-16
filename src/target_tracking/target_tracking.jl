@@ -1,8 +1,11 @@
 using Base.Iterators
+using Distributions
 using Statistics
 
 export Grid, get_states, dims, neighbors, random_state, target_dynamics,
   RangingSensor, generate_observation
+
+import Distributions.mean
 
 abstract type StateSpace end
 # methods
@@ -51,4 +54,18 @@ mean(r::RangingSensor, a, b) = norm(a .- b)
 function generate_observation(r::RangingSensor, a, b)
   m = mean(r,a,b)
   m + randn() * stddev(r, m)
+end
+
+# Compute likeihoods of observations
+function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
+                             range::Real)
+
+  likelihoods = Array{Float64}(undef, size(target_states))
+  for (ii, target_state) in enumerate(target_states)
+    distance = mean(sensor, robot_state, target_state)
+
+    likelihoods[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
+  end
+
+  likelihoods
 end
