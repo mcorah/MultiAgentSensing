@@ -2,7 +2,7 @@ using StatsBase
 using LinearAlgebra
 using PyCall
 
-ag = pyimport("mpl_toolkits.axes_grid1")
+import Distributions.dim
 
 ####################
 # Sensor definitions
@@ -69,7 +69,7 @@ end
 # Environment model
 ###################
 
-export Gaussian, GaussianMixture, sample_pdf, pdf, visualize_pdf, dim,
+export Gaussian, GaussianMixture, sample_pdf, evaluate_pdf, dim,
 in_limits, sample_reject, standard_mixture, generate_events
 
 pdf_coefficient(covariance) = sqrt((2*pi)^size(covariance,1) * det(covariance))
@@ -124,15 +124,15 @@ function sample_reject(p, limits)
 end
 
 
-function pdf(g::Gaussian, x::Array{T,1}) where T <: Number
+function evaluate_pdf(g::Gaussian, x::Array{T,1}) where T <: Number
   d = x - g.mean
 
   exp(- d' * g.inv_covariance * d / 2)[1] * g.pdf_coefficient
 end
 
-function pdf(gm::GaussianMixture, x::Array{T,1}) where T <: Number
+function evaluate_pdf(gm::GaussianMixture, x::Array{T,1}) where T <: Number
   reduce(zip(gm.weights, gm.components); init=0.0) do value, w_c
-    value + w_c[1] * pdf(w_c[2], x)
+    value + w_c[1] * evaluate_pdf(w_c[2], x)
   end
 end
 
@@ -150,8 +150,8 @@ function visualize_pdf(fun; limits = [0 1; 0 1], n = 1000, cmap = "viridis")
   xlim = limits[1,:]
   ylim = limits[2,:]
 
-  density = [pdf(fun, [x,y]) for x in range(xlim[1], stop=xlim[2], length=n),
-                                 y in range(ylim[1], stop=ylim[2], length=n)]
+  density = [evaluate_pdf(fun, [x,y]) for x in range(xlim[1], stop=xlim[2], length=n),
+                                          y in range(ylim[1], stop=ylim[2], length=n)]
 
   # the density is normalized to be a proper probability density on [0, 1]^2
   # so values can be anywhere on real+, keep zero though

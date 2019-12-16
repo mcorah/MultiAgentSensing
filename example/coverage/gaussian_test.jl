@@ -6,11 +6,11 @@ using LinearAlgebra
 num_sample = 1000
 limits = [0 1; 0 1]
 
-function evaluate_pdf(p, name)
+function analyze_pdf(p, name)
   println("Evaluating $name")
 
   println("PDF at center")
-  @show pdf(p, [0.5, 0.5])
+  @show evaluate_pdf(p, [0.5, 0.5])
 
   figure()
   @time visualize_pdf(p)
@@ -23,13 +23,13 @@ function evaluate_pdf(p, name)
 end
 
 g = Gaussian([0.5, 0.5], Diagonal([0.01, 0.1]))
-evaluate_pdf(g, "Gaussian")
+analyze_pdf(g, "Gaussian")
 
 bimodal_mixture = GaussianMixture([1.0, 1.5],
                                   [Gaussian([0.2, 0.5], Diagonal([0.001, 0.1])),
                                    Gaussian([0.8, 0.5], Diagonal([0.001, 0.1]))])
-evaluate_pdf(bimodal_mixture, "Bimodal Mixture")
+analyze_pdf(bimodal_mixture, "Bimodal Mixture")
 
-evaluate_pdf(standard_mixture(), "Standard Mixture")
+analyze_pdf(standard_mixture(), "Standard Mixture")
 
 nothing

@@ -4,7 +4,7 @@ using Base.Iterators
 
 import Base.<
 
-export  PartitionProblem, PartitionElement, ElementArray, Solution, empty,
+export  PartitionProblem, PartitionElement, ElementArray, Solution,
   get_num_agents, get_element, objective, evaluate_solution, marginal_gain,
   compute_weight, compute_weight_matrix, mean_weight, total_weight,
   extract_triangle, get_element_indices, visualize_solution
