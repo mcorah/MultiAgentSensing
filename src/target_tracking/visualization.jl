@@ -1,6 +1,7 @@
 using PyPlot
 
-export plot_state_space, plot_trajectory, plot_robot, plot_observation
+export plot_state_space, plot_trajectory, plot_robot, plot_observation,
+  visualize_filter
 
 const object_scale = 9^2
 
@@ -35,4 +36,14 @@ end
 
 function plot_observation(state, range; linestyle="-", kwargs...)
   plot_circle([state...]; radius=range, linestyle=linestyle, kwargs...)
+end
+
+# Visualize a discrete histogram filter
+function visualize_filter(filter::Filter)
+  range = get_range(filter)
+
+  # Adjust bounds because indices are in centers
+  limits = [range[1][[1,end]]'; range[2][[1,end]]'] + repeat([-0.5 0.5], 2)
+
+  visualize_pdf(get_data(filter), show_colorbar = false, limits=limits)
 end
