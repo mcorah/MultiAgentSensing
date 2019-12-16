@@ -18,11 +18,16 @@ dims(g::Grid) = (g.width, g.height)
 
 in_bounds(g::Grid, state) = all(x->in(x[1],1:x[2]), zip(state, dims(g)))
 
+# Produces the out neighbors of the transition graph based on a grid model
 function neighbors(g::Grid, state)
   dirs = ((1,0), (0,1))
-  offsets = (-1, 0, 1)
+  offsets = (-1, 1)
 
-  candidates = [state .+ o .* d for d in dirs, o in offsets]
+  candidates = map(product(dirs, offsets)) do (d, o)
+    state .+ o .* d
+  end[:]
+  push!(candidates, state)
+
   filter(x->in_bounds(g, x), candidates)
 end
 
