@@ -1,9 +1,10 @@
 using Base.Iterators
 using Distributions
 using Statistics
+using SparseArrays
 
 export Grid, get_states, dims, neighbors, random_state, target_dynamics,
-  RangingSensor, generate_observation
+  RangingSensor, generate_observation, transition_matrix
 
 import Distributions.mean
 
@@ -18,8 +19,16 @@ struct Grid <: StateSpace
 end
 get_states(g::Grid) = collect(product(1:g.width, 1:g.height))
 dims(g::Grid) = (g.width, g.height)
+num_states(g::Grid) = g.width * g.height
 
 in_bounds(g::Grid, state) = all(x->in(x[1],1:x[2]), zip(state, dims(g)))
+
+state_to_index(g::Grid, s) = s[1] + (g.width) * (s[2] - 1)
+function index_to_state(g::Grid, x)
+  b = div(x-1, g.width) + 1
+  a = x - (b - 1) * g.width
+  (a, b)
+end
 
 # Produces the out neighbors of the transition graph based on a grid model
 function neighbors(g::Grid, state)
@@ -32,6 +41,32 @@ function neighbors(g::Grid, state)
   push!(candidates, state)
 
   filter(x->in_bounds(g, x), candidates)
+end
+
+# returns a left stochastic matrix A so that posterior = A * prior
+function transition_matrix(g::Grid; states = get_states(g))
+  rows = Int64[]
+  columns = Int64[]
+  weights = Float64[]
+
+  # Push uniform transition probabilities for each state
+  for state in states
+    ns = neighbors(g, state)
+
+    source = state_to_index(g, state)
+    weight = 1 / length(ns)
+
+    for neighbor in ns
+      dest = state_to_index(g, neighbor)
+
+      push!(columns, source)
+      push!(rows, dest)
+      push!(weights, weight)
+    end
+  end
+
+  size = length(states)
+  sparse(rows, columns, weights, size, size)
 end
 
 random_state(g::Grid) = sample(get_states(g))
