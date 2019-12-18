@@ -1,4 +1,4 @@
-# Plots target motion and sampled rang observations as circles
+# Plots target motion and sampled range observations as circles
 
 using SubmodularMaximization
 using PyPlot
