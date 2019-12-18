@@ -2,8 +2,8 @@ using PyCall
 using PyPlot
 using Colors
 
-matplotlib2tikz = pyimport("matplotlib2tikz")
-ag = pyimport("mpl_toolkits.axes_grid1")
+const matplotlib2tikz = pyimport("matplotlib2tikz")
+const ag = pyimport("mpl_toolkits.axes_grid1")
 
 ###############
 # visualization

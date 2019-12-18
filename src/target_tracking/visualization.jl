@@ -39,11 +39,11 @@ function plot_observation(state, range; linestyle="-", kwargs...)
 end
 
 # Visualize a discrete histogram filter
-function visualize_filter(filter::Filter)
+function visualize_filter(filter::Filter; show_colorbar = false)
   range = get_range(filter)
 
   # Adjust bounds because indices are in centers
   limits = [range[1][[1,end]]'; range[2][[1,end]]'] + repeat([-0.5 0.5], 2)
 
-  visualize_pdf(get_data(filter), show_colorbar = false, limits=limits)
+  visualize_pdf(get_data(filter), show_colorbar = show_colorbar, limits=limits)
 end
