@@ -3,6 +3,7 @@
 using Histograms
 using LinearAlgebra
 using Base.Iterators
+using StatsBase
 
 import Histograms.generate_prior
 
@@ -13,6 +14,12 @@ export process_update, process_update!, measurement_update, measurement_update!,
 const Filter = Histograms.Histogram
 
 Filter(g::Grid) = Filter((1:g.width, 1:g.height))
+
+# sample from the prior
+function sample_state(grid::Grid, prior::Filter)
+  ind = sample(1:length(get_data(prior)), Weights(get_data(prior)[:]))
+  index_to_state(grid, ind)
+end
 
 # General process update
 function process_update!(prior::Filter, transition_matrix)
