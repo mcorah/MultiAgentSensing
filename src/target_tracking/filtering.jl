@@ -7,7 +7,7 @@ using Base.Iterators
 import Histograms.generate_prior
 
 export process_update, process_update!, measurement_update, measurement_update!,
-  Filter, compute_likelihood
+  Filter, compute_likelihood, get_data
 
 # StatsBase also defines Histogram so we need an alias
 const Filter = Histograms.Histogram

@@ -3,7 +3,7 @@ using Distributions
 using Statistics
 using SparseArrays
 
-export Grid, get_states, dims, neighbors, random_state, target_dynamics,
+export Grid, State, get_states, dims, neighbors, random_state, target_dynamics,
   RangingSensor, generate_observation, transition_matrix
 
 import Distributions.mean
@@ -17,6 +17,7 @@ struct Grid <: StateSpace
   width::Int64
   height::Int64
 end
+const State = Tuple{Int64,Int64}
 get_states(g::Grid) = collect(product(1:g.width, 1:g.height))
 dims(g::Grid) = (g.width, g.height)
 num_states(g::Grid) = g.width * g.height
