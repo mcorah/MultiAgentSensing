@@ -26,10 +26,8 @@ entropy(prior::Filter) = sum(x -> -x * log(2, x), get_data(prior))
 # (after one process update on the prior)
 #
 function finite_horizon_information(grid::Grid, prior::Filter,
-                                  sensor::RangingSensor, trajectories;
-                                  num_samples::Integer = 1000,
-                                  transition_matrix = transition_matrix(grid),
-                                  grid_states = get_states(grid))
+                                    sensor::RangingSensor, trajectories;
+                                    num_samples::Integer = 1000)
   steps = length(trajectories)
 
   if steps == 0
@@ -46,7 +44,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
   process_entropies = Array{Float64}(undef, steps)
   let prior = deepcopy(prior)
     for ii = 1:steps
-      process_update!(prior, transition_matrix)
+      process_update!(prior, transition_matrix(grid))
       process_entropies[ii] = entropy(prior)
     end
   end
@@ -55,9 +53,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
   # entry per time-step
   conditional_entropies =
   mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, trajectories;
-                                  transition_matrix = transition_matrix,
-                                  grid_states = grid_states)
+    sample_finite_horizon_entropy(grid, prior, sensor, trajectories)
   end
 
   (
@@ -75,10 +71,9 @@ end
 #
 # Returns an array of entropies with entries for each step
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
-                                   sensor::RangingSensor,
-                                   trajectories;
-                                   transition_matrix = transition_matrix(grid),
-                                   grid_states = get_states(grid))
+                                       sensor::RangingSensor,
+                                       trajectories)
+
   steps = length(trajectories)
 
   if steps == 0
@@ -103,7 +98,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   for step = 1:steps
     # Update from prior state to the first time-step in the horizon
     target_state = target_dynamics(grid, target_state)
-    process_update!(filter, transition_matrix)
+    process_update!(filter, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
     # the given time-step
@@ -116,7 +111,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                                target_state)
 
 
-      measurement_update!(filter, robot_state, grid_states, sensor,
+      measurement_update!(filter, robot_state, get_states(grid), sensor,
                           range_observation)
     end
 

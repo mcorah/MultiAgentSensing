@@ -26,8 +26,6 @@ xlim([0, grid_size+1])
 ylim([0, grid_size+1])
 
 # precomputation
-grid_states = get_states(grid)
-transition = transition_matrix(grid, states = grid_states)
 histogram_filter = Filter(grid)
 
 for ii = 2:steps
@@ -40,9 +38,9 @@ for ii = 2:steps
   end
 
   # compute filter updates in place for this script
-  process_update!(histogram_filter, transition)
+  process_update!(histogram_filter, transition_matrix(grid))
   for (robot, observation) in zip(robots, range_observations)
-    measurement_update!(histogram_filter, robot, grid_states, sensor,
+    measurement_update!(histogram_filter, robot, get_states(grid), sensor,
                         observation)
   end
 

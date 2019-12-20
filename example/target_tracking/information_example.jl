@@ -13,8 +13,6 @@ grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
 
 # precomputation
-grid_states = get_states(grid)
-transition = transition_matrix(grid, states = grid_states)
 histogram_filter = Filter(grid)
 
 target_state = random_state(grid)
@@ -23,7 +21,7 @@ target_state = random_state(grid)
 for ii = 1:num_observations
   robot_state = random_state(grid)
   range_observation = generate_observation(sensor, robot_state, target_state)
-  measurement_update!(histogram_filter, robot_state, grid_states, sensor,
+  measurement_update!(histogram_filter, robot_state, get_states(grid), sensor,
                       range_observation)
 end
 

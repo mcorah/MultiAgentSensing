@@ -3,8 +3,8 @@ using Distributions
 using Statistics
 using SparseArrays
 
-export Grid, State, get_states, dims, neighbors, random_state, target_dynamics,
-  RangingSensor, generate_observation, transition_matrix
+export Grid, State, get_states, dims, num_states, neighbors, random_state,
+  target_dynamics, RangingSensor, generate_observation, transition_matrix
 
 import Distributions.mean
 
@@ -13,14 +13,27 @@ abstract type StateSpace end
 #
 # get_states
 
+const State = Tuple{Int64,Int64}
 struct Grid <: StateSpace
   width::Int64
   height::Int64
+  states::Array{State}
+  transition_matrix
+
+  # We will precompute some of the large objects that we use frequently
+  function Grid(width, height)
+    x = new(width, height, get_states(width, height),
+            sparse([], [], Float64[], width*height, width*height)
+           )
+    x.transition_matrix .= generate_transition_matrix(x)
+
+    x
+  end
 end
-const State = Tuple{Int64,Int64}
-get_states(g::Grid) = collect(product(1:g.width, 1:g.height))
+get_states(width::Real, height::Real) = collect(product(1:width, 1:height))
+get_states(g::Grid) = g.states
 dims(g::Grid) = (g.width, g.height)
-num_states(g::Grid) = g.width * g.height
+num_states(g::Grid) = length(g.states)
 
 in_bounds(g::Grid, state) = all(x->in(x[1],1:x[2]), zip(state, dims(g)))
 
@@ -44,14 +57,15 @@ function neighbors(g::Grid, state)
   filter(x->in_bounds(g, x), candidates)
 end
 
-# returns a left stochastic matrix A so that posterior = A * prior
-function transition_matrix(g::Grid; states = get_states(g))
+# Returns a left stochastic matrix A so that posterior = A * prior
+# This should only be run while initializing the grid
+function generate_transition_matrix(g::Grid)
   rows = Int64[]
   columns = Int64[]
   weights = Float64[]
 
   # Push uniform transition probabilities for each state
-  for state in states
+  for state in get_states(g)
     ns = neighbors(g, state)
 
     source = state_to_index(g, state)
@@ -66,9 +80,10 @@ function transition_matrix(g::Grid; states = get_states(g))
     end
   end
 
-  size = length(states)
+  size = length(get_states(g))
   sparse(rows, columns, weights, size, size)
 end
+transition_matrix(grid::Grid) = grid.transition_matrix
 
 random_state(g::Grid) = sample(get_states(g))
 target_dynamics(g::Grid, s) = sample(neighbors(g, s))

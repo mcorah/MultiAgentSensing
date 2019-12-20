@@ -26,7 +26,7 @@ if real_ns != Set(ns)
   println("Neighbors do not match")
 end
 
-@show transition = Matrix(transition_matrix(grid, states = grid_states))
+@show transition = Matrix(transition_matrix(grid))
 
 # true 4x4 transition matrix for a 2x2 grid noting that the indices are
 # [1, 3]

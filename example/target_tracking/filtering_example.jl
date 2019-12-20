@@ -21,9 +21,6 @@ plot_state_space(grid)
 xlim([0, grid_size+1])
 ylim([0, grid_size+1])
 
-# precomputation
-grid_states = get_states(grid)
-transition = transition_matrix(grid, states = grid_states)
 histogram_filter = Filter(grid)
 
 for ii = 2:steps
@@ -34,8 +31,8 @@ for ii = 2:steps
   range_observation = generate_observation(sensor, robot_state, state)
 
   # compute filter updates in place for this script
-  process_update!(histogram_filter, transition)
-  measurement_update!(histogram_filter, robot_state, grid_states, sensor,
+  process_update!(histogram_filter, transition_matrix(grid))
+  measurement_update!(histogram_filter, robot_state, get_states(grid), sensor,
                       range_observation)
 
   plots=[]
