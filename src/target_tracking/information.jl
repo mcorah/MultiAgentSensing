@@ -1,6 +1,7 @@
 using LinearAlgebra
 using Base.Iterators
 using Statistics
+using Random
 
 export finite_horizon_information, entropy
 
@@ -27,7 +28,8 @@ entropy(prior::Filter) = sum(x -> -x * log(2, x), get_data(prior))
 #
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor, trajectories;
-                                    num_samples::Integer = 1000)
+                                    num_samples::Integer = 1000,
+                                    rng = Random.GLOBAL_RNG)
   steps = length(trajectories)
 
   if steps == 0
@@ -53,7 +55,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
   # entry per time-step
   conditional_entropies =
   mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, trajectories)
+    sample_finite_horizon_entropy(grid, prior, sensor, trajectories; rng = rng)
   end
 
   (
@@ -72,7 +74,7 @@ end
 # Returns an array of entropies with entries for each step
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
-                                       trajectories)
+                                       trajectories; rng = rng)
 
   steps = length(trajectories)
 
@@ -86,7 +88,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
     return 0
   end
 
-  target_state = sample_state(grid, prior)
+  target_state = sample_state(grid, prior; rng = rng)
 
   # Simulate trajectories and compute updates
   #
@@ -108,7 +110,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
       robot_state = trajectory[step]
 
       range_observation = generate_observation(sensor, robot_state,
-                                               target_state)
+                                               target_state; rng = rng)
 
 
       measurement_update!(filter, robot_state, get_states(grid), sensor,

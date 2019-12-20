@@ -2,6 +2,7 @@ using Base.Iterators
 using Distributions
 using Statistics
 using SparseArrays
+using Random
 
 export Grid, State, get_states, dims, num_states, neighbors, random_state,
   target_dynamics, RangingSensor, generate_observation, transition_matrix
@@ -85,8 +86,8 @@ function generate_transition_matrix(g::Grid)
 end
 transition_matrix(grid::Grid) = grid.transition_matrix
 
-random_state(g::Grid) = sample(get_states(g))
-target_dynamics(g::Grid, s) = sample(neighbors(g, s))
+random_state(g::Grid; rng=Random.GLOBAL_RNG) = sample(rng, get_states(g))
+target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG) = sample(rng, neighbors(g, s))
 
 # variance of observations is: constant + scaling * norm_squared
 struct RangingSensor
@@ -102,9 +103,9 @@ stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
 mean(r::RangingSensor, a, b) = norm(a .- b)
 
 # sample a ranging observation
-function generate_observation(r::RangingSensor, a, b)
+function generate_observation(r::RangingSensor, a, b; rng=Random.GLOBAL_RNG)
   m = mean(r,a,b)
-  m + randn() * stddev(r, m)
+  m + randn(rng) * stddev(r, m)
 end
 
 # Compute likeihoods of observations
