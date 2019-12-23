@@ -31,17 +31,18 @@ function finite_horizon_information(grid::Grid, prior::Filter,
                                     num_samples::Integer = 1000,
                                     rng = Random.GLOBAL_RNG)
   if length(trajectories) == 0
-    println("No input trajectories")
+    error("No input trajectories")
   end
 
   steps = length(trajectories[1])
 
   if steps == 0
-    println("Information horizon is zero")
+    error("Information horizon is zero")
   end
 
   if !all(length.(trajectories) .== steps)
-    println("Information trajectory lengths do not match")
+    @show trajectories
+    error("Information trajectory lengths do not match")
   end
 
   # Compute entropy over horizon
@@ -77,17 +78,18 @@ end
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
                                        trajectories; rng = rng)
+  if length(trajectories) == 0
+    error("No input trajectories")
+  end
 
-  steps = length(trajectories)
+  steps = length(trajectories[1])
 
   if steps == 0
-    println("Information horizon is zero")
-    return 0
+    error("Information horizon is zero")
   end
 
   if !all(length.(trajectories) .== steps)
-    println("Information trajectory lengths do not match")
-    return 0
+    error("Information trajectory lengths do not match")
   end
 
   target_state = sample_state(grid, prior; rng = rng)
