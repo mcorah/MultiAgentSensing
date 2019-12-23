@@ -1,7 +1,7 @@
 using PyPlot
 
-export plot_state_space, plot_trajectory, plot_robot, plot_observation,
-  visualize_filter
+export plot_state_space, plot_states, plot_trajectory, plot_robot,
+  plot_observation, visualize_filter
 
 const object_scale = 9^2
 
@@ -11,6 +11,13 @@ function plot_state_space(g::Grid; color=:k)
   ys = [x[2] for x in states]
 
   scatter(xs, ys, color=color)
+end
+
+function plot_states(states::Array{State}; kwargs...)
+  xs = [x[1] for x in states]
+  ys = [x[2] for x in states]
+
+  [plot(xs, ys, kwargs...)]
 end
 
 function plot_trajectory(states; color=:red)
