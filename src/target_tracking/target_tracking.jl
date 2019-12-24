@@ -5,7 +5,8 @@ using SparseArrays
 using Random
 
 export Grid, State, get_states, dims, num_states, neighbors, random_state,
-  target_dynamics, RangingSensor, generate_observation, transition_matrix
+  target_dynamics, RangingSensor, generate_observation, compute_likelihoods,
+  transition_matrix
 
 import Distributions.mean
 
