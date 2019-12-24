@@ -27,7 +27,7 @@ function process_update!(prior::Filter, transition_matrix)
   get_data(prior) .= get_data(process_update(prior, transition_matrix))
 end
 function process_update(prior::Filter, transition_matrix)
-  posterior = deepcopy(prior)
+  posterior = Filter(prior)
 
   # Perform the update
   @views get_data(posterior)[:] = transition_matrix * get_data(prior)[:]
@@ -38,7 +38,7 @@ end
 
 # General measurement update
 function measurement_update(prior::Filter, xs...)
-  posterior = deepcopy(prior)
+  posterior = Filter(prior)
   measurement_update!(posterior, xs...)
 end
 function measurement_update!(prior::Filter, likelihoods::Array{Float64})

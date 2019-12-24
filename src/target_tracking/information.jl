@@ -46,9 +46,9 @@ function finite_horizon_information(grid::Grid, prior::Filter,
     error("Information trajectory lengths do not match")
   end
 
-  # Compute entropy over horizon
+  # Compute entropy over horizon (note that we duplicate the filter)
   process_entropies = Array{Float64}(undef, steps)
-  let prior = deepcopy(prior)
+  let prior = Filter(prior)
     for ii = 1:steps
       process_update!(prior, transition_matrix(grid))
       process_entropies[ii] = entropy(prior)
@@ -100,7 +100,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   # Sample ranging observations
   # (by also sampling sampling target trajectories)
   # Note: we will reuse samples accross the horizon
-  filter = deepcopy(prior)
+  filter = Filter(prior)
   conditional_entropies = Array{Float64}(undef, steps)
   for step = 1:steps
     # Update from prior state to the first time-step in the horizon
