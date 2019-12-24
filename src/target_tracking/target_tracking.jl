@@ -19,8 +19,8 @@ const State = Tuple{Int64,Int64}
 struct Grid <: StateSpace
   width::Int64
   height::Int64
-  states::Array{State}
-  transition_matrix
+  states::Array{State,2}
+  transition_matrix::SparseMatrixCSC{Float64,Int64}
 
   # We will precompute some of the large objects that we use frequently
   function Grid(width, height)
@@ -92,8 +92,8 @@ target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG) = sample(rng, neighbors(g, s)
 
 # variance of observations is: constant + scaling * norm_squared
 struct RangingSensor
-  variance_constant::Real
-  variance_scaling_factor::Real
+  variance_constant::Float64
+  variance_scaling_factor::Float64
 end
 
 variance(r::RangingSensor, distance) =
