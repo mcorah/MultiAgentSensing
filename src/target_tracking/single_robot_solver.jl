@@ -121,5 +121,9 @@ function POMDPs.gen(model::SingleRobotTargetTrackingProblem,
     reward = sample_reward(model, state_trajectory(new_state); rng = rng)
   end
 
+  if isnan(reward)
+    error("Information reward (", reward, ") is NaN")
+  end
+
   (sp=new_state , r=reward)
 end
