@@ -3,9 +3,10 @@ using POMDPs
 using MCTS
 
 using Statistics
+using Profile
 using ProfileView
 
-default_steps = 20
+default_steps = 5
 grid_size = 10
 horizon = 2
 iterations = 100
@@ -57,6 +58,7 @@ end
 
 @profview run_test(2)
 ProfileView.closeall()
+Profile.init(n=10000000)
 @profview run_test(default_steps)
 
 nothing
