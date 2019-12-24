@@ -38,12 +38,12 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   grid::Grid
   sensor::RangingSensor
   horizon::Integer
-  target_filters::Vector{Filter}
+  target_filters::Vector{Filter{Int64}}
   trajectories::Vector{Vector{State}}
 end
 function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                           horizon::Integer,
-                                          filters::Vector{Filter})
+                                          filters::Vector{Filter{Int64}})
   SingleRobotTargetTrackingProblem(grid, sensor, horizon, filters,
                                    Vector{State}[])
 end
