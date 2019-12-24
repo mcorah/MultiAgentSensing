@@ -5,8 +5,9 @@ using Random
 
 export finite_horizon_information, entropy
 
-entropy(prior::Filter) = sum(x -> -x * log(2, x), get_data(prior))
+nan_to_zero(x::Float64) = ifelse(isnan(x), 0.0, x)
 
+entropy(prior::Filter) = sum(x -> nan_to_zero(-x * log(2, x)), get_data(prior))
 
 # Sum mutual information objective as by Ryan and Hedrick.
 # Computes:
