@@ -13,7 +13,7 @@ grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
 
 # precomputation
-histogram_filter = Filter(grid)
+histogram_filter = Filter(grid, target_state)
 
 target_state = random_state(grid)
 

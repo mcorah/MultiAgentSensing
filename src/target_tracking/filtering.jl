@@ -16,6 +16,14 @@ const Filter = Histograms.Histogram
 
 Filter(g::Grid) = Filter((1:g.width, 1:g.height))
 
+# Constructor with known initial state
+function Filter(g::Grid, initial_state::State)
+  data = zeros(dims(g))
+  data[initial_state...] = 1
+
+  Filter((1:g.width, 1:g.height), data)
+end
+
 # sample from the prior
 function sample_state(grid::Grid, prior::Filter; rng=Random.GLOBAL_RNG)
   ind = sample(rng, 1:length(get_data(prior)), Weights(get_data(prior)[:]))

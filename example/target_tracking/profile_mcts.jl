@@ -25,7 +25,7 @@ function run_test(steps)
   robot_states = Array{State}(undef, steps)
   robot_states[1] = robot_state
 
-  histogram_filter = Filter(grid)
+  histogram_filter = Filter(grid, target_state)
 
   problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
                                              [histogram_filter])
