@@ -7,7 +7,14 @@ export finite_horizon_information, entropy
 
 nan_to_zero(x::Float64) = ifelse(isnan(x), 0.0, x)
 
-entropy(prior::Filter) = sum(x -> nan_to_zero(-x * log(2, x)), get_data(prior))
+entropy_sum(prior::Filter) = sum(x -> nan_to_zero(-x * log(2, x)), get_data(prior))
+function entropy(prior::Filter)
+  sum = 0.0
+  @inbounds @simd for x = get_data(prior)
+    sum += nan_to_zero(-x * log(2, x))
+  end
+  sum
+end
 
 # Sum mutual information objective as by Ryan and Hedrick.
 # Computes:
