@@ -38,7 +38,7 @@ for ii = 1:length(information)
   state = SubmodularMaximization.index_to_state(grid, ii)
 
   information[ii] = finite_horizon_information(grid, histogram_filter, sensor,
-                                               [[state]]).reward
+                                               [state]).reward
 end
 
 # Visualize the information gain

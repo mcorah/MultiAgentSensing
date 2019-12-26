@@ -40,13 +40,14 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   sensor::RangingSensor
   horizon::Integer
   target_filters::Vector{Filter{Int64}}
-  trajectories::Vector{Vector{State}}
-end
-function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
-                                          horizon::Integer,
-                                          filters::Vector{Filter{Int64}})
-  SingleRobotTargetTrackingProblem(grid, sensor, horizon, filters,
-                                   Vector{State}[])
+  prior_trajectories::Vector{Vector{State}}
+
+  function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
+                                            horizon::Integer,
+                                            filters::Vector{Filter{Int64}},
+                                            prior_trajectories = Vector{State}[])
+    new(grid, sensor, horizon, filters, prior_trajectories)
+  end
 end
 
 function generate_solver(depth;
@@ -110,14 +111,12 @@ end
 # sample reward for all targets and sum
 function sample_reward(model::SingleRobotTargetTrackingProblem,
                        trajectory::Vector{State}; kwargs...)
-  if !isempty(model.trajectories)
-    println(stderr, "Planning for multiple robots has not yet been implemented")
-  end
 
-  trajectories = vcat(model.trajectories, [trajectory])
+  # Compute reward conditional on prior selections (trajectories)
   sum(model.target_filters) do filter
     finite_horizon_information(model.grid, filter, model.sensor,
-                               trajectories; kwargs...).reward
+                               trajectory, model.prior_trajectories;
+                               kwargs...).reward
   end
 end
 
