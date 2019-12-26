@@ -58,7 +58,11 @@ for ii = 2:steps
   append!(plots, plot_trajectory(target_states[1:ii]))
   append!(plots, visualize_filter(histogram_filter))
 
-  readline()
+  line = readline()
+
+  if line == "q"
+    break
+  end
 
   if ii < steps
     foreach(x->x.remove(), plots)
