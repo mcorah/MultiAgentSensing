@@ -3,6 +3,8 @@ using POMDPs
 using MCTS
 using PyPlot
 
+close()
+
 steps = 100
 grid_size = 10
 horizon = 2
