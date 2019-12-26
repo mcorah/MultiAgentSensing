@@ -13,13 +13,11 @@ sensor = RangingSensor(0.5^2, 0.1^2)
 histogram_filter = Filter(grid)
 
 for horizon = 1:2
-  solver = generate_solver(horizon, n_iterations = iterations)
+  problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
+                                             [histogram_filter])
 
-  mdp = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
-                                         [histogram_filter])
-  policy = solve(solver, mdp)
-
-  @show a = action(policy, MDPState(robot_state))
+  @show a = solve_single_robot(problem, robot_state,
+                               n_iterations = iterations)
 
   if !in(a, neighbors(grid, robot_state))
     println("Action is not valid")

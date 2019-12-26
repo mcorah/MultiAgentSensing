@@ -7,7 +7,8 @@ using POMDPs
 import POMDPs.isterminal
 import POMDPs.actions
 
-export SingleRobotTargetTrackingProblem, MDPState, generate_solver, isterminal
+export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
+  solve_single_robot, isterminal
 
 const default_num_iterations = 1000
 const default_exploration_constant = 10.0
@@ -57,6 +58,17 @@ function generate_solver(depth;
                       exploration_constant = exploration_constant,
                       enable_tree_vis = false
                      )
+end
+
+# Return the next state for the robot
+function solve_single_robot(problem::SingleRobotTargetTrackingProblem,
+                            state::State;
+                            n_iterations = default_exploration_constant,
+                            exploration_constant = default_exploration_constant)
+  solver = generate_solver(horizon(problem), n_iterations = n_iterations,
+                           exploration_constant = exploration_constant)
+  policy = solve(solver, problem)
+  action(policy, MDPState(state))
 end
 
 horizon(x::SingleRobotTargetTrackingProblem) = x.horizon

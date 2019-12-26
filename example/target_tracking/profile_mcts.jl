@@ -27,17 +27,16 @@ function run_test(steps)
 
   histogram_filter = Filter(grid)
 
-  solver = generate_solver(horizon, n_iterations = iterations)
+  problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
+                                             [histogram_filter])
 
   time = @elapsed for ii = 2:steps
     println("Step: ", ii)
 
     # Before the target moves and the robot receives a measurement, execute robot
     # dynamics
-    mdp = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
-                                           [histogram_filter])
-    policy = solve(solver, mdp)
-    robot_state = action(policy, MDPState(robot_state))
+    robot_state = solve_single_robot(problem, robot_state,
+                                     n_iterations = iterations)
     robot_states[ii] = robot_state
 
     # Then update the target and sample the observation
