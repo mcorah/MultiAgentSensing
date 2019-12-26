@@ -24,23 +24,20 @@ end
 
 # General process update
 function process_update!(prior::Filter, transition_matrix)
-  get_data(prior) .= get_data(process_update(prior, transition_matrix))
+  @inbounds @views get_data(prior)[:] .= transition_matrix * get_data(prior)[:]
+
+  prior
 end
 function process_update(prior::Filter, transition_matrix)
+  # Copy
   posterior = Filter(prior)
 
   # Perform the update
-  @views get_data(posterior)[:] = transition_matrix * get_data(prior)[:]
-
-  posterior
+  process_update!(posterior, transition_matrix)
 end
 
 
 # General measurement update
-function measurement_update(prior::Filter, xs...)
-  posterior = Filter(prior)
-  measurement_update!(posterior, xs...)
-end
 function measurement_update!(prior::Filter, likelihoods::Array{Float64})
   data = get_data(prior)
 
@@ -51,6 +48,13 @@ function measurement_update!(prior::Filter, likelihoods::Array{Float64})
   data .= data ./ sum(data)
 
   prior
+end
+function measurement_update(prior::Filter, xs...)
+  # Copy
+  posterior = Filter(prior)
+
+  # Perform the update
+  measurement_update!(posterior, xs...)
 end
 
 # compute measurement update by computing likelihood
