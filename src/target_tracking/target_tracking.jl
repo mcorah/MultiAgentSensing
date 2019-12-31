@@ -47,16 +47,25 @@ function index_to_state(g::Grid, x)
 end
 
 # Produces the out neighbors of the transition graph based on a grid model
-function neighbors(g::Grid, state)
+# We preallocate the array with the max number of neighbors
+neighbors_buffer() = Vector{State}(undef, 5)
+function neighbors(g::Grid, state; buffer=neighbors_buffer())
   dirs = ((1,0), (0,1))
   offsets = (-1, 1)
 
-  candidates = map(product(dirs, offsets)) do (d, o)
-    state .+ o .* d
-  end[:]
-  push!(candidates, state)
+  resize!(buffer, 0)
 
-  filter(x->in_bounds(g, x), candidates)
+  for dir in dirs, offset in offsets
+    candidate = state .+ offset .* dir
+
+    if in_bounds(g, candidate)
+      push!(buffer, candidate)
+    end
+  end
+
+  push!(buffer, state)
+
+  buffer
 end
 
 # Returns a left stochastic matrix A so that posterior = A * prior
@@ -88,7 +97,11 @@ end
 transition_matrix(grid::Grid) = grid.transition_matrix
 
 random_state(g::Grid; rng=Random.GLOBAL_RNG) = sample(rng, get_states(g))
-target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG) = sample(rng, neighbors(g, s))
+function target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG,
+                         buffer=neighbors_buffer())
+
+  sample(rng, neighbors(g, s, buffer=buffer))
+end
 
 # variance of observations is: constant + scaling * norm_squared
 struct RangingSensor
@@ -109,20 +122,22 @@ function generate_observation(r::RangingSensor, a, b; rng=Random.GLOBAL_RNG)
   m + randn(rng) * stddev(r, m)
 end
 
-# Compute likeihoods of observations
 const normal_lookup_table = NormalLookup(increment=0.001, max=4.0)
+
+likelihoods_buffer(states) = Array{Float64}(undef, size(states))
 
 # Computes (non-normalize) likelihoods of data
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
-                             range::Real)
+                             range::Real;
+                             buffer = likelihoods_buffer(target_states)
+                            )
 
-  likelihoods = Array{Float64}(undef, size(target_states))
   for (ii, target_state) in enumerate(target_states)
     distance = mean(sensor, robot_state, target_state)
 
-    likelihoods[ii] = evaluate(normal_lookup_table, error=range - distance,
+    buffer[ii] = evaluate(normal_lookup_table, error=range - distance,
                                stddev=stddev(sensor, distance))
   end
 
-  likelihoods
+  buffer
 end

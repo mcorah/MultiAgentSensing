@@ -7,7 +7,8 @@ using POMDPs
 import POMDPs.isterminal
 import POMDPs.actions
 
-export SingleRobotTargetTrackingProblem, MDPState, generate_solver, isterminal
+export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
+  solve_single_robot, isterminal
 
 const default_num_iterations = 1000
 const default_exploration_constant = 10.0
@@ -39,13 +40,14 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   sensor::RangingSensor
   horizon::Integer
   target_filters::Vector{Filter{Int64}}
-  trajectories::Vector{Vector{State}}
-end
-function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
-                                          horizon::Integer,
-                                          filters::Vector{Filter{Int64}})
-  SingleRobotTargetTrackingProblem(grid, sensor, horizon, filters,
-                                   Vector{State}[])
+  prior_trajectories::Vector{Vector{State}}
+
+  function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
+                                            horizon::Integer,
+                                            filters::Vector{Filter{Int64}},
+                                            prior_trajectories = Vector{State}[])
+    new(grid, sensor, horizon, filters, prior_trajectories)
+  end
 end
 
 function generate_solver(depth;
@@ -57,6 +59,17 @@ function generate_solver(depth;
                       exploration_constant = exploration_constant,
                       enable_tree_vis = false
                      )
+end
+
+# Return the next state for the robot
+function solve_single_robot(problem::SingleRobotTargetTrackingProblem,
+                            state::State;
+                            n_iterations = default_exploration_constant,
+                            exploration_constant = default_exploration_constant)
+  solver = generate_solver(horizon(problem), n_iterations = n_iterations,
+                           exploration_constant = exploration_constant)
+  policy = solve(solver, problem)
+  action(policy, MDPState(state))
 end
 
 horizon(x::SingleRobotTargetTrackingProblem) = x.horizon
@@ -98,14 +111,12 @@ end
 # sample reward for all targets and sum
 function sample_reward(model::SingleRobotTargetTrackingProblem,
                        trajectory::Vector{State}; kwargs...)
-  if !isempty(model.trajectories)
-    println(stderr, "Planning for multiple robots has not yet been implemented")
-  end
 
-  trajectories = vcat(model.trajectories, [trajectory])
+  # Compute reward conditional on prior selections (trajectories)
   sum(model.target_filters) do filter
     finite_horizon_information(model.grid, filter, model.sensor,
-                               trajectories; kwargs...).reward
+                               trajectory, model.prior_trajectories;
+                               kwargs...).reward
   end
 end
 

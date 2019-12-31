@@ -12,10 +12,10 @@ num_observations = 3
 grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
 
-# precomputation
-histogram_filter = Filter(grid)
-
 target_state = random_state(grid)
+
+# precomputation
+histogram_filter = Filter(grid, target_state)
 
 # Create some fake observations and update the filter
 for ii = 1:num_observations
@@ -38,7 +38,7 @@ for ii = 1:length(information)
   state = SubmodularMaximization.index_to_state(grid, ii)
 
   information[ii] = finite_horizon_information(grid, histogram_filter, sensor,
-                                               [[state]]).reward
+                                               [state]).reward
 end
 
 # Visualize the information gain

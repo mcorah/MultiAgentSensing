@@ -3,9 +3,9 @@ using POMDPs
 using MCTS
 using PyPlot
 
-close()
+pygui(false)
 
-steps = 100
+steps = 20
 grid_size = 10
 horizon = 2
 iterations = 100
@@ -53,18 +53,11 @@ for ii = 2:steps
 
   plots=[]
   append!(plots, plot_trajectory(robot_states[1:ii], color=:blue))
-  #append!(plots, plot_states(robot_states), color=:blue)
   append!(plots, plot_observation(robot_state, range_observation, color=:blue))
   append!(plots, plot_trajectory(target_states[1:ii]))
   append!(plots, visualize_filter(histogram_filter))
 
-  line = readline()
+  savefig(string("fig/single_robot_gif_", ii, ".png"))
 
-  if line == "q"
-    break
-  end
-
-  if ii < steps
-    foreach(x->x.remove(), plots)
-  end
+  foreach(x->x.remove(), plots)
 end

@@ -35,44 +35,46 @@ end
 # (after one process update on the prior)
 #
 function finite_horizon_information(grid::Grid, prior::Filter,
-                                    sensor::RangingSensor, trajectories;
+                                    sensor::RangingSensor,
+                                    trajectory,
+                                    prior_trajectories = Vector{State}[];
                                     num_samples::Integer = 1000,
                                     rng = Random.GLOBAL_RNG)
-  if length(trajectories) == 0
-    error("No input trajectories")
-  end
 
-  steps = length(trajectories[1])
+  steps = length(trajectory)
 
   if steps == 0
     error("Information horizon is zero")
   end
 
-  if !all(length.(trajectories) .== steps)
-    @show trajectories
+  if !all(length.(prior_trajectories) .== steps)
+    @show prior_trajectories
     error("Information trajectory lengths do not match")
   end
 
-  # Compute entropy over horizon (note that we duplicate the filter)
-  process_entropies = Array{Float64}(undef, steps)
-  let prior = Filter(prior)
-    for ii = 1:steps
-      process_update!(prior, transition_matrix(grid))
-      process_entropies[ii] = entropy(prior)
-    end
+  # Compute entropies over the horizon, conditional on the prior trajectories
+  # to compute the entropies:
+  #
+  # sum_i=1^t H(Xi|Y_{prior_trajectories}, belief)
+  prior_entropies = mean(1:num_samples) do _
+    sample_finite_horizon_entropy(grid, prior, sensor, prior_trajectories,
+                                  steps, rng = rng)
   end
 
-  # Compute conditional entropies over the horizon (produces an array with one
-  # entry per time-step
-  conditional_entropies =
-  mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, trajectories; rng = rng)
+  # Compute entropies over the horizon conditional on the input trajectory
+  # (produces an array with one entry per time-step) to compute entropies:
+  #
+  # sum_i=1^t H(Xi|Y_{all_trajectories}, belief)
+  all_trajectories = vcat(prior_trajectories, [trajectory])
+  conditional_entropies = mean(1:num_samples) do _
+    sample_finite_horizon_entropy(grid, prior, sensor, all_trajectories,
+                                  steps, rng = rng)
   end
 
   (
-   reward = sum(process_entropies - conditional_entropies),
-   mutual_information = process_entropies - conditional_entropies,
-   process_entropies = process_entropies,
+   reward = sum(prior_entropies - conditional_entropies),
+   mutual_information = prior_entropies - conditional_entropies,
+   prior_entropies = prior_entropies,
    conditional_entropies = conditional_entropies
   )
 end
@@ -85,18 +87,16 @@ end
 # Returns an array of entropies with entries for each step
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
-                                       trajectories; rng = rng)
-  if length(trajectories) == 0
-    error("No input trajectories")
-  end
-
-  steps = length(trajectories[1])
+                                       trajectories,
+                                       steps; rng = Random.GLOBAL_RNG)
 
   if steps == 0
     error("Information horizon is zero")
   end
 
   if !all(length.(trajectories) .== steps)
+    @show steps
+    @show trajectories
     error("Information trajectory lengths do not match")
   end
 
@@ -109,9 +109,13 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   # Note: we will reuse samples accross the horizon
   filter = Filter(prior)
   conditional_entropies = Array{Float64}(undef, steps)
+
+  neighbor_buffer = neighbors_buffer()
+  likelihood_buffer = likelihoods_buffer(get_states(grid))
+
   for step = 1:steps
     # Update from prior state to the first time-step in the horizon
-    target_state = target_dynamics(grid, target_state)
+    target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
     process_update!(filter, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
@@ -126,7 +130,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
 
 
       measurement_update!(filter, robot_state, get_states(grid), sensor,
-                          range_observation)
+                          range_observation, buffer=likelihood_buffer)
     end
 
     conditional_entropies[step] = entropy(filter)

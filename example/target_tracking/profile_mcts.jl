@@ -6,7 +6,7 @@ using Statistics
 using Profile
 using ProfileView
 
-default_steps = 5
+default_steps = 2
 grid_size = 10
 horizon = 2
 iterations = 100
@@ -25,19 +25,18 @@ function run_test(steps)
   robot_states = Array{State}(undef, steps)
   robot_states[1] = robot_state
 
-  histogram_filter = Filter(grid)
+  histogram_filter = Filter(grid, target_state)
 
-  solver = generate_solver(horizon, n_iterations = iterations)
+  problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
+                                             [histogram_filter])
 
   time = @elapsed for ii = 2:steps
     println("Step: ", ii)
 
     # Before the target moves and the robot receives a measurement, execute robot
     # dynamics
-    mdp = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
-                                           [histogram_filter])
-    policy = solve(solver, mdp)
-    robot_state = action(policy, MDPState(robot_state))
+    robot_state = solve_single_robot(problem, robot_state,
+                                     n_iterations = iterations)
     robot_states[ii] = robot_state
 
     # Then update the target and sample the observation
@@ -56,9 +55,17 @@ function run_test(steps)
   println("  ", time / (steps - 1), " seconds per step")
 end
 
-@profview run_test(2)
+Profile.init(n=1000000)
+#@profview run_test(2)
+@profile run_test(2)
+#run_test(2)
+
+Profile.clear()
 ProfileView.closeall()
-Profile.init(n=10000000)
-@profview run_test(default_steps)
+Profile.init(n=1000000)
+#@profview run_test(default_steps)
+#run_test(default_steps)
+@profile run_test(default_steps)
+Profile.print(mincount=100)
 
 nothing
