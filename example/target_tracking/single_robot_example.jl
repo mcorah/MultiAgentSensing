@@ -7,7 +7,7 @@ close()
 
 steps = 100
 grid_size = 10
-horizon = 2
+horizon = 3
 iterations = 100
 
 grid = Grid(grid_size, grid_size)
