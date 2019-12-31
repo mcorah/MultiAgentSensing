@@ -57,16 +57,16 @@ function measurement_update!(prior::Filter, likelihoods::Array{Float64})
 
   prior
 end
-function measurement_update(prior::Filter, xs...)
+function measurement_update(prior::Filter, xs...; kwargs...)
   # Copy
   posterior = Filter(prior)
 
   # Perform the update
-  measurement_update!(posterior, xs...)
+  measurement_update!(posterior, xs...; kwargs...)
 end
 
 # compute measurement update by computing likelihood
-function measurement_update!(prior::Filter, xs...)
-  likelihoods = compute_likelihoods(xs...)
+function measurement_update!(prior::Filter, xs...; kwargs...)
+  likelihoods = compute_likelihoods(xs...; kwargs...)
   measurement_update!(prior, likelihoods)
 end
