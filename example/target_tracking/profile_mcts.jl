@@ -6,7 +6,7 @@ using Statistics
 using Profile
 using ProfileView
 
-default_steps = 5
+default_steps = 2
 grid_size = 10
 horizon = 2
 iterations = 100
@@ -55,9 +55,17 @@ function run_test(steps)
   println("  ", time / (steps - 1), " seconds per step")
 end
 
-@profview run_test(2)
+Profile.init(n=1000000)
+#@profview run_test(2)
+@profile run_test(2)
+#run_test(2)
+
+Profile.clear()
 ProfileView.closeall()
-Profile.init(n=10000000)
-@profview run_test(default_steps)
+Profile.init(n=1000000)
+#@profview run_test(default_steps)
+#run_test(default_steps)
+@profile run_test(default_steps)
+Profile.print(mincount=100)
 
 nothing
