@@ -47,16 +47,25 @@ function index_to_state(g::Grid, x)
 end
 
 # Produces the out neighbors of the transition graph based on a grid model
-function neighbors(g::Grid, state)
+# We preallocate the array with the max number of neighbors
+neighbors_buffer() = Vector{State}(undef, 5)
+function neighbors(g::Grid, state; buffer=neighbors_buffer())
   dirs = ((1,0), (0,1))
   offsets = (-1, 1)
 
-  candidates = map(product(dirs, offsets)) do (d, o)
-    state .+ o .* d
-  end[:]
-  push!(candidates, state)
+  resize!(buffer, 0)
 
-  filter(x->in_bounds(g, x), candidates)
+  for dir in dirs, offset in offsets
+    candidate = state .+ offset .* dir
+
+    if in_bounds(g, candidate)
+      push!(buffer, candidate)
+    end
+  end
+
+  push!(buffer, state)
+
+  buffer
 end
 
 # Returns a left stochastic matrix A so that posterior = A * prior
@@ -88,7 +97,11 @@ end
 transition_matrix(grid::Grid) = grid.transition_matrix
 
 random_state(g::Grid; rng=Random.GLOBAL_RNG) = sample(rng, get_states(g))
-target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG) = sample(rng, neighbors(g, s))
+function target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG,
+                         buffer=neighbors_buffer())
+
+  sample(rng, neighbors(g, s, buffer=buffer))
+end
 
 # variance of observations is: constant + scaling * norm_squared
 struct RangingSensor
