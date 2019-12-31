@@ -2,7 +2,7 @@ using PyCall
 using PyPlot
 using Colors
 
-const matplotlib2tikz = pyimport("matplotlib2tikz")
+const tikzplotlib = pyimport("tikzplotlib")
 const ag = pyimport("mpl_toolkits.axes_grid1")
 
 ###############
@@ -13,7 +13,7 @@ export to_file, save_fig, make_tight_colorbar, visualize_pdf
 to_file(s) = replace(lowercase(s), " " => "_")
 
 function save_fig(fig_path, title)
-  matplotlib2tikz.save("$(fig_path)/$(to_file(title)).tex",
+  tikzplotlib.save("$(fig_path)/$(to_file(title)).tex",
                        figureheight="\\figureheight",
                        figurewidth="\\figurewidth",
                        show_info=false)
