@@ -4,15 +4,16 @@ using MCTS
 
 using Statistics
 using Profile
-using ProfileView
 
-default_steps = 2
+default_steps = 5
 grid_size = 10
 horizon = 2
 iterations = 100
 
-function run_test(steps)
-  println("Running test: ", steps, " steps")
+function run_test(steps; print=true)
+  ifprint(xs...) = if print println(xs...) end
+
+  ifprint("Running test: ", steps, " steps")
   grid = Grid(grid_size, grid_size)
   sensor = RangingSensor(0.5^2, 0.1^2)
 
@@ -31,7 +32,7 @@ function run_test(steps)
                                              [histogram_filter])
 
   time = @elapsed for ii = 2:steps
-    println("Step: ", ii)
+    ifprint("Step: ", ii)
 
     # Before the target moves and the robot receives a measurement, execute robot
     # dynamics
@@ -51,21 +52,23 @@ function run_test(steps)
                         range_observation)
   end
 
-  println("Test duration: ", time, " seconds")
-  println("  ", time / (steps - 1), " seconds per step")
+  ifprint("Test duration: ", time, " seconds")
+  ifprint("  ", time / (steps - 1), " seconds per step")
 end
 
+# Show timing without profiling
+run_test(2)
+
+run_test(default_steps)
+
+# Run the profiler
 Profile.init(n=1000000)
-#@profview run_test(2)
-@profile run_test(2)
-#run_test(2)
+@profile run_test(2, print=false)
 
 Profile.clear()
-ProfileView.closeall()
 Profile.init(n=1000000)
-#@profview run_test(default_steps)
-#run_test(default_steps)
-@profile run_test(default_steps)
+@profile run_test(default_steps, print=false)
+
 Profile.print(mincount=100)
 
 nothing
