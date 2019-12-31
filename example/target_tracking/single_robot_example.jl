@@ -36,8 +36,10 @@ for ii = 2:steps
 
   # Before the target moves and the robot receives a measurement, execute robot
   # dynamics
-  global robot_state = solve_single_robot(problem, robot_state,
-                                          n_iterations = iterations)
+  solution = solve_single_robot(problem, robot_state,
+                                n_iterations = iterations)
+  global robot_state = solution.action
+  trajectory = solution.trajectory
   robot_states[ii] = robot_state
 
   # Then update the target and sample the observation

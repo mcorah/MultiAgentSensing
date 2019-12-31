@@ -16,10 +16,13 @@ for horizon = 1:2
   problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
                                              [histogram_filter])
 
-  @show a = solve_single_robot(problem, robot_state,
-                               n_iterations = iterations)
+  solution = solve_single_robot(problem, robot_state,
+                                n_iterations = iterations)
 
-  if !in(a, neighbors(grid, robot_state))
+  @show solution.action
+  @show solution.trajectory
+
+  if !in(solution.action, neighbors(grid, robot_state))
     println("Action is not valid")
   end
 end

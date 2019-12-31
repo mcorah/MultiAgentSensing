@@ -52,12 +52,13 @@ end
 
 function generate_solver(depth;
                          n_iterations = default_num_iterations,
-                         exploration_constant = default_exploration_constant)
+                         exploration_constant = default_exploration_constant,
+                         enable_tree_vis = true)
 
   solver = MCTSSolver(n_iterations = n_iterations,
                       depth = depth,
                       exploration_constant = exploration_constant,
-                      enable_tree_vis = false
+                      enable_tree_vis = enable_tree_vis
                      )
 end
 
@@ -66,10 +67,43 @@ function solve_single_robot(problem::SingleRobotTargetTrackingProblem,
                             state::State;
                             n_iterations = default_exploration_constant,
                             exploration_constant = default_exploration_constant)
+
   solver = generate_solver(horizon(problem), n_iterations = n_iterations,
                            exploration_constant = exploration_constant)
   policy = solve(solver, problem)
-  action(policy, MDPState(state))
+
+  action, info = action_info(policy, MDPState(state))
+  tree = info[:tree]
+  trajectory = extract_trajectory(problem, tree, state)
+
+  (
+   action=action,
+   trajectory=trajectory,
+   tree=tree
+  )
+end
+
+# Pull the tree out of the info object
+function extract_trajectory(problem::SingleRobotTargetTrackingProblem,
+                            tree::MCTS.MCTSTree,
+                            initial_state::State)
+
+  # Recal that our State objects are the actions in the MDP
+  states = Vector{State}(undef, horizon(problem))
+
+  mdp_state = MDPState(initial_state)
+
+  # TODO: allow for cases where the tree might not all be stored
+  for ii in 1:horizon(problem)
+    state = action(MCTS.best_sanode_Q(MCTS.StateNode(tree, mdp_state)))
+
+    states[ii] = state
+
+    # Propagate the trajectory
+    mdp_state = MDPState(mdp_state, state)
+  end
+
+  states
 end
 
 horizon(x::SingleRobotTargetTrackingProblem) = x.horizon
