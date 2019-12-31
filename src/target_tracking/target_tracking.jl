@@ -123,15 +123,17 @@ function generate_observation(r::RangingSensor, a, b; rng=Random.GLOBAL_RNG)
 end
 
 # Compute likeihoods of observations
+likelihoods_buffer(states) = Array{Float64}(undef, size(states))
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
-                             range::Real)
+                             range::Real;
+                             buffer = likelihoods_buffer(target_states)
+                            )
 
-  likelihoods = Array{Float64}(undef, size(target_states))
   for (ii, target_state) in enumerate(target_states)
     distance = mean(sensor, robot_state, target_state)
 
-    likelihoods[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
+    buffer[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
   end
 
-  likelihoods
+  buffer
 end

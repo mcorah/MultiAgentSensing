@@ -109,10 +109,13 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   # Note: we will reuse samples accross the horizon
   filter = Filter(prior)
   conditional_entropies = Array{Float64}(undef, steps)
-  buffer = neighbors_buffer()
+
+  neighbor_buffer = neighbors_buffer()
+  likelihood_buffer = likelihoods_buffer(get_states(grid))
+
   for step = 1:steps
     # Update from prior state to the first time-step in the horizon
-    target_state = target_dynamics(grid, target_state, buffer=buffer)
+    target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
     process_update!(filter, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
@@ -127,7 +130,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
 
 
       measurement_update!(filter, robot_state, get_states(grid), sensor,
-                          range_observation)
+                          range_observation, buffer=likelihood_buffer)
     end
 
     conditional_entropies[step] = entropy(filter)
