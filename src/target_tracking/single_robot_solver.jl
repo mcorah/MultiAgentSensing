@@ -38,7 +38,7 @@ MDPState(m::MDPState, s::State) = MDPState(s, m.depth + 1, m)
 struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   grid::Grid
   sensor::RangingSensor
-  horizon::Integer
+  horizon::Int64
   target_filters::Vector{Filter{Int64}}
   prior_trajectories::Vector{Vector{State}}
 

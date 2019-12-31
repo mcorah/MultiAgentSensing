@@ -37,7 +37,7 @@ function run_test(steps; print=true)
     # Before the target moves and the robot receives a measurement, execute robot
     # dynamics
     robot_state = solve_single_robot(problem, robot_state,
-                                     n_iterations = iterations)
+                                     n_iterations = iterations).action
     robot_states[ii] = robot_state
 
     # Then update the target and sample the observation
