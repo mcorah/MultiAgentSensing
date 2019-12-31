@@ -55,7 +55,7 @@ for ii = 2:steps
 
   plots=[]
   append!(plots, plot_trajectory(robot_states[1:ii], color=:blue))
-  #append!(plots, plot_states(robot_states), color=:blue)
+  append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
   append!(plots, plot_observation(robot_state, range_observation, color=:blue))
   append!(plots, plot_trajectory(target_states[1:ii]))
   append!(plots, visualize_filter(histogram_filter))

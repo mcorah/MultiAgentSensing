@@ -17,7 +17,7 @@ function plot_states(states::Array{State}; kwargs...)
   xs = [x[1] for x in states]
   ys = [x[2] for x in states]
 
-  [plot(xs, ys, kwargs...)]
+  plot(xs, ys; kwargs...)
 end
 
 function plot_trajectory(states; color=:red)
