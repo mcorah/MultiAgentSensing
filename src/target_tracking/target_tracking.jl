@@ -122,8 +122,11 @@ function generate_observation(r::RangingSensor, a, b; rng=Random.GLOBAL_RNG)
   m + randn(rng) * stddev(r, m)
 end
 
-# Compute likeihoods of observations
+const normal_lookup_table = NormalLookup(increment=0.001, max=4.0)
+
 likelihoods_buffer(states) = Array{Float64}(undef, size(states))
+
+# Computes (non-normalize) likelihoods of data
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
                              range::Real;
                              buffer = likelihoods_buffer(target_states)
@@ -132,7 +135,8 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
   for (ii, target_state) in enumerate(target_states)
     distance = mean(sensor, robot_state, target_state)
 
-    buffer[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
+    buffer[ii] = evaluate(normal_lookup_table, error=range - distance,
+                               stddev=stddev(sensor, distance))
   end
 
   buffer

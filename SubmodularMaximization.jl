@@ -131,6 +131,7 @@ get_element_indices(agents) = map(agents, 1:length(agents)) do agent, agent_inde
 end
 
 include("src/visualization.jl")
+include("src/normal_lookup_table.jl")
 include("src/coverage/coverage.jl")
 include("src/coverage/probabilistic_coverage.jl")
 include("src/target_tracking/target_tracking.jl")
