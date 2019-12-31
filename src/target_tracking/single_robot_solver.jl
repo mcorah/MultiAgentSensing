@@ -25,7 +25,7 @@ const default_exploration_constant = 10.0
 # actions taken)
 struct MDPState
   state::State
-  depth::Integer
+  depth::Int64
   prev::Union{MDPState, Nothing}
 end
 # Constructor for initial states
