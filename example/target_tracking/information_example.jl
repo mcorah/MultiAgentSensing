@@ -12,10 +12,10 @@ num_observations = 3
 grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
 
+target_state = random_state(grid)
+
 # precomputation
 histogram_filter = Filter(grid, target_state)
-
-target_state = random_state(grid)
 
 # Create some fake observations and update the filter
 for ii = 1:num_observations
