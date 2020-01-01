@@ -115,7 +115,10 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
 
   for step = 1:steps
     # Update from prior state to the first time-step in the horizon
-    target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
+    if !isempty(trajectories)
+      target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
+    end
+
     process_update!(filter, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
