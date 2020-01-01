@@ -6,7 +6,7 @@ import Base.<
 
 # Abstract interface
 export  PartitionProblem, PartitionElement, ElementArray, Solution,
-  get_num_agents, objective, evaluate_solution, empty
+  get_num_agents, solve_block, objective, evaluate_solution, empty
 
 # Explicit interface
 export ExplicitPartitionProblem, get_element
@@ -93,6 +93,11 @@ empty(::Type{T}) where T <: PartitionProblem = ElementArray(T)()
 # vector
 get_num_agents(p::PartitionProblem) = length(p.partition_matroid)
 
+# This should be an optimal or subotimal solver that outputs the appropriate
+# PartitionElement for a block given prior selections
+solve_block(p::PartitionProblem, block::Integer, selections::Vector) =
+  error("Single agent (block) solver not defined for ", typeof(p))
+
 #
 # Concrete partition matroid problems
 #
@@ -130,6 +135,18 @@ compute_weight(f, x, y) = f([x]) - marginal_gain(f, x, [y])
 
 compute_weight(f, X::Array, Y::Array) =
   maximum([compute_weight(f, x, y) for x in X, y in Y])
+
+# Solve explicit partition matroids by iteration over blocks given a set of
+# prior selections
+function solve_block(p::ExplicitPartitionProblem, block_index::Integer,
+                     selections::Vector)
+
+  block::ElementArray(p) = get_element_indices(p, block_index)
+
+  _, index = findmax(map(x->objective(p, [selections; x]), block))
+
+  block[index]
+end
 
 function compute_weight_matrix(p::PartitionProblem)
   indices = get_element_indices(p.partition_matroid)
@@ -172,12 +189,21 @@ end
 
 # indexing and solver tools
 
-# construct index set to ease manipulation of the matroid
-# note that the resulting index is an array of arrays whereas each array is a
-# block of the partition matroid
-get_element_indices(agents) = map(agents, 1:length(agents)) do agent, agent_index
-  map(1:length(get_block(agent))) do block_index
-    (agent_index, block_index)
+# Construct index set for ease in manipulation of the matroid
+#
+# The resulting index is an array of arrays whereas each array corresponds
+# to indices for an element in a block of the partition matroid
+get_element_indices(p::ExplicitPartitionProblem, xs...) =
+  get_element_indices(p.partition_matroid, xs...)
+
+function get_element_indices(agents::Vector{<:Agent}, block::Integer)
+  map(1:length(get_block(agents[block]))) do block_index
+    (block, block_index)
+  end
+end
+function get_element_indices(agents::Vector{<:Agent})
+  map(agents, 1:length(agents)) do agent, agent_index
+    get_element_indices(agents, agent_index)
   end
 end
 
@@ -198,7 +224,7 @@ include("src/target_tracking/visualization.jl")
 # dag solver
 
 # optimal solver
-function solve_optimal(p::PartitionProblem)
+function solve_optimal(p::ExplicitPartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
   v0 = evaluate_solution(p, empty())
@@ -210,7 +236,7 @@ function solve_optimal(p::PartitionProblem)
 end
 
 # anti-optimal solver
-function solve_worst(p::PartitionProblem)
+function solve_worst(p::ExplicitPartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
   v0 = Solution(Inf, empty())
@@ -221,20 +247,20 @@ function solve_worst(p::PartitionProblem)
   foldl(op, product(indices...), init=v0)
 end
 
-# myopic solver
+# Myopic solver
 function solve_myopic(p::PartitionProblem)
-  indices = get_element_indices(p.partition_matroid)
+  for ii = 1:get_num_agents(p)
+    # Solve given knowledge of no prior decisions
+    solution_element = solve_block(p, ii, empty(p))
 
-  selection = map(indices) do block
-    _, ii = findmax(map(x->objective(p, [x]), block))
-    block[ii]
+    push!(selection, solution_element)
   end
 
   evaluate_solution(p, selection)
 end
 
 # random solver
-function solve_random(p::PartitionProblem)
+function solve_random(p::ExplicitPartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
   evaluate_solution(p, map(x->rand(x), indices))
@@ -242,14 +268,12 @@ end
 
 # sequential solver
 function solve_sequential(p::PartitionProblem)
-  indices = get_element_indices(p.partition_matroid)
+  selection = empty(p)
 
-  selection = ElementArray(p)()
+  for ii = 1:get_num_agents(p)
+    solution_element = solve_block(p, ii, selection)
 
-  for block in indices
-    _, ii = findmax(map(x->objective(p, [selection; x]), block))
-
-    push!(selection, block[ii])
+    push!(selection, solution_element)
   end
 
   evaluate_solution(p, selection)
@@ -275,11 +299,11 @@ function solve_dag(d::DAGSolver, p::PartitionProblem)
     neighbor_selection::ElementArray(p) =
       map(x->(x, selection[x]), in_neighbors(d, agent_index))
 
-    values = map(indices[agent_index]) do x
-      objective(p, [neighbor_selection; x])
-    end
+    # Index of agent and its solution
+    solution_element = solve_block(p, agent_index, neighbor_selection)
 
-    _, selection[agent_index] = findmax(values)
+    # Store the index of agent's solution
+    selection[agent_index] = solution_element[2]
   end
 
   selection_tuples::ElementArray(p) =
