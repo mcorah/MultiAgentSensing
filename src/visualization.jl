@@ -55,7 +55,8 @@ function visualize_agents(agents, colors)
   nothing
 end
 
-function visualize_solution(p::PartitionProblem, X::ElementArray, agent_colors)
+function visualize_solution(p::PartitionProblem, X, agent_colors)
+
   elements = map(X) do x
     get_element(p.partition_matroid, x)
   end

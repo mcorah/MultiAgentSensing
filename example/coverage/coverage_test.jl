@@ -19,7 +19,7 @@ agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
 agents = generate_agents(agent_specification, num_agents)
 
 f(x) = mean_area_coverage(x, 100)
-problem = PartitionProblem(f, agents)
+problem = ExplicitPartitionProblem(f, agents)
 
 function evaluate_solver(solver, name)
   println("$name solver running")

@@ -4,15 +4,24 @@ using Base.Iterators
 
 import Base.<
 
+# Abstract interface
 export  PartitionProblem, PartitionElement, ElementArray, Solution,
-  get_num_agents, get_element, objective, evaluate_solution, marginal_gain,
-  compute_weight, compute_weight_matrix, mean_weight, total_weight,
-  extract_triangle, get_element_indices, visualize_solution
+  get_num_agents, objective, evaluate_solution, empty
 
+# Explicit interface
+export ExplicitPartitionProblem, get_element
+
+# General methods that probably need updates
+export marginal_gain, compute_weight, compute_weight_matrix, mean_weight,
+total_weight, extract_triangle, visualize_solution
+
+# Agent specification for coverage problems
 export Agent, generate_agents,
   generate_colors,
-  visualize_agents
+  visualize_agents,
+  get_element_indices
 
+# Solvers
 export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
 
 # Max now uses isless to exclude types that do not have a total order. We would
@@ -41,37 +50,79 @@ function generate_agents(agent_specification, num_agents)
   [make_agent(agent_specification) for agent in 1:num_agents]
 end
 
-# f({x} | Y)
-# the objective takes in an array of elements of the blocks
-struct PartitionProblem
-  objective
-  partition_matroid::Array
-end
+#
+#
+# Abstract partition matroid problems
+#
+# This interface is suitable for cases where the matroid is defined implicitly
+# and solved suboptimally
+#
+# Interface
+#
+abstract type PartitionProblem end
 
-# (agent_index, block_index)
-PartitionElement = Tuple{Int64,Int64}
-ElementArray = Array{PartitionElement, 1}
+# Define dependent types
+PartitionElement(::T) where T <: PartitionProblem = PartitionElement(T)
+PartitionElement(::Type{<:PartitionProblem}) =
+  error("Element type not defined for this partition problem")
 
-get_num_agents(p::PartitionProblem) = length(p.partition_matroid)
+# Defines the structure of a solution for the given matroid or its type
+ElementArray(::T) where T = ElementArray(T)
+ElementArray(::Type{T}) where T = Vector{PartitionElement(T)}
 
-struct Solution
+# Solutions consist of their value and a set of solution elements
+struct Solution{PartitionElement}
   value::Float64
-  elements::ElementArray
+  elements::Vector{PartitionElement}
 end
 
-# empty tuple
-empty() = ElementArray()
+objective(p::PartitionProblem, X) = error("Objective not defined for ",
+                                          typeof(p))
 
+evaluate_solution(p::PartitionProblem, X) =
+  Solution(objective(p, X), X)
+
+# Compare solutions by value
 <(a::Solution, b::Solution) = a.value < b.value
 
-get_element(partition_matroid, x::PartitionElement) =
+# empty array (vector) of solution elements
+empty(::T) where T <: PartitionProblem = ElementArray(T)()
+empty(::Type{T}) where T <: PartitionProblem = ElementArray(T)()
+
+# By default, store the representation of the matroid in something like a vector
+# vector
+get_num_agents(p::PartitionProblem) = length(p.partition_matroid)
+
+#
+# Concrete partition matroid problems
+#
+# The objective provides f({x} | Y)
+# as objective(x, Y)
+#
+# The inputs are elements of the blocks
+#
+# The partition matroid is a Vector of the blocks of the partition matroid.
+# The blocks contain whatever the elements of the ground set correspond to.
+# For example, the blocks may contain specifications of coverage regions.
+
+struct ExplicitPartitionProblem <: PartitionProblem
+  objective::Function
+  partition_matroid::Vector
+end
+
+# Solution elemnts for concrete partition matroids are indices within the array
+# of blocks
+#
+# (agent_index, block_index)
+PartitionElement(::Type{ExplicitPartitionProblem}) = Tuple{Int64,Int64}
+
+get_element(problem::ExplicitPartitionProblem, x) =
+  get_element(problem.partition_matroid, x)
+get_element(partition_matroid, x) =
   get_block(partition_matroid[x[1]])[x[2]]
 
-objective(p::PartitionProblem, X::ElementArray) =
+objective(p::ExplicitPartitionProblem, X) =
   p.objective(map(x->get_element(p.partition_matroid, x), X))
-
-evaluate_solution(p::PartitionProblem, X::ElementArray) =
-  Solution(objective(p, X), X)
 
 marginal_gain(f, x, Y) = f(vcat([x], Y)) - f(Y)
 
@@ -193,7 +244,7 @@ end
 function solve_sequential(p::PartitionProblem)
   indices = get_element_indices(p.partition_matroid)
 
-  selection = ElementArray()
+  selection = ElementArray(p)()
 
   for block in indices
     _, ii = findmax(map(x->objective(p, [selection; x]), block))
@@ -221,7 +272,8 @@ function solve_dag(d::DAGSolver, p::PartitionProblem)
   selection = Dict{Int64, Int64}()
 
   for agent_index in sequence(d)
-    neighbor_selection::ElementArray = map(x->(x, selection[x]), in_neighbors(d, agent_index))
+    neighbor_selection::ElementArray(p) =
+      map(x->(x, selection[x]), in_neighbors(d, agent_index))
 
     values = map(indices[agent_index]) do x
       objective(p, [neighbor_selection; x])
@@ -230,7 +282,8 @@ function solve_dag(d::DAGSolver, p::PartitionProblem)
     _, selection[agent_index] = findmax(values)
   end
 
-  selection_tuples::ElementArray = map(x->(x, selection[x]), sequence(d))
+  selection_tuples::ElementArray(p) =
+    map(x->(x, selection[x]), sequence(d))
 
   evaluate_solution(p, selection_tuples)
 end
