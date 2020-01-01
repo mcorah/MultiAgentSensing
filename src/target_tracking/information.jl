@@ -34,11 +34,14 @@ end
 # in each trajectory corresponds to the robot's position at the next time-step
 # (after one process update on the prior)
 #
+const default_num_information_samples = 1000
+
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
                                     trajectory,
                                     prior_trajectories = Vector{State}[];
-                                    num_samples::Integer = 1000,
+                                    num_samples::Integer =
+                                      default_num_information_samples,
                                     rng = Random.GLOBAL_RNG)
 
   steps = length(trajectory)

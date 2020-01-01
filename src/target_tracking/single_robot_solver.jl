@@ -42,11 +42,16 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   target_filters::Vector{Filter{Int64}}
   prior_trajectories::Vector{Vector{State}}
 
+  num_information_samples::Int64
+
   function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                             horizon::Integer,
-                                            filters::Vector{Filter{Int64}},
-                                            prior_trajectories = Vector{State}[])
-    new(grid, sensor, horizon, filters, prior_trajectories)
+                                            filters::Vector{Filter{Int64}};
+                                            prior_trajectories = Vector{State}[],
+                                            num_information_samples = 1
+                                           )
+    new(grid, sensor, horizon, filters, prior_trajectories,
+        num_information_samples)
   end
 end
 
@@ -150,6 +155,7 @@ function sample_reward(model::SingleRobotTargetTrackingProblem,
   sum(model.target_filters) do filter
     finite_horizon_information(model.grid, filter, model.sensor,
                                trajectory, model.prior_trajectories;
+                               num_samples = model.num_information_samples,
                                kwargs...).reward
   end
 end
