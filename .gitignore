@@ -6,3 +6,4 @@
 *.zip
 data/
 fig/
+.ipynb_checkpoints/
