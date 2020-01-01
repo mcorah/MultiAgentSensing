@@ -135,8 +135,8 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
   for (ii, target_state) in enumerate(target_states)
     distance = mean(sensor, robot_state, target_state)
 
-    buffer[ii] = evaluate(normal_lookup_table, error=range - distance,
-                               stddev=stddev(sensor, distance))
+    buffer[ii] = evaluate_no_norm(normal_lookup_table, error=range - distance,
+                                  stddev=stddev(sensor, distance))
   end
 
   buffer
