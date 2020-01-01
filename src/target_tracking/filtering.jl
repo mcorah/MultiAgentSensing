@@ -32,7 +32,12 @@ end
 
 # General process update
 function process_update!(prior::Filter, transition_matrix)
-  @inbounds @views get_data(prior)[:] .= transition_matrix * get_data(prior)[:]
+
+  @inbounds @views mul!(get_buffer(prior)[:],
+                        transition_matrix,
+                        get_data(prior)[:])
+
+  swap_buffer!(prior)
 
   prior
 end
@@ -50,10 +55,15 @@ function measurement_update!(prior::Filter, likelihoods::Array{Float64})
   data = get_data(prior)
 
   # update belief in place
-  data .= data .* likelihoods
+  @inbounds @simd for ii in 1:length(data)
+    data[ii] = data[ii] * likelihoods[ii]
+  end
 
   # normalize
-  data .= data ./ sum(data)
+  s = sum(data)
+  @inbounds @simd for ii in 1:length(data)
+    data[ii] = data[ii] / s
+  end
 
   prior
 end
