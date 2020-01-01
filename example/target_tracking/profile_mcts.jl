@@ -5,10 +5,11 @@ using MCTS
 using Statistics
 using Profile
 
-default_steps = 5
+default_steps = 100
 grid_size = 10
-horizon = 2
-iterations = 100
+horizon = 5
+iterations = 1000
+information_samples = 1
 
 function run_test(steps; print=true)
   ifprint(xs...) = if print println(xs...) end
@@ -29,11 +30,11 @@ function run_test(steps; print=true)
   histogram_filter = Filter(grid, target_state)
 
   problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
-                                             [histogram_filter])
+                                             [histogram_filter],
+                                             num_information_samples =
+                                               information_samples)
 
   time = @elapsed for ii = 2:steps
-    ifprint("Step: ", ii)
-
     # Before the target moves and the robot receives a measurement, execute robot
     # dynamics
     robot_state = solve_single_robot(problem, robot_state,
@@ -54,11 +55,14 @@ function run_test(steps; print=true)
 
   ifprint("Test duration: ", time, " seconds")
   ifprint("  ", time / (steps - 1), " seconds per step")
+  ifprint("  ", time / ((steps - 1) * iterations), " seconds per MCTS sample")
+  ifprint("  ", time / ((steps - 1) * iterations * information_samples),
+          " seconds per information sample")
+  ifprint("Note: horizon length is ", horizon)
 end
 
 # Show timing without profiling
 run_test(2)
-
 run_test(default_steps)
 
 # Run the profiler
@@ -69,6 +73,7 @@ Profile.clear()
 Profile.init(n=1000000)
 @profile run_test(default_steps, print=false)
 
+println()
 Profile.print(mincount=100)
 
 nothing

@@ -7,8 +7,8 @@ close()
 
 steps = 100
 grid_size = 10
-horizon = 3
-iterations = 100
+horizon = 5
+iterations = 1000
 
 grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
