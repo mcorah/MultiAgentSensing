@@ -4,17 +4,34 @@
 # Some solvers are only applicable to certain problem types. Note type
 # constraints.
 
+# Utilities
+
+# Optionally threaded loop
+function optionally_threaded(f, collection; threaded = false)
+  if threaded
+    Threads.@threads for x in collection
+      f(x)
+    end
+  else
+    for x in collection
+      f(x)
+    end
+  end
+end
+
 #######################################
 # Basic solvers (sequential and myopic)
 #######################################
 
 # Myopic solver
-function solve_myopic(p::PartitionProblem)
-  for ii = 1:get_num_agents(p)
-    # Solve given knowledge of no prior decisions
+function solve_myopic(p::PartitionProblem; threaded=false)
+  selection = ElementArray(p)(undef, get_num_agents(p))
+
+  optionally_threaded(1:get_num_agents(p), threaded=threaded) do
+    # Solve given no knowledge of prior decisions
     solution_element = solve_block(p, ii, empty(p))
 
-    push!(selection, solution_element)
+    selection[ii] = solution_element
   end
 
   evaluate_solution(p, selection)
@@ -105,17 +122,7 @@ function solve_dag(d::DAGSolver, p::PartitionProblem; threaded=false)
     end
 
     # Threaded execution is optional
-    if threaded
-      Threads.@threads for agent_index in partition
-        #println("Thread ", Threads.threadid(), " solving for robot ",
-                #agent_index)
-        solve(agent_index)
-      end
-    else
-      for agent_index in partition
-        solve(agent_index)
-      end
-    end
+    optionally_threaded(solve, partition; threaded=threaded)
   end
 
   evaluate_solution(p, selections)
