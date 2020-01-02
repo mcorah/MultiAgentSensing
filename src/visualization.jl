@@ -1,9 +1,5 @@
-using PyCall
 using PyPlot
 using Colors
-
-const tikzplotlib = pyimport("tikzplotlib")
-const ag = pyimport("mpl_toolkits.axes_grid1")
 
 ###############
 # visualization

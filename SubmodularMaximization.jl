@@ -1,5 +1,21 @@
 module SubmodularMaximization
 
+#
+# Hack in python imports for now
+#
+using PyCall
+
+const tikzplotlib = PyNULL()
+const ag = PyNULL()
+
+function __init__()
+  copy!(tikzplotlib, pyimport("tikzplotlib"))
+  copy!(ag, pyimport("mpl_toolkits.axes_grid1"))
+end
+#
+# End hack
+#
+
 using Base.Iterators
 
 import Base.<
