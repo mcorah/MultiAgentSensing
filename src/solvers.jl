@@ -85,27 +85,40 @@ abstract type DAGSolver end
 # in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
 # sequence(d::DAGSolver) = <sequence of agent ids>
 
-function solve_dag(d::DAGSolver, p::PartitionProblem)
-  indices = get_element_indices(p.partition_matroid)
+function solve_dag(d::DAGSolver, p::PartitionProblem; threaded=false)
+  # The selections is an array of assignments on the matroid
+  #
+  # Generally, solution elements will line up with the blocks of the matroid,
+  # but code should not rely on this fact
+  selections = ElementArray(p)(undef, get_num_agents(p))
 
-  # selection is a mapping from agent indices to block_indices
-  selection = Dict{Int64, Int64}()
+  for partition in partitions(d)
+    function solve(agent_index)
+      neighbor_selection::ElementArray(p) =
+        map(x->selections[x], in_neighbors(d, agent_index))
 
-  for agent_index in sequence(d)
-    neighbor_selection::ElementArray(p) =
-      map(x->(x, selection[x]), in_neighbors(d, agent_index))
+      # Index of agent and its solution
+      solution_element = solve_block(p, agent_index, neighbor_selection)
 
-    # Index of agent and its solution
-    solution_element = solve_block(p, agent_index, neighbor_selection)
+      # Store the index of agent's solution
+      selections[agent_index] = solution_element
+    end
 
-    # Store the index of agent's solution
-    selection[agent_index] = solution_element[2]
+    # Threaded execution is optional
+    if threaded
+      Threads.@threads for agent_index in partition
+        #println("Thread ", Threads.threadid(), " solving for robot ",
+                #agent_index)
+        solve(agent_index)
+      end
+    else
+      for agent_index in partition
+        solve(agent_index)
+      end
+    end
   end
 
-  selection_tuples::ElementArray(p) =
-    map(x->(x, selection[x]), sequence(d))
-
-  evaluate_solution(p, selection_tuples)
+  evaluate_solution(p, selections)
 end
 
 function deleted_edge_weight(d::DAGSolver, W::Array{Float64})
@@ -169,6 +182,7 @@ struct PartitionSolver <: DAGSolver
 end
 
 sequence(p::PartitionSolver) = vcat(p.partitions...)
+partitions(p::PartitionSolver) = p.partitions
 
 function in_neighbors(p::PartitionSolver, agent_index)
   partition_index = p.agent_partition_numbers[agent_index]
@@ -188,13 +202,14 @@ function generate_by_global_partition_size(num_agents, partition_size)
 end
 
 # fixed number of partitions
-function solve_n_partitions(num_partitions, p::PartitionProblem)
+function solve_n_partitions(num_partitions, p::PartitionProblem;
+                            threaded=false)
   num_agents = length(p.partition_matroid)
 
   partition_solver = generate_by_global_partition_size(num_agents,
                                                        num_partitions)
 
-  solve_dag(partition_solver, p)
+  solve_dag(partition_solver, p, threaded=threaded)
 end
 
 #######################

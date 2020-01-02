@@ -12,6 +12,8 @@ solver_iterations = 1000
 grid_cells_per_robot = 50
 show_observations = false
 
+num_partitions = 4
+
 print("Enter number of robots: ")
 num_robots = parse(Int64, readline())
 
@@ -46,10 +48,12 @@ for ii = 2:steps
                                             solver_iterations=solver_iterations
                                            )
 
-  @time solution = solve_sequential(problem)
-  trajectories = solution.elements
+  @time solution = solve_n_partitions(num_partitions, problem, threaded=true)
 
-  global robot_states = map(first, trajectories)
+  for (index, trajectory) in solution.elements
+    robot_states[index] = trajectory[1]
+  end
+  trajectories = map(last, solution.elements)
 
 
   # Update Target states

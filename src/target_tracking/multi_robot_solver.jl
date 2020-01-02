@@ -34,12 +34,18 @@ struct MultiRobotTargetTrackingProblem <: PartitionProblem
   end
 end
 
-PartitionElement(::Type{MultiRobotTargetTrackingProblem}) = Trajectory
+# Solution elements consist of the robot index and the associated trajectory
+# We construct solutions as such because the output may not have the same
+# ordering as the robots
+PartitionElement(::Type{MultiRobotTargetTrackingProblem}) =
+  Tuple{Int64, Trajectory}
 
 function objective(p::MultiRobotTargetTrackingProblem, X)
+  trajectories = map(last, X)
+
   sum(p.target_filters) do filter
     finite_horizon_information(p.grid, filter, p.sensor,
-                               X;
+                               trajectories;
                                num_samples=p.objective_information_samples
                               ).reward
   end
@@ -50,11 +56,13 @@ function get_state(p::MultiRobotTargetTrackingProblem, index)
 end
 
 function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
-                     selections::Vector{Trajectory})
+                     selections::Vector)
+
+  trajectories = map(last, selections)
 
   problem = SingleRobotTargetTrackingProblem(p.grid, p.sensor, p.horizon,
                                              p.target_filters,
-                                             prior_trajectories=selections,
+                                             prior_trajectories=trajectories,
                                              num_information_samples=
                                                p.solver_information_samples
                                             )
@@ -64,5 +72,5 @@ function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
   solution = solve_single_robot(problem, state,
                                 n_iterations=p.solver_iterations)
 
-  solution.trajectory
+  (block, solution.trajectory)
 end
