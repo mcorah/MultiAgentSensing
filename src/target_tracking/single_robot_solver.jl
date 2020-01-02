@@ -11,6 +11,7 @@ export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
   solve_single_robot, isterminal
 
 const default_num_iterations = 1000
+const default_solver_information_samples = 1
 const default_exploration_constant = 10.0
 
 #
@@ -48,7 +49,8 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
                                             horizon::Integer,
                                             filters::Vector{Filter{Int64}};
                                             prior_trajectories = Trajectory[],
-                                            num_information_samples = 1
+                                            num_information_samples =
+                                              default_solver_information_samples
                                            )
     new(grid, sensor, horizon, filters, prior_trajectories,
         num_information_samples)
@@ -149,7 +151,7 @@ end
 
 # sample reward for all targets and sum
 function sample_reward(model::SingleRobotTargetTrackingProblem,
-                       trajectory::Vector{State}; kwargs...)
+                       trajectory::Trajectory; kwargs...)
 
   # Compute reward conditional on prior selections (trajectories)
   sum(model.target_filters) do filter
