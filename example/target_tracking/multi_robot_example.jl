@@ -7,12 +7,17 @@ using Base.Iterators
 close()
 
 steps = 100
-grid_size = 10
 horizon = 5
 solver_iterations = 1000
+grid_cells_per_robot = 50
+show_observations = false
 
-num_robots = 2
-num_targets = 1
+print("Enter number of robots: ")
+num_robots = parse(Int64, readline())
+
+num_targets = div(num_robots, 2)
+
+grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
 
 grid = Grid(grid_size, grid_size)
 sensor = RangingSensor(0.5^2, 0.1^2)
@@ -41,7 +46,7 @@ for ii = 2:steps
                                             solver_iterations=solver_iterations
                                            )
 
-  solution = solve_sequential(problem)
+  @time solution = solve_sequential(problem)
   trajectories = solution.elements
 
   global robot_states = map(first, trajectories)
@@ -89,9 +94,11 @@ for ii = 2:steps
     append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
   end
 
-  for (robot, observations) in zip(robot_states, range_observations)
-    for observation in observations
-      append!(plots, plot_observation(robot, observation, color=:blue))
+  if show_observations
+    for (robot, observations) in zip(robot_states, range_observations)
+      for observation in observations
+        append!(plots, plot_observation(robot, observation, color=:blue))
+      end
     end
   end
 
