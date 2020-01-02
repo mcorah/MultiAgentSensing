@@ -1,7 +1,7 @@
 using PyPlot
 
 export plot_state_space, plot_states, plot_trajectory, plot_robot,
-  plot_observation, visualize_filter
+  plot_observation, visualize_filter, visualize_filters
 
 const object_scale = 9^2
 
@@ -46,11 +46,21 @@ function plot_observation(state, range; linestyle="-", kwargs...)
 end
 
 # Visualize a discrete histogram filter
-function visualize_filter(filter::Filter; show_colorbar = false)
-  range = get_range(filter)
+function visualize_filter(filter::Filter; kwargs...)
+  visualize_filters([filter]; kwargs...)
+end
+function visualize_filters(filters::Vector{<:Filter}; show_colorbar = false)
+  if length(filters) == 0
+    error("No filters to visualize")
+  end
+
+  range = get_range(filters[1])
 
   # Adjust bounds because indices are in centers
   limits = [range[1][[1,end]]'; range[2][[1,end]]'] + repeat([-0.5 0.5], 2)
 
-  visualize_pdf(get_data(filter), show_colorbar = show_colorbar, limits=limits)
+  data = sum(get_data, filters)
+
+  # Note: visualize filter does not normalize by default
+  visualize_pdf(data, show_colorbar = show_colorbar, limits=limits)
 end
