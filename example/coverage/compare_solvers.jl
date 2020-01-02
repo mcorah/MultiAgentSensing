@@ -44,7 +44,7 @@ results = zeros(num_trials, length(solvers))
 
 problems = map(1:num_trials) do unused
   agents = generate_agents(agent_specification, num_agents)
-  problem = PartitionProblem(f, agents)
+  problem = ExplicitPartitionProblem(f, agents)
 end
 @save "$data_path/partition_matroids" map(x->x.partition_matroid, problems)
 

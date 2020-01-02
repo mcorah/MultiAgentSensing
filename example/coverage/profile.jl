@@ -16,7 +16,7 @@ agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
 agents = generate_agents(agent_specification, num_agents)
 
 f(x) = mean_area_coverage(x, 100)
-problem = PartitionProblem(f, agents)
+problem = ExplicitPartitionProblem(f, agents)
 
 solution = solve_optimal(problem)
 
@@ -27,7 +27,7 @@ function foo(n)
 
   for i in 1:n
     agents = generate_agents(agent_specification, num_agents)
-    problem = PartitionProblem(f, agents)
+    problem = ExplicitPartitionProblem(f, agents)
 
     time = @elapsed solution = solve_optimal(problem)
 

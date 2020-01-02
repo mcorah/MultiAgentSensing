@@ -45,7 +45,7 @@ problems = map(1:num_trials) do unused
   events = generate_events(num_events)
   f(x) = mean_detection_probability(x, events)
 
-  problem = PartitionProblem(f, agents)
+  problem = ExplicitPartitionProblem(f, agents)
 end
 @save "$data_path/partition_matroids" map(x->x.partition_matroid, problems)
 

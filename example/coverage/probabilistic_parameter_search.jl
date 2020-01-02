@@ -39,7 +39,7 @@ function performance_ratio(params::ProbabilisticCoverageParams)
 
     agents = generate_agents(agent_specification, num_agents)
 
-    PartitionProblem(f, agents)
+    ExplicitPartitionProblem(f, agents)
   end
 
   myopic_mean = mean(map(x->solve_myopic(x).value, problems))

@@ -38,7 +38,7 @@ agent_specification = ProbabilisticAgentSpecification(max_success_probability,
 
 agents = generate_agents(agent_specification, num_agents)
 f(x) = mean_detection_probability(x, events)
-problem = PartitionProblem(f, agents)
+problem = ExplicitPartitionProblem(f, agents)
 
 
 ####################

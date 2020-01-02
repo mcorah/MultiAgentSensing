@@ -33,7 +33,7 @@ for trial_num in 1:num_trials
   println("Trial: $trial_num")
 
   agents = generate_agents(agent_specification, num_agents)
-  problem = PartitionProblem(f, agents)
+  problem = ExplicitPartitionProblem(f, agents)
 
   for solver_num in 1:length(solvers)
     solver = solvers[solver_num][1]

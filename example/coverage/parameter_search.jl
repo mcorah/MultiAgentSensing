@@ -30,7 +30,7 @@ function coverage_performance_ratio(params::CoverageParams)
 
   problems = map(1:num_trials) do unused
     agents = generate_agents(agent_specification, num_agents)
-    PartitionProblem(f, agents)
+    ExplicitPartitionProblem(f, agents)
   end
 
   myopic_mean = mean(map(x->solve_myopic(x).value, problems))
