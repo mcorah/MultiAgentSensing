@@ -47,7 +47,7 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
   function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                             horizon::Integer,
                                             filters::Vector{Filter{Int64}};
-                                            prior_trajectories = Vector{State}[],
+                                            prior_trajectories = Trajectory[],
                                             num_information_samples = 1
                                            )
     new(grid, sensor, horizon, filters, prior_trajectories,

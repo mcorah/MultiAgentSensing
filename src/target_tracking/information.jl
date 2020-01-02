@@ -38,19 +38,37 @@ const default_num_information_samples = 1000
 
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
-                                    trajectory,
-                                    prior_trajectories = Vector{State}[];
+                                    trajectory::Trajectory,
+                                    prior_trajectories = Trajectory[];
+                                    kwargs...
+                                   )
+
+  finite_horizon_information(grid, prior, sensor, [trajectory],
+                             prior_trajectories; kwargs...)
+end
+
+function finite_horizon_information(grid::Grid, prior::Filter,
+                                    sensor::RangingSensor,
+                                    posterior_trajectories::Vector{Trajectory},
+                                    prior_trajectories = Trajectory[];
                                     num_samples::Integer =
                                       default_num_information_samples,
                                     rng = Random.GLOBAL_RNG)
 
-  steps = length(trajectory)
+  if length(posterior_trajectories) == 0
+    error("Please supply at least one trajectory for posterior")
+  end
+
+  steps = length(posterior_trajectories[1])
 
   if steps == 0
     error("Information horizon is zero")
   end
 
-  if !all(length.(prior_trajectories) .== steps)
+  if !all(length.(posterior_trajectories) .== steps) &&
+    !all(length.(prior_trajectories) .== steps)
+
+    @show posterior_trajectories
     @show prior_trajectories
     error("Information trajectory lengths do not match")
   end
@@ -68,7 +86,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
   # (produces an array with one entry per time-step) to compute entropies:
   #
   # sum_i=1^t H(Xi|Y_{all_trajectories}, belief)
-  all_trajectories = vcat(prior_trajectories, [trajectory])
+  all_trajectories = vcat(prior_trajectories, posterior_trajectories)
   conditional_entropies = mean(1:num_samples) do _
     sample_finite_horizon_entropy(grid, prior, sensor, all_trajectories,
                                   steps, rng = rng)

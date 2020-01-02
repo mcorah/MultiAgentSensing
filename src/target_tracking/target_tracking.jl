@@ -15,7 +15,10 @@ abstract type StateSpace end
 #
 # get_states
 
+# State and trajectory objects for convenience
 const State = Tuple{Int64,Int64}
+const Trajectory = Vector{State}
+
 struct Grid <: StateSpace
   width::Int64
   height::Int64
