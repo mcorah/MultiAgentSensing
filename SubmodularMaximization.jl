@@ -79,6 +79,7 @@ abstract type PartitionProblem end
 
 # Define dependent types
 PartitionElement(::T) where T <: PartitionProblem = PartitionElement(T)
+# Subtypes should redefine this method
 PartitionElement(::Type{<:PartitionProblem}) =
   error("Element type not defined for this partition problem")
 
