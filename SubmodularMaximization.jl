@@ -232,6 +232,7 @@ include("src/target_tracking/target_tracking.jl")
 include("src/target_tracking/filtering.jl")
 include("src/target_tracking/information.jl")
 include("src/target_tracking/single_robot_solver.jl")
+include("src/target_tracking/multi_robot_solver.jl")
 include("src/target_tracking/visualization.jl")
 
 # solvers
