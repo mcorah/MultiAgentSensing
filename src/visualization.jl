@@ -103,7 +103,7 @@ function visualize_pdf(density::Matrix; limits = [0 1; 0 1], cmap = "viridis",
   ret
 end
 
-function visualize_pdf(fun::Function; n = 1000, limits = [0 1; 0 1], kwargs...)
+function visualize_pdf(fun; n = 1000, limits = [0 1; 0 1], kwargs...)
   xlim = limits[1,:]
   ylim = limits[2,:]
 
