@@ -3,7 +3,9 @@ using Base.Iterators
 using Statistics
 using Random
 
-export finite_horizon_information, entropy
+export finite_horizon_information, entropy, TimedObservation
+
+import Base.length
 
 nan_to_zero(x::Float64) = ifelse(isnan(x), 0.0, x)
 
@@ -14,6 +16,100 @@ function entropy(prior::Filter)
     sum += nan_to_zero(-x * log(2, x))
   end
   sum
+end
+
+#
+# Measurement representation and updates
+#
+# Most of the sequential planning utilizes the trajectory objects. I prefer to
+# avoid further processing of the trajectories as this code runs a lot.
+#
+# I also include a more general representation TimedObservation to support
+# mutual information for collections of observations at specific times
+#
+
+#
+# Timed observations allow flexibility in scheduling observations
+#
+struct TimedObservation
+  step::Int64
+  state::State
+end
+# Object that manages and sorts observations
+mutable struct TimedObservations
+  observations::Vector{TimedObservation}
+  index::Int64
+
+  function TimedObservations(observations::Vector{TimedObservation})
+    new(sort(observations, by=x->x.step), 1)
+  end
+end
+TimedObservations() = TimedObservations(TimedObservation[])
+length(x::TimedObservations) = length(x.observations)
+access(x::TimedObservations) = x.observations[x.index]
+advance!(x::TimedObservations) = (x.index += 1; nothing)
+processed(x::TimedObservations) = x.index > length(x)
+
+#
+# Combine sets of observations (so that we can obtain the set of all
+# observations from the union of the prior and posterior)
+#
+function combine_observations(x::Vararg{X}) where
+  X <: Union{Vector{Trajectory}, Vector{TimedObservation}}
+
+  vcat(x...)
+end
+
+#
+# Simulate observations and update the filter for a given time-step
+#
+
+# Assumption: all trajectories are at least as long as "step"
+function simulate_update_filter!(grid::Grid, filter::Filter,
+                                 sensor::RangingSensor, target_state::State,
+                                 trajectories::Vector{Trajectory}, step;
+                                 rng=Random.GLOBAL_RNG,
+                                 likelihood_buffer = likelihood_buffer()
+                                )
+
+    for trajectory in trajectories
+      robot_state = trajectory[step]
+
+      range_observation = generate_observation(sensor, robot_state,
+                                               target_state; rng=rng)
+
+      measurement_update!(filter, robot_state, get_states(grid), sensor,
+                          range_observation, buffer=likelihood_buffer)
+    end
+end
+# Precondition: all observations before "step" have already been processed.
+# (this is reasonable because the filter update design would prevent processing
+# those observations afterward. As such, observations that precede the scope of
+# updates are malformed)
+function simulate_update_filter!(grid::Grid, filter::Filter,
+                                 sensor::RangingSensor, target_state::State,
+                                 observations::TimedObservations, step;
+                                 rng=Random.GLOBAL_RNG,
+                                 likelihood_buffer = likelihood_buffer()
+                                )
+
+  # Process all observations at the current step
+  #
+  # Note that observations are sorted and that observations before the current
+  # steps *have already been processed*
+  while !finished(observations) && access(observations).step == step
+    robot_state = access(observations).state
+
+    range_observation = generate_observation(sensor, robot_state,
+                                             target_state; rng = rng)
+
+    measurement_update!(filter, robot_state, get_states(grid), sensor,
+                        range_observation, buffer=likelihood_buffer)
+
+    advance!(observations)
+  end
+
+  nothing
 end
 
 # Sum mutual information objective as by Ryan and Hedrick.
@@ -36,60 +132,84 @@ end
 #
 const default_num_information_samples = 1000
 
+# Package a single trajectory in an array
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
-                                    trajectory::Trajectory,
-                                    prior_trajectories = Trajectory[];
+                                    observation::Trajectory;
+                                    prior_observations::Vector{Trajectory}=
+                                    Trajectory[],
                                     kwargs...
                                    )
 
-  finite_horizon_information(grid, prior, sensor, [trajectory],
-                             prior_trajectories; kwargs...)
+  finite_horizon_information(grid, prior, sensor, [observation];
+                             prior_observations=prior_observations, kwargs...)
 end
-
+# Pull the number of time-steps from a vector of trajectories as appropriate
+# and drop that into the keyword arguments
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
-                                    posterior_trajectories::Vector{Trajectory},
-                                    prior_trajectories = Trajectory[];
-                                    num_samples::Integer =
-                                      default_num_information_samples,
-                                    rng = Random.GLOBAL_RNG)
+                                    observations::T,
+                                    prior_observations::T = T();
+                                    kwargs...
+                                   ) where T <: Vector{Trajectory}
 
-  if length(posterior_trajectories) == 0
+  if length(observations) == 0
     error("Please supply at least one trajectory for posterior")
   end
 
-  steps = length(posterior_trajectories[1])
+  horizon = length(observations[1])
 
-  if steps == 0
+  if horizon == 0
     error("Information horizon is zero")
   end
 
-  if !all(length.(posterior_trajectories) .== steps) &&
-    !all(length.(prior_trajectories) .== steps)
+  if !all(length.(observations) .== horizon) &&
+    !all(length.(prior_observations) .== horizon)
 
-    @show posterior_trajectories
-    @show prior_trajectories
+    @show observations
+    @show prior_observations
     error("Information trajectory lengths do not match")
   end
+
+  finite_horizon_information(grid, prior, sensor, observations, horizon;
+                             prior_observations=prior_observations,
+                             kwargs...)
+end
+
+# Base implementation of the information objective for finite horizons that is
+# called by all others
+#
+# (Note from above that this is sum of conditional mutual informations at each
+# step)
+function finite_horizon_information(grid::Grid, prior::Filter,
+                                    sensor::RangingSensor,
+                                    posterior_observations::O,
+                                    horizon::Integer;
+                                    prior_observations::O = O(),
+                                    num_samples::Integer =
+                                      default_num_information_samples,
+                                    kwargs...
+                                   ) where O <: Union{TimedObservations,
+                                                      Vector{Trajectory}}
 
   # Compute entropies over the horizon, conditional on the prior trajectories
   # to compute the entropies:
   #
-  # sum_i=1^t H(Xi|Y_{prior_trajectories}, belief)
+  # sum_i=1^t H(Xi|Y_{prior_observations}, belief)
   prior_entropies = mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, prior_trajectories,
-                                  steps, rng = rng)
+    sample_finite_horizon_entropy(grid, prior, sensor, prior_observations,
+                                  horizon; kwargs...)
   end
 
   # Compute entropies over the horizon conditional on the input trajectory
   # (produces an array with one entry per time-step) to compute entropies:
   #
   # sum_i=1^t H(Xi|Y_{all_trajectories}, belief)
-  all_trajectories = vcat(prior_trajectories, posterior_trajectories)
+  all_observations = combine_observations(prior_observations,
+                                          posterior_observations)
   conditional_entropies = mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, all_trajectories,
-                                  steps, rng = rng)
+    sample_finite_horizon_entropy(grid, prior, sensor, all_observations,
+                                  horizon; kwargs...)
   end
 
   (
@@ -106,22 +226,31 @@ end
 # This method samples the observations and computes the entropy
 #
 # Returns an array of entropies with entries for each step
+# *on which entropy is evaluated*
+#
+# The "entropy_only_at_end" keyword argument allows the designer
+# to evaluate entropy at only one time-step (the last in the horizon)
+
+# Package timed observations before passing them into the main implementation
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
-                                       trajectories,
-                                       steps; rng = Random.GLOBAL_RNG)
+                                       observations::Vector{TimedObservation},
+                                       b...;
+                                       kwargs...)
 
-  if steps == 0
-    error("Information horizon is zero")
-  end
+  sample_finite_horizon_entropy(a..., TimedObservations(observations), b...;
+                                kwargs...)
+end
+function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
+                                       sensor::RangingSensor,
+                                       observations::Union{Vector{Trajectory},
+                                                           TimedObservations},
+                                       horizon::Integer;
+                                       rng = Random.GLOBAL_RNG,
+                                       entropy_only_at_end=false
+                                      )
 
-  if !all(length.(trajectories) .== steps)
-    @show steps
-    @show trajectories
-    error("Information trajectory lengths do not match")
-  end
-
-  target_state = sample_state(grid, prior; rng = rng)
+  target_state = sample_state(grid, prior; rng=rng)
 
   # Simulate trajectories and compute updates
   #
@@ -129,35 +258,27 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   # (by also sampling sampling target trajectories)
   # Note: we will reuse samples accross the horizon
   filter = Filter(prior)
-  conditional_entropies = Array{Float64}(undef, steps)
+  conditional_entropies = Float64[]
 
   neighbor_buffer = neighbors_buffer()
   likelihood_buffer = likelihoods_buffer(get_states(grid))
 
-  for step = 1:steps
+  for step = 1:horizon
     # Update from prior state to the first time-step in the horizon
-    if !isempty(trajectories)
-      target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
-    end
+    target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
 
     process_update!(filter, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
-    # the given time-step
-    #
-    # Afterward, perform measurement updates
-    for trajectory in trajectories
-      robot_state = trajectory[step]
+    # the given time-step, and then perform measurement updates
+    simulate_update_filter!(grid, filter, sensor, target_state, observations,
+                            step; rng=rng, likelihood_buffer=likelihood_buffer)
 
-      range_observation = generate_observation(sensor, robot_state,
-                                               target_state; rng = rng)
-
-
-      measurement_update!(filter, robot_state, get_states(grid), sensor,
-                          range_observation, buffer=likelihood_buffer)
+    # Evaluate entropy if evaluating entropy at all time-steps or if at the last
+    # time-step
+    if !entropy_only_at_end || step == horizon
+      push!(conditional_entropies, entropy(filter))
     end
-
-    conditional_entropies[step] = entropy(filter)
   end
 
   conditional_entropies
