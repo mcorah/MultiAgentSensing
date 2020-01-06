@@ -213,12 +213,12 @@ end
 get_element_indices(p::ExplicitPartitionProblem, xs...) =
   get_element_indices(p.partition_matroid, xs...)
 
-function get_element_indices(agents::Vector{<:Agent}, block::Integer)
+function get_element_indices(agents::Vector, block::Integer)
   map(1:length(get_block(agents[block]))) do block_index
     (block, block_index)
   end
 end
-function get_element_indices(agents::Vector{<:Agent})
+function get_element_indices(agents::Vector)
   map(agents, 1:length(agents)) do agent, agent_index
     get_element_indices(agents, agent_index)
   end
