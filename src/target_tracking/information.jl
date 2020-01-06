@@ -48,7 +48,7 @@ TimedObservations() = TimedObservations(TimedObservation[])
 length(x::TimedObservations) = length(x.observations)
 access(x::TimedObservations) = x.observations[x.index]
 advance!(x::TimedObservations) = (x.index += 1; nothing)
-processed(x::TimedObservations) = x.index > length(x)
+all_processed(x::TimedObservations) = x.index > length(x)
 
 #
 # Combine sets of observations (so that we can obtain the set of all
@@ -97,7 +97,7 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
   #
   # Note that observations are sorted and that observations before the current
   # steps *have already been processed*
-  while !finished(observations) && access(observations).step == step
+  while !all_processed(observations) && access(observations).step == step
     robot_state = access(observations).state
 
     range_observation = generate_observation(sensor, robot_state,
@@ -189,7 +189,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
                                     num_samples::Integer =
                                       default_num_information_samples,
                                     kwargs...
-                                   ) where O <: Union{TimedObservations,
+                                   ) where O <: Union{Vector{TimedObservation},
                                                       Vector{Trajectory}}
 
   # Compute entropies over the horizon, conditional on the prior trajectories
@@ -238,7 +238,8 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
                                        b...;
                                        kwargs...)
 
-  sample_finite_horizon_entropy(a..., TimedObservations(observations), b...;
+  sample_finite_horizon_entropy(grid, prior, sensor,
+                                TimedObservations(observations), b...;
                                 kwargs...)
 end
 function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
