@@ -13,9 +13,9 @@ target_state = (5,5)
 
 # Some representative and interesting weights sets
 state_sets = [[(5,5), (5,5)],
-              [(5,0), (5,10)],
               [(5,5), (5,10)],
-              [(5,-100), (5, 110)]]
+              [(5,3), (5,7)],
+              [(5,1), (5,9)]]
 
 grid = Grid(grid_size, grid_size)
 histogram_filter = Filter(grid, target_state)
