@@ -49,6 +49,9 @@ function index_to_state(g::Grid, x)
   (a, b)
 end
 
+# Wrap states back into the grid
+wrap(g::Grid, s) = mod.(s .- 1, dims(g)) .+ 1
+
 # Produces the out neighbors of the transition graph based on a grid model
 # We preallocate the array with the max number of neighbors
 neighbors_buffer() = Vector{State}(undef, 5)
@@ -59,11 +62,9 @@ function neighbors(g::Grid, state; buffer=neighbors_buffer())
   resize!(buffer, 0)
 
   for dir in dirs, offset in offsets
-    candidate = state .+ offset .* dir
+    candidate = wrap(g, state .+ offset .* dir)
 
-    if in_bounds(g, candidate)
-      push!(buffer, candidate)
-    end
+    push!(buffer, candidate)
   end
 
   push!(buffer, state)
@@ -117,11 +118,19 @@ variance(r::RangingSensor, distance) =
 
 stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
 
-mean(r::RangingSensor, a, b) = norm(a .- b)
+# Distances in each direction are minimum distances around the grid
+function mean(g::Grid, r::RangingSensor, a, b)
+  diff = abs.(a .- b)
+
+  dists = min.(diff, dims(g) .- diff)
+
+  norm(dists)
+end
 
 # sample a ranging observation
-function generate_observation(r::RangingSensor, a, b; rng=Random.GLOBAL_RNG)
-  m = mean(r,a,b)
+function generate_observation(g::Grid, r::RangingSensor, a, b;
+                              rng=Random.GLOBAL_RNG)
+  m = mean(g, r,a,b)
   m + randn(rng) * stddev(r, m)
 end
 
@@ -131,16 +140,39 @@ likelihoods_buffer(states) = Array{Float64}(undef, size(states))
 
 # Computes (non-normalize) likelihoods of data
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
+                             grid::Grid,
                              range::Real;
                              buffer = likelihoods_buffer(target_states)
                             )
 
   for (ii, target_state) in enumerate(target_states)
-    distance = mean(sensor, robot_state, target_state)
+    distance = mean(grid, sensor, robot_state, target_state)
 
     buffer[ii] = evaluate_no_norm(normal_lookup_table, error=range - distance,
                                   stddev=stddev(sensor, distance))
   end
 
   buffer
+end
+
+# produces an array of continuous ranges of states in the intput trajectory
+# (as the robot may cros over the grid)
+continuous(a::State, b::State) = sum(abs.(a .- b)) <= 1
+function continuous_ranges(states::Trajectory)
+  ret = Vector{State}[]
+
+  # Ends of ranges are states that are discontinuous with the following
+  range_ends = findall(1:length(states)-1) do ii
+    !continuous(states[ii], states[ii+1])
+  end
+  push!(range_ends, length(states))
+
+  # Push the ranges of states
+  start = 1
+  for range_end in range_ends
+    push!(ret, states[start:range_end])
+    start = range_end + 1
+  end
+
+  ret
 end

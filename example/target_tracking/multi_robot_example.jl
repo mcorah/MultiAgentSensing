@@ -74,14 +74,15 @@ for ii = 2:steps
   # (output is an array of arrays of robots' observations)
   range_observations = map(robot_states) do robot
     map(target_states) do target
-      generate_observation(sensor, robot, target)
+      generate_observation(grid, sensor, robot, target)
     end
   end
 
   # Measurement update
   for (robot, observations) in zip(robot_states, range_observations)
     for (filter, observation) in zip(histogram_filters, observations)
-      measurement_update!(filter, robot, get_states(grid), sensor, observation)
+      measurement_update!(filter, robot, get_states(grid), sensor, grid,
+                          observation)
     end
   end
 

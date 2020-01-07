@@ -75,10 +75,10 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
     for trajectory in trajectories
       robot_state = trajectory[step]
 
-      range_observation = generate_observation(sensor, robot_state,
+      range_observation = generate_observation(grid, sensor, robot_state,
                                                target_state; rng=rng)
 
-      measurement_update!(filter, robot_state, get_states(grid), sensor,
+      measurement_update!(filter, robot_state, get_states(grid), sensor, grid,
                           range_observation, buffer=likelihood_buffer)
     end
 end
@@ -100,10 +100,10 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
   while !all_processed(observations) && access(observations).step == step
     robot_state = access(observations).state
 
-    range_observation = generate_observation(sensor, robot_state,
+    range_observation = generate_observation(grid, sensor, robot_state,
                                              target_state; rng = rng)
 
-    measurement_update!(filter, robot_state, get_states(grid), sensor,
+    measurement_update!(filter, robot_state, get_states(grid), sensor, grid,
                         range_observation, buffer=likelihood_buffer)
 
     advance!(observations)

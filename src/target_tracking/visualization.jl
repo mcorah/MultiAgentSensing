@@ -14,26 +14,34 @@ function plot_state_space(g::Grid; color=:k)
 end
 
 function plot_states(states::Array{State}; kwargs...)
-  xs = [x[1] for x in states]
-  ys = [x[2] for x in states]
+  vcat(map(continuous_ranges(states)) do range
+    xs = [x[1] for x in range]
+    ys = [x[2] for x in range]
 
-  plot(xs, ys; kwargs...)
+    plot(xs, ys; kwargs...)
+  end...)
 end
 
-function plot_trajectory(states; color=:red)
+function plot_trajectory(states; color=:red, kwargs...)
 
-  xs = [x[1] for x in states]
-  ys = [x[2] for x in states]
+  first = states[1]
+  last = states[end]
 
   # start end
-  i = scatter(xs[1], ys[1], color=color, marker="X", edgecolors=:k,
-              s=object_scale)
-  f = scatter(xs[end], ys[end], color=color, marker="^", edgecolors=:k,
-              s=object_scale)
-  t = plot(xs, ys, color=color)
+  ret = []
+  push!(ret, scatter(first[1], first[2], color=color, marker="X", edgecolors=:k,
+                     s=object_scale))
+  push!(ret, scatter(last[1], last[2], color=color, marker="^", edgecolors=:k,
+                     s=object_scale))
+
+  range_plots = map(continuous_ranges(states)) do range
+    xs = [x[1] for x in range]
+    ys = [x[2] for x in range]
+    plot(xs, ys; color=color, kwargs...)
+  end
 
   # return values are arrays of plot objects, concatenate
-  vcat(i, f, t)
+  vcat(ret, range_plots...)
 end
 
 function plot_robot(state; color=:blue, kwargs...)

@@ -34,13 +34,13 @@ for ii = 2:steps
   states[ii] = state
 
   range_observations = map(robots) do robot
-    generate_observation(sensor, robot, state)
+    generate_observation(grid, sensor, robot, state)
   end
 
   # compute filter updates in place for this script
   process_update!(histogram_filter, transition_matrix(grid))
   for (robot, observation) in zip(robots, range_observations)
-    measurement_update!(histogram_filter, robot, get_states(grid), sensor,
+    measurement_update!(histogram_filter, robot, get_states(grid), sensor, grid,
                         observation)
   end
 

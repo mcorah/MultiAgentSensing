@@ -28,12 +28,12 @@ for ii = 2:steps
   state = target_dynamics(grid, states[ii-1])
   states[ii] = state
 
-  range_observation = generate_observation(sensor, robot_state, state)
+  range_observation = generate_observation(grid, sensor, robot_state, state)
 
   # compute filter updates in place for this script
   process_update!(histogram_filter, transition_matrix(grid))
   measurement_update!(histogram_filter, robot_state, get_states(grid), sensor,
-                      range_observation)
+                      grid, range_observation)
 
   plots=[]
   append!(plots, plot_robot(robot_state))

@@ -20,9 +20,10 @@ histogram_filter = Filter(grid, target_state)
 # Create some fake observations and update the filter
 for ii = 1:num_observations
   robot_state = random_state(grid)
-  range_observation = generate_observation(sensor, robot_state, target_state)
+  range_observation = generate_observation(grid, sensor, robot_state,
+                                           target_state)
   measurement_update!(histogram_filter, robot_state, get_states(grid), sensor,
-                      range_observation)
+                      grid, range_observation)
 end
 
 function run_test(steps; print=true)

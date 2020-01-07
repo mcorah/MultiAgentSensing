@@ -26,7 +26,7 @@ for ii = 2:steps
   state = target_dynamics(grid, states[ii-1])
   states[ii] = state
 
-  range_observation = generate_observation(sensor, robot_state, state)
+  range_observation = generate_observation(grid, sensor, robot_state, state)
 
   plots=[]
   append!(plots, plot_robot(robot_state))
