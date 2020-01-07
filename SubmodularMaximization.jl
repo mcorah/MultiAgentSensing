@@ -75,13 +75,12 @@ end
 #
 # Interface
 #
-abstract type PartitionProblem end
+abstract type PartitionProblem{PartitionElement} end
 
 # Define dependent types
-PartitionElement(::T) where T <: PartitionProblem = PartitionElement(T)
+PartitionElement(::PartitionProblem{T}) where T = T
 # Subtypes should redefine this method
-PartitionElement(::Type{<:PartitionProblem}) =
-  error("Element type not defined for this partition problem")
+PartitionElement(::Type{<:PartitionProblem{T}}) where T = T
 
 # Defines the structure of a solution for the given matroid or its type
 ElementArray(::T) where T = ElementArray(T)
@@ -127,16 +126,14 @@ solve_block(p::PartitionProblem, block::Integer, selections::Vector) =
 # The blocks contain whatever the elements of the ground set correspond to.
 # For example, the blocks may contain specifications of coverage regions.
 
-struct ExplicitPartitionProblem <: PartitionProblem
-  objective::Function
-  partition_matroid::Vector
-end
-
 # Solution elemnts for concrete partition matroids are indices within the array
 # of blocks
 #
 # (agent_index, block_index)
-PartitionElement(::Type{ExplicitPartitionProblem}) = Tuple{Int64,Int64}
+struct ExplicitPartitionProblem <: PartitionProblem{Tuple{Int64,Int64}}
+  objective::Function
+  partition_matroid::Vector
+end
 
 get_element(problem::ExplicitPartitionProblem, x) =
   get_element(problem.partition_matroid, x)

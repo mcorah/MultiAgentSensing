@@ -2,7 +2,11 @@ using LinearAlgebra
 
 export MultiRobotTargetTrackingProblem
 
-struct MultiRobotTargetTrackingProblem <: PartitionProblem
+# Solution elements consist of the robot index and the associated trajectory
+# We construct solutions as such because the output may not have the same
+# ordering as the robots
+struct MultiRobotTargetTrackingProblem <: PartitionProblem{Tuple{Int64,
+                                                                 Trajectory}}
   grid::Grid
   sensor::RangingSensor
   horizon::Int64
@@ -33,12 +37,6 @@ struct MultiRobotTargetTrackingProblem <: PartitionProblem
         solver_information_samples, objective_information_samples)
   end
 end
-
-# Solution elements consist of the robot index and the associated trajectory
-# We construct solutions as such because the output may not have the same
-# ordering as the robots
-PartitionElement(::Type{MultiRobotTargetTrackingProblem}) =
-  Tuple{Int64, Trajectory}
 
 function objective(p::MultiRobotTargetTrackingProblem, X)
   trajectories = map(last, X)
