@@ -32,7 +32,7 @@ weights = map(range) do x
 
   @time weights = compute_weight_matrix(problem,
                                         channel_capacity_method=
-                                          channel_capacities_by_target)
+                                          channel_capacities_mcts)
 
   sum(weights) / 2
 end

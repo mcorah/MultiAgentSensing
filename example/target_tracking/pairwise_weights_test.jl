@@ -45,7 +45,9 @@ for states in state_sets
   end
 
   # Compute weight matrices
-  methods = [channel_capacities_by_target, channel_capacities_by_target_time]
+  methods = [channel_capacities_mcts,
+             channel_capacities_by_target,
+             channel_capacities_by_target_time]
 
   for method in methods
     @time weights = compute_weight_matrix(problem, channel_capacity_method=method)

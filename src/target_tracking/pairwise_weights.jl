@@ -2,7 +2,7 @@
 # decomposition
 
 export reachable_set, propagate_reachable_set, channel_capacities_by_target,
-  channel_capacities_by_target_time
+  channel_capacities_by_target_time, channel_capacities_mcts
 
 
 # Compute reachable set on the grid for n steps as a set of states
@@ -125,6 +125,30 @@ function channel_capacity_by_target(p::MultiRobotTargetTrackingProblem,
   2 * solution.value
 end
 
+# Partition matroids turned out to be super slow as I probably could have
+# guessed. Using MCTS is a bit tenuous, but I should be able to get results in a
+# small fraction of the time I would require otherwise
+#
+# On the plus side, this should be a relatively easy problem for MCTS to solve
+function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
+                               filter::Filter; robot_index)
+  # Construct a solver for the individual filter
+  problem = SingleRobotTargetTrackingProblem(p.grid, p.sensor, p.horizon,
+                                             [filter],
+                                             num_information_samples=
+                                               p.solver_information_samples)
+
+  state = p.partition_matroid[robot_index]
+
+  trajectory = solve_single_robot(problem, state,
+                                  n_iterations=p.solver_iterations).trajectory
+
+  # Sample again to get an accurate estimate of the reward
+  #
+  # The tuple is a hack to put this in a format tha the multi-robot code can
+  # recognize
+  objective(p, [(1, trajectory)])
+end
 
 #
 # Compute all channel capacity bounds (by target and or time-step) for a given
@@ -143,6 +167,13 @@ function channel_capacities_by_target(p::MultiRobotTargetTrackingProblem,
                                       robot_index::Integer)
   map(p.target_filters) do filter
     channel_capacity_by_target(p, filter,robot_index=robot_index)
+  end
+end
+
+function channel_capacities_mcts(p::MultiRobotTargetTrackingProblem,
+                                      robot_index::Integer)
+  map(p.target_filters) do filter
+    channel_capacity_mcts(p, filter,robot_index=robot_index)
   end
 end
 
