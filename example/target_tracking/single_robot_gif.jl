@@ -11,7 +11,7 @@ horizon = 2
 iterations = 100
 
 grid = Grid(grid_size, grid_size)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 robot_state = random_state(grid)
 target_state = random_state(grid)

@@ -22,7 +22,7 @@ num_targets = div(num_robots, 2)
 grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
 
 grid = Grid(grid_size, grid_size)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 robot_states = map(x->random_state(grid), 1:num_robots)
 target_states = map(x->random_state(grid), 1:num_targets)

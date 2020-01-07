@@ -6,7 +6,7 @@ using SubmodularMaximization: channel_capacity_by_target,
 
 grid_size = 9
 horizon = 5
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 # place the target in the center of the grid
 target_state = (5,5)

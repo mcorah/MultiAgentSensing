@@ -15,7 +15,7 @@ robots = map(1:num_robots) do _
   random_state(grid)
 end
 
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 initial = random_state(grid)
 states = Array{typeof(initial)}(undef, steps)

@@ -10,7 +10,7 @@ horizon = 5
 num_information_samples = 10
 
 grid = Grid(grid_size, grid_size)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 target_state = (2,2)
 

@@ -11,7 +11,7 @@ grid_size = 10
 grid = Grid(grid_size, grid_size)
 
 robot_state = div.((grid_size, grid_size), 2)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 initial = random_state(grid)
 states = Array{typeof(initial)}(undef, steps)

@@ -6,7 +6,7 @@ grid_size = 10
 iterations = 10
 
 grid = Grid(grid_size, grid_size)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 @show robot_state = random_state(grid)
 

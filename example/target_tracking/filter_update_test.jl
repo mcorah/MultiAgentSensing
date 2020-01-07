@@ -8,7 +8,7 @@ grid_size = 2
 grid = Grid(grid_size, grid_size)
 
 robot_state = div.((grid_size, grid_size), 2)
-sensor = RangingSensor(0.5^2, 0.1^2)
+sensor = RangingSensor()
 
 grid_states = get_states(grid)
 histogram_filter = Filter(grid)
