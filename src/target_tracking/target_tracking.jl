@@ -112,7 +112,7 @@ struct RangingSensor
   variance_constant::Float64
   variance_scaling_factor::Float64
 
-  function RangingSensor(;variance_constant=0.5, variance_scaling_factor=0.1)
+  function RangingSensor(;variance_constant=0.5, variance_scaling_factor=0.2)
     new(variance_constant, variance_scaling_factor)
   end
 end
