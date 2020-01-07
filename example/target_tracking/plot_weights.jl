@@ -30,8 +30,9 @@ weights = map(range) do x
   problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon, [histogram_filter],
                                             [state, state])
 
-  weights = compute_weight_matrix(problem,
-                                  channel_capacity_method=channel_capacities_by_target)
+  @time weights = compute_weight_matrix(problem,
+                                        channel_capacity_method=
+                                          channel_capacities_by_target)
 
   sum(weights) / 2
 end

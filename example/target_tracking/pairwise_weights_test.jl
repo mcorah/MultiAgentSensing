@@ -48,7 +48,7 @@ for states in state_sets
   methods = [channel_capacities_by_target, channel_capacities_by_target_time]
 
   for method in methods
-    weights = compute_weight_matrix(problem, channel_capacity_method=method)
+    @time weights = compute_weight_matrix(problem, channel_capacity_method=method)
     total_weight = sum(weights) / 2
 
     println("Weight: ", total_weight, " (", method, ")")
