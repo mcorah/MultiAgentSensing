@@ -18,15 +18,15 @@ state_sets = [[(5,5), (5,5)],
               [(5,-100), (5, 110)]]
 
 grid = Grid(grid_size, grid_size)
-histogram_filter = Filter(grid)
+histogram_filter = Filter(grid, target_state)
 
 # Create some uncertainty. Two steps is probably a reasonable approximation of
 # the kind of target uncertainty that we will encounter
-for _ in 1:2
-  process_update!(histogram_filter, transition_matrix(grid))
-end
+process_update!(histogram_filter, transition_matrix(grid))
 
 for states in state_sets
+  println()
+
   @show states
 
   problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon, [histogram_filter],
@@ -36,11 +36,11 @@ for states in state_sets
 
   for ii = 1:length(states)
     @show target_weight = channel_capacity_by_target(problem, histogram_filter,
-                                                     robot_index=1)
+                                                     robot_index=ii)
 
     step_weights = map(1:horizon) do x
       @show channel_capacity_by_target_time(problem, histogram_filter,
-                                            robot_index=1, step=x)
+                                            robot_index=ii, step=x)
     end
   end
 
