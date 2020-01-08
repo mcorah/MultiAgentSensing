@@ -1,5 +1,5 @@
-
-# Simple test on the weights code
+# Provides a representative plot demonstrating how target weight varies with
+# distance
 
 using SubmodularMaximization
 using PyPlot
