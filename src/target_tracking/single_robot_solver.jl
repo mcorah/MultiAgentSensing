@@ -4,6 +4,7 @@ using LinearAlgebra
 
 using MCTS
 using POMDPs
+using Random
 import POMDPs.isterminal
 import POMDPs.actions
 
@@ -45,15 +46,18 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
 
   num_information_samples::Int64
 
+  rng::MersenneTwister
+
   function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                             horizon::Integer,
                                             filters::Vector{Filter{Int64}};
                                             prior_trajectories = Trajectory[],
                                             num_information_samples =
-                                              default_solver_information_samples
+                                              default_solver_information_samples,
+                                            rng = Random.GLOBAL_RNG
                                            )
     new(grid, sensor, horizon, filters, prior_trajectories,
-        num_information_samples)
+        num_information_samples, rng)
   end
 end
 
@@ -100,9 +104,14 @@ function extract_trajectory(problem::SingleRobotTargetTrackingProblem,
 
   mdp_state = MDPState(initial_state)
 
-  # TODO: allow for cases where the tree might not all be stored
+  # Allow for cases where the tree might not all be stored by sampling the rest
+  # of the rollout
   for ii in 1:horizon(problem)
-    state = action(MCTS.best_sanode_Q(MCTS.StateNode(tree, mdp_state)))
+    state = try
+      action(MCTS.best_sanode_Q(MCTS.StateNode(tree, mdp_state)))
+    catch e
+      target_dynamics(problem.grid, mdp_state.state; rng=problem.rng)
+    end
 
     states[ii] = state
 
