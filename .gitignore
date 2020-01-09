@@ -7,3 +7,4 @@
 data/
 fig/
 .ipynb_checkpoints/
+*.mem
