@@ -181,6 +181,8 @@ end
 #
 # (Note from above that this is sum of conditional mutual informations at each
 # step)
+information_counter = Threads.Atomic{Int64}(0)
+const samples_per_gc = 100_000
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
                                     posterior_observations::O,
@@ -191,6 +193,14 @@ function finite_horizon_information(grid::Grid, prior::Filter,
                                     kwargs...
                                    ) where O <: Union{Vector{TimedObservation},
                                                       Vector{Trajectory}}
+
+  # add one to the ccounter, and add one to the old value
+  old = Threads.atomic_add!(information_counter, num_samples)
+  new = old + num_samples
+  # Run the garbage collector if we pass a sample boundary
+  if div(new, samples_per_gc) > div(old, samples_per_gc)
+    GC.gc()
+  end
 
   # Compute entropies over the horizon, conditional on the prior trajectories
   # to compute the entropies:
