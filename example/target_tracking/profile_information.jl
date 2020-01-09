@@ -43,10 +43,12 @@ function run_test(steps; print=true)
   ifprint("  ", time / (steps * num_information_samples),
           " per information sample")
   ifprint("Note: horizon length is ", horizon)
+  ifprint("Note: total number of information samples is ",
+          steps * num_information_samples)
 end
 
 run_test(1)
-run_test(steps)
+@time run_test(steps)
 
 # Run the profiler
 Profile.init(n=1000000)

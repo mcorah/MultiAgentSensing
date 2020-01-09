@@ -60,6 +60,8 @@ function run_test(steps; print=true)
   ifprint("  ", time / ((steps - 1) * iterations * information_samples),
           " seconds per information sample")
   ifprint("Note: horizon length is ", horizon)
+  ifprint("Note: total number of information samples is ",
+          (steps-1) * iterations * information_samples)
 end
 
 # Show timing without profiling
