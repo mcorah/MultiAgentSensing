@@ -5,7 +5,7 @@ using MCTS
 using Statistics
 using Profile
 
-default_steps = 100
+default_steps = 50
 grid_size = 10
 horizon = 5
 iterations = 1000
@@ -64,7 +64,8 @@ end
 
 # Show timing without profiling
 run_test(2)
-run_test(default_steps)
+# Timing should produce useful memory data
+@time run_test(default_steps)
 
 # Run the profiler
 Profile.init(n=1000000)
