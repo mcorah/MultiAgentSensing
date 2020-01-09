@@ -64,7 +64,7 @@ end
 function generate_solver(depth;
                          n_iterations = default_num_iterations,
                          exploration_constant = default_exploration_constant,
-                         enable_tree_vis = true)
+                         enable_tree_vis = false)
 
   solver = MCTSSolver(n_iterations = n_iterations,
                       depth = depth,
