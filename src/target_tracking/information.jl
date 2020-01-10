@@ -166,12 +166,14 @@ function finite_horizon_information(grid::Grid, prior::Filter,
     error("Information horizon is zero")
   end
 
-  if !all(length.(observations) .== horizon) &&
-    !all(length.(prior_observations) .== horizon)
-
-    @show observations
-    @show prior_observations
-    error("Information trajectory lengths do not match")
+  for trajectories in (observations, prior_observations)
+    for trajectory in trajectories
+      if length(trajectory) != horizon
+        @show observations
+        @show prior_observations
+        error("Information trajectory lengths do not match")
+      end
+    end
   end
 
   finite_horizon_information(grid, prior, sensor, observations, horizon;
