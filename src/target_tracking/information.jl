@@ -207,13 +207,17 @@ function finite_horizon_information(grid::Grid, prior::Filter,
     GC.gc()
   end
 
+  prior_buffer = Filter(prior)
+  reset_prior() = copy_filter!(prior, out=prior_buffer)
+
   # Compute entropies over the horizon, conditional on the prior trajectories
   # to compute the entropies:
   #
   # sum_i=1^t H(Xi|Y_{prior_observations}, belief)
   prior_entropies = mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, prior_observations,
-                                  horizon; kwargs...)
+    reset_prior()
+    sample_finite_horizon_entropy!(grid, prior_buffer, sensor,
+                                   prior_observations, horizon; kwargs...)
   end
 
   # Compute entropies over the horizon conditional on the input trajectory
@@ -223,8 +227,9 @@ function finite_horizon_information(grid::Grid, prior::Filter,
   all_observations = combine_observations(prior_observations,
                                           posterior_observations)
   conditional_entropies = mean(1:num_samples) do _
-    sample_finite_horizon_entropy(grid, prior, sensor, all_observations,
-                                  horizon; kwargs...)
+    reset_prior()
+    sample_finite_horizon_entropy!(grid, prior_buffer, sensor,
+                                   all_observations, horizon; kwargs...)
   end
 
   (
@@ -245,19 +250,23 @@ end
 #
 # The "entropy_only_at_end" keyword argument allows the designer
 # to evaluate entropy at only one time-step (the last in the horizon)
+#
+#
+# WARNING: We operate on the prior/filter in place! It is up to the user to
+# maintain the original.
 
 # Package timed observations before passing them into the main implementation
-function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
+function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
                                        observations::Vector{TimedObservation},
                                        b...;
                                        kwargs...)
 
-  sample_finite_horizon_entropy(grid, prior, sensor,
+  sample_finite_horizon_entropy!(grid, prior, sensor,
                                 TimedObservations(observations), b...;
                                 kwargs...)
 end
-function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
+function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
                                        sensor::RangingSensor,
                                        observations::Union{Vector{Trajectory},
                                                            TimedObservations},
@@ -273,7 +282,7 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
   # Sample ranging observations
   # (by also sampling sampling target trajectories)
   # Note: we will reuse samples accross the horizon
-  filter = Filter(prior)
+
   conditional_entropies = Float64[]
 
   neighbor_buffer = neighbors_buffer()
@@ -283,17 +292,17 @@ function sample_finite_horizon_entropy(grid::Grid, prior::Filter,
     # Update from prior state to the first time-step in the horizon
     target_state = target_dynamics(grid, target_state, buffer=neighbor_buffer)
 
-    process_update!(filter, transition_matrix(grid))
+    process_update!(prior, transition_matrix(grid))
 
     # Sample observations based on the target state and each robot's state at
     # the given time-step, and then perform measurement updates
-    simulate_update_filter!(grid, filter, sensor, target_state, observations,
+    simulate_update_filter!(grid, prior, sensor, target_state, observations,
                             step; rng=rng, likelihood_buffer=likelihood_buffer)
 
     # Evaluate entropy if evaluating entropy at all time-steps or if at the last
     # time-step
     if !entropy_only_at_end || step == horizon
-      push!(conditional_entropies, entropy(filter))
+      push!(conditional_entropies, entropy(prior))
     end
   end
 
