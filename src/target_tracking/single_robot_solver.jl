@@ -13,8 +13,9 @@ export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
 
 const default_solver_information_samples = 1
 
-# This approximates the expected reward from a prior test
-exploration_constant(horizon) = 0.06 * horizon^2 + 0.1
+# This approximates the (half) the expected reward prior tests as we found that
+# using roughly half the typical reward results in the fastest convergence.
+exploration_constant(horizon) = 0.03 * horizon^2 + 0.05
 
 # We map the horizon length to the number of samples according to approximately
 # where the average return crossed 94% in a prior test
