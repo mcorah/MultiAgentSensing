@@ -26,7 +26,7 @@ struct MultiRobotTargetTrackingProblem <: PartitionProblem{Tuple{Int64,
                                            target_filters,
                                            robot_states;
                                            solver_iterations =
-                                             default_num_iterations,
+                                             default_num_iterations[horizon],
                                            solver_information_samples =
                                              default_solver_information_samples,
                                            objective_information_samples =

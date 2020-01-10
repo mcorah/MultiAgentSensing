@@ -11,9 +11,19 @@ import POMDPs.actions
 export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
   solve_single_robot, isterminal
 
-const default_num_iterations = 1000
 const default_solver_information_samples = 1
-const default_exploration_constant = 10.0
+
+# This approximates the expected reward from a prior test
+exploration_constant(horizon) = 0.06 * horizon^2 + 0.1
+
+# We map the horizon length to the number of samples according to approximately
+# where the average return crossed 94% in a prior test
+const default_num_iterations = Dict(1=>500,
+                                    2=>1100,
+                                    3=>2000,
+                                    4=>4100,
+                                    5=>8200,
+                                    6=>3000)
 
 #
 # Define the MDP model for POMDPs.jl
@@ -62,8 +72,8 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
 end
 
 function generate_solver(depth;
-                         n_iterations = default_num_iterations,
-                         exploration_constant = default_exploration_constant,
+                         n_iterations = default_num_iterations[depth],
+                         exploration_constant = exploration_constant(depth),
                          enable_tree_vis = false)
 
   solver = MCTSSolver(n_iterations = n_iterations,
@@ -76,8 +86,10 @@ end
 # Return the next state for the robot
 function solve_single_robot(problem::SingleRobotTargetTrackingProblem,
                             state::State;
-                            n_iterations = default_exploration_constant,
-                            exploration_constant = default_exploration_constant)
+                            n_iterations =
+                              default_num_iterations[problem.horizon],
+                            exploration_constant =
+                              exploration_constant(problem.horizon))
 
   solver = generate_solver(horizon(problem), n_iterations = n_iterations,
                            exploration_constant = exploration_constant)
