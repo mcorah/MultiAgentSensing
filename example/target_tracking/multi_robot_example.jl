@@ -18,68 +18,35 @@ num_robots = parse(Int64, readline())
 num_targets = default_num_targets(num_robots=num_robots)
 
 grid = Grid(num_robots=num_robots)
-sensor = RangingSensor()
+
+configs = MultiRobotTargetTrackingConfigs(grid=grid,
+                                          horizon=horizon)
 
 robot_states = map(x->random_state(grid), 1:num_robots)
 target_states = map(x->random_state(grid), 1:num_targets)
 
 histogram_filters = map(x->Filter(grid, x), target_states)
 
+solver = x->solve_n_partitions(num_partitions, x, threaded=true)
+
 plot_state_space(grid)
 xlim([0, grid.width+1])
 ylim([0, grid.height+1])
 
+
 for ii = 2:steps
   println("Step ", ii)
 
-  #
-  # Update robot and target states
-  #
+  @time solution = iterate_target_tracking!(robot_states=robot_states,
+                                            target_states=target_states,
+                                            target_filters=histogram_filters,
+                                            configs=configs,
+                                            solver=solver)
 
-  # Solve for robot and update state
-  problem = MultiRobotTargetTrackingProblem(robot_states,
-                                            histogram_filters,
-                                            grid=grid,
-                                            sensor=sensor,
-                                            horizon=horizon)
-
-  @time solution = solve_n_partitions(num_partitions, problem, threaded=true)
-
-  for (index, trajectory) in solution.elements
-    robot_states[index] = trajectory[1]
-  end
-  trajectories = map(last, solution.elements)
-
-
-  # Update Target states
-  global target_states = map(x->target_dynamics(grid, x), target_states)
-
-
-  #
-  # Run filter updates (corresponding to new target states) and provide robots
-  # with observations
-  #
-
-  # Process update
-  for filter in histogram_filters
-    process_update!(filter, transition_matrix(grid))
-  end
-
-  # Sample ranging observations
-  # (output is an array of arrays of robots' observations)
-  range_observations = map(robot_states) do robot
-    map(target_states) do target
-      generate_observation(grid, sensor, robot, target)
-    end
-  end
-
-  # Measurement update
-  for (robot, observations) in zip(robot_states, range_observations)
-    for (filter, observation) in zip(histogram_filters, observations)
-      measurement_update!(filter, robot, get_states(grid), sensor, grid,
-                          observation)
-    end
-  end
+  global robot_states = solution.robot_states
+  global target_states = solution.target_states
+  trajectories = solution.trajectories
+  range_observations = solution.range_observations
 
   #
   # Plot results

@@ -234,6 +234,7 @@ include("src/target_tracking/information.jl")
 include("src/target_tracking/single_robot_solver.jl")
 include("src/target_tracking/multi_robot_solver.jl")
 include("src/target_tracking/pairwise_weights.jl")
+include("src/target_tracking/experiment_tools.jl")
 include("src/target_tracking/visualization.jl")
 
 end
