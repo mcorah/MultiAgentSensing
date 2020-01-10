@@ -26,7 +26,8 @@ end
 
 # sample from the prior
 function sample_state(grid::Grid, prior::Filter; rng=Random.GLOBAL_RNG)
-  ind = sample(rng, 1:length(get_data(prior)), Weights(get_data(prior)[:]))
+  @views ind = sample(rng, 1:length(get_data(prior)),
+                      Weights(get_data(prior)[:]))
   index_to_state(grid, ind)
 end
 
