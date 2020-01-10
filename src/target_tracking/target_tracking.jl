@@ -142,7 +142,7 @@ const normal_lookup_table = NormalLookup(increment=0.001, max=4.0)
 
 likelihoods_buffer(states) = Array{Float64}(undef, size(states))
 
-# Computes (non-normalize) likelihoods of data
+# Computes (non-normalized) likelihoods of data
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
                              grid::Grid,
                              range::Real;
