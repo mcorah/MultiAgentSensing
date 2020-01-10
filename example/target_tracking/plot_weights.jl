@@ -20,7 +20,7 @@ grid = Grid(grid_size, grid_size)
 histogram_filter = Filter(grid, target_state)
 process_update!(histogram_filter, transition_matrix(grid))
 
-range = 1:2:grid_size
+range = 1:grid_size
 
 weights = map(range) do x
   println("Evaluating: ", x)
