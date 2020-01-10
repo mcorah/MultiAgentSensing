@@ -73,17 +73,21 @@ end
 function channel_capacity_by_target_time(p::MultiRobotTargetTrackingProblem,
                                          filter::Filter;
                                          step, robot_index)
+  configs = p.configs
+
   # Note: X is a vector of TimedObservation
   function objective(observations)
-    finite_horizon_information(p.grid, filter, p.sensor,
+    finite_horizon_information(configs.grid, filter, configs.sensor,
                                observations, step;
-                               num_samples=p.objective_information_samples,
+                               num_samples=
+                                configs.objective_information_samples,
                                entropy_only_at_end=true
                               ).reward
   end
 
   # Due to the objective design, states after the given time-step do not matter
-  partition_matroid = reachable_sets(p.grid, p.partition_matroid[robot_index],
+  partition_matroid = reachable_sets(configs.grid,
+                                     p.partition_matroid[robot_index],
                                      step)
 
   # Construct and solve the optimization problem
@@ -105,17 +109,20 @@ end
 
 function channel_capacity_by_target(p::MultiRobotTargetTrackingProblem,
                                     filter::Filter; robot_index)
+  configs = p.configs
 
   function objective(observations)
-    finite_horizon_information(p.grid, filter, p.sensor,
-                               observations, p.horizon;
-                               num_samples=p.objective_information_samples,
+    finite_horizon_information(configs.grid, filter, configs.sensor,
+                               observations, configs.horizon;
+                               num_samples=
+                                configs.objective_information_samples,
                                entropy_only_at_end=false
                               ).reward
   end
 
-  partition_matroid = reachable_sets(p.grid, p.partition_matroid[robot_index],
-                                     p.horizon)
+  partition_matroid = reachable_sets(configs.grid,
+                                     p.partition_matroid[robot_index],
+                                     configs.horizon)
 
   # Construct and solve the optimization problem
   problem = ExplicitPartitionProblem(objective, partition_matroid)
@@ -132,16 +139,20 @@ end
 # On the plus side, this should be a relatively easy problem for MCTS to solve
 function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
                                filter::Filter; robot_index)
+  configs=p.configs
+
   # Construct a solver for the individual filter
-  problem = SingleRobotTargetTrackingProblem(p.grid, p.sensor, p.horizon,
-                                             [filter],
-                                             num_information_samples=
-                                               p.solver_information_samples)
+  problem = SingleRobotTargetTrackingProblem(configs.grid, configs.sensor,
+                                           configs.horizon,
+                                           [filter],
+                                           num_information_samples=
+                                             configs.solver_information_samples)
 
   state = p.partition_matroid[robot_index]
 
   trajectory = solve_single_robot(problem, state,
-                                  n_iterations=p.solver_iterations).trajectory
+                                  n_iterations=
+                                    configs.solver_iterations).trajectory
 
   # Sample again to get an accurate estimate of the reward
   #
@@ -157,7 +168,9 @@ end
 
 function channel_capacities_by_target_time(p::MultiRobotTargetTrackingProblem,
                                            robot_index::Integer)
-  map(product(p.target_filters, 1:p.horizon)) do (filter, step)
+  configs = p.configs
+
+  map(product(p.target_filters, 1:configs.horizon)) do (filter, step)
     channel_capacity_by_target_time(p, filter, step=step,
                                     robot_index=robot_index)
   end

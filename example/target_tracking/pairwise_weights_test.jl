@@ -6,7 +6,6 @@ using SubmodularMaximization: channel_capacity_by_target,
 
 grid_size = 9
 horizon = 5
-sensor = RangingSensor()
 
 # place the target in the center of the grid
 target_state = (5,5)
@@ -29,8 +28,9 @@ for states in state_sets
 
   @show states
 
-  problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon, [histogram_filter],
-                                            states)
+  problem = MultiRobotTargetTrackingProblem(states, [histogram_filter],
+                                            grid=grid,
+                                            horizon=horizon)
 
   # Investigate weights
 

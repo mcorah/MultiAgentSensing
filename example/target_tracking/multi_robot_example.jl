@@ -37,8 +37,11 @@ for ii = 2:steps
   #
 
   # Solve for robot and update state
-  problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon,
-                                            histogram_filters, robot_states)
+  problem = MultiRobotTargetTrackingProblem(robot_states,
+                                            histogram_filters,
+                                            grid=grid,
+                                            sensor=sensor,
+                                            horizon=horizon)
 
   @time solution = solve_n_partitions(num_partitions, problem, threaded=true)
 
