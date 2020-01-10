@@ -8,7 +8,6 @@ close()
 
 steps = 100
 horizon = 5
-solver_iterations = 1000
 grid_cells_per_robot = 50
 show_observations = false
 
@@ -44,9 +43,7 @@ for ii = 2:steps
 
   # Solve for robot and update state
   problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon,
-                                            histogram_filters, robot_states,
-                                            solver_iterations=solver_iterations
-                                           )
+                                            histogram_filters, robot_states)
 
   @time solution = solve_n_partitions(num_partitions, problem, threaded=true)
 
