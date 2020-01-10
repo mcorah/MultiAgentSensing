@@ -12,9 +12,8 @@ using Base.Iterators
 using JLD2
 using Profile
 
-num_mcts_samples = 2 ^ 19
+num_mcts_samples = 2 ^ 14
 horizon = 5
-threads = Threads.nthreads()
 
 grid_size = 10
 sensor = RangingSensor()
