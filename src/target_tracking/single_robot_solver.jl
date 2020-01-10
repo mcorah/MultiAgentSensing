@@ -18,13 +18,15 @@ const default_solver_information_samples = 1
 exploration_constant(horizon) = 0.03 * horizon^2 + 0.05
 
 # We map the horizon length to the number of samples according to approximately
-# where the average return crossed 94% in a prior test
-const default_num_iterations = Dict(1=>500,
-                                    2=>1100,
-                                    3=>2000,
-                                    4=>4100,
-                                    5=>8200,
-                                    6=>3000)
+# where the average return crossed 97% in a prior test
+#
+# Note: the last test indicated slow convergence for a horizon length of 2.
+const default_num_iterations = Dict(1=>512,
+                                    2=>1024,
+                                    3=>1024,
+                                    4=>1024,
+                                    5=>2048,
+                                    6=>4000)
 
 #
 # Define the MDP model for POMDPs.jl
