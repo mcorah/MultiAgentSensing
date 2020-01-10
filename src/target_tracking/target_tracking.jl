@@ -6,7 +6,7 @@ using Random
 
 export Grid, State, get_states, dims, num_states, neighbors, random_state,
   target_dynamics, RangingSensor, generate_observation, compute_likelihoods,
-  transition_matrix
+  transition_matrix, default_num_targets
 
 import Distributions.mean
 
@@ -35,6 +35,17 @@ struct Grid <: StateSpace
     x
   end
 end
+
+# Construct default grids according to the number of robots
+const grid_cells_per_robot = 50
+function Grid(;num_robots)
+  grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
+  Grid(grid_size, grid_size)
+end
+
+# default number of targets as a function of the number of robots
+default_num_targets(;num_robots) = num_robots / 2
+
 get_states(width::Real, height::Real) = collect(product(1:width, 1:height))
 get_states(g::Grid) = g.states
 dims(g::Grid) = (g.width, g.height)

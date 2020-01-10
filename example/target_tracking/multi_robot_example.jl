@@ -8,7 +8,6 @@ close()
 
 steps = 100
 horizon = 5
-grid_cells_per_robot = 50
 show_observations = false
 
 num_partitions = 4
@@ -16,11 +15,9 @@ num_partitions = 4
 print("Enter number of robots: ")
 num_robots = parse(Int64, readline())
 
-num_targets = div(num_robots, 2)
+num_targets = default_num_targets(num_robots=num_robots)
 
-grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
-
-grid = Grid(grid_size, grid_size)
+grid = Grid(num_robots=num_robots)
 sensor = RangingSensor()
 
 robot_states = map(x->random_state(grid), 1:num_robots)
@@ -28,11 +25,9 @@ target_states = map(x->random_state(grid), 1:num_targets)
 
 histogram_filters = map(x->Filter(grid, x), target_states)
 
-# got this far
-
 plot_state_space(grid)
-xlim([0, grid_size+1])
-ylim([0, grid_size+1])
+xlim([0, grid.width+1])
+ylim([0, grid.height+1])
 
 for ii = 2:steps
   println("Step ", ii)
