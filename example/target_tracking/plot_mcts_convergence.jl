@@ -10,10 +10,10 @@ using JLD2
 close()
 
 data_file = "./data/mcvs_convergence_data.jld2"
-reprocess = false
+reprocess = true
 
 num_trials = 100
-num_mcts_samples = 2 .^ (4:17)
+num_mcts_samples = 2 .^ (4:16)
 horizons = 1:6
 
 grid_size = 10
@@ -48,11 +48,6 @@ function get_data()
         println("Block num: ", block_num)
         # Ensure that thread execution does not overlap
         @threads for ii in block
-          # We run into memory issues for large amounts of data
-          if num_mcts_samples > 2000
-            GC.gc()
-          end
-
           # solve via mcts
           trajectory = solve_single_robot(problem, robot_state,
                                           n_iterations = num_mcts_samples).trajectory
