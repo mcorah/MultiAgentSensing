@@ -69,7 +69,8 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
                                  sensor::RangingSensor, target_state::State,
                                  trajectories::Vector{Trajectory}, step;
                                  rng=Random.GLOBAL_RNG,
-                                 likelihood_buffer = likelihood_buffer()
+                                 likelihood_buffer =
+                                  likelihoods_buffer(get_states(grid))
                                 )
 
     for trajectory in trajectories
@@ -90,7 +91,8 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
                                  sensor::RangingSensor, target_state::State,
                                  observations::TimedObservations, step;
                                  rng=Random.GLOBAL_RNG,
-                                 likelihood_buffer = likelihood_buffer()
+                                 likelihood_buffer =
+                                  likelihoods_buffer(get_states(grid))
                                 )
 
   # Process all observations at the current step
@@ -148,10 +150,11 @@ end
 # and drop that into the keyword arguments
 function finite_horizon_information(grid::Grid, prior::Filter,
                                     sensor::RangingSensor,
-                                    observations::T,
-                                    prior_observations::T = T();
+                                    observations::Vector{Trajectory};
+                                    prior_observations::Vector{Trajectory}=
+                                      Trajectory[],
                                     kwargs...
-                                   ) where T <: Vector{Trajectory}
+                                   )
 
   if length(observations) == 0
     error("Please supply at least one trajectory for posterior")
