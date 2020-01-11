@@ -11,7 +11,7 @@ using JLD2
 close()
 
 data_file = "./data/mcts_exploration_constant_data.jld2"
-reprocess = true
+reprocess = false
 
 num_trials = 100
 num_mcts_samples = 2 .^ (4:16)
