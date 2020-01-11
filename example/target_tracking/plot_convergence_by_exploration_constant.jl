@@ -70,7 +70,6 @@ function get_data()
 
     @save data_file data
   else
-    global data
     @load data_file data
   end
 
