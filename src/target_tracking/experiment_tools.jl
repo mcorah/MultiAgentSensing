@@ -1,9 +1,51 @@
 # This file provides tools for design of multi-robot target tracking experiments
 
-export iterate_target_tracking!
+export target_tracking_experiment, target_tracking_instance,
+  iterate_target_tracking!
 
-#function target_tracking_experiment()
-#end
+# Run a target tracking experiment for a given number of steps
+# By default, keep all data from each step
+function target_tracking_experiment(;steps,
+                                    num_robots,
+                                    num_targets=default_num_targets(num_robots),
+                                    configs::MultiRobotTargetTrackingConfigs,
+                                    solver=solve_sequential,
+                                    step_callback=copy_data
+                                   )
+  initialization = target_tracking_instance(num_robots=num_robots,
+                                            num_targets=num_targets,
+                                            configs=configs)
+
+  robot_states = initialization.robot_states
+  target_states = initialization.target_states
+  target_filters = initialization.target_filters
+
+  # Run target tracking. Store data in whatever the callback returns
+  map(1:steps) do _
+    # Simulate one step of tracking; update everything in place
+    data = iterate_target_tracking!(robot_states=robot_states,
+                                    target_states=target_states,
+                                    target_filters=target_filters,
+                                    configs=configs,
+                                    solver=solver)
+
+    step_callback(data)
+  end
+end
+
+function target_tracking_instance(;num_robots::Int64,
+                                  num_targets=default_num_targets(num_robots),
+                                  configs::MultiRobotTargetTrackingConfigs)
+  grid = configs.grid
+
+  target_states = map(x->random_state(grid), 1:num_targets)
+
+  (
+   robot_states = map(x->random_state(grid), 1:num_robots),
+   target_states = target_states,
+   target_filters = map(x->Filter(grid, x), target_states)
+  )
+end
 
 function iterate_target_tracking!(;robot_states::Vector{State},
                                   target_states::Vector{State},
