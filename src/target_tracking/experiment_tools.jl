@@ -24,7 +24,9 @@ function iterate_target_tracking!(;robot_states::Vector{State},
   trajectories = map(last, solution.elements)
 
   # Update Target states
-  target_states = map(x->target_dynamics(configs.grid, x), target_states)
+  for (ii, target_state) in enumerate(target_states)
+    target_states[ii] = target_dynamics(configs.grid, target_state)
+  end
 
   #
   # Run filter updates (corresponding to new target states) and provide robots
@@ -62,11 +64,11 @@ function iterate_target_tracking!(;robot_states::Vector{State},
   )
 end
 
-# The default updater updates filters in place so we provide the option to copy
-function copy_filters(x)
+# The default updater modifies the states and filters in place
+function copy_data(x)
   (
-   robot_states=x.robot_states,
-   target_states=x.target_states,
+   robot_states=Array(x.robot_states),
+   target_states=Array(x.target_states),
    target_filters=map(Filter, x.target_filters),
    trajectories=x.trajectories,
    range_observations=x.range_observations
