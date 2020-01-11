@@ -44,7 +44,7 @@ function Grid(;num_robots)
 end
 
 # default number of targets as a function of the number of robots
-default_num_targets(;num_robots) = num_robots / 2
+default_num_targets(num_robots) = num_robots / 2
 
 get_states(width::Real, height::Real) = collect(product(1:width, 1:height))
 get_states(g::Grid) = g.states

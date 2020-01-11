@@ -15,7 +15,7 @@ num_partitions = 4
 print("Enter number of robots: ")
 num_robots = parse(Int64, readline())
 
-num_targets = default_num_targets(num_robots=num_robots)
+num_targets = default_num_targets(num_robots)
 
 grid = Grid(num_robots=num_robots)
 
