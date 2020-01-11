@@ -6,7 +6,7 @@ using Random
 
 export Grid, State, get_states, dims, num_states, neighbors, random_state,
   target_dynamics, RangingSensor, generate_observation, compute_likelihoods,
-  transition_matrix, default_num_targets
+  transition_matrix, default_num_targets, continuous
 
 import Distributions.mean
 
@@ -173,6 +173,26 @@ end
 # produces an array of continuous ranges of states in the intput trajectory
 # (as the robot may cros over the grid)
 continuous(a::State, b::State) = sum(abs.(a .- b)) <= 1
+function continuous(states::Trajectory)
+  for ii = 2:length(states)
+    if !continuous(states[ii-1], states[ii])
+      return false
+    end
+  end
+
+  true
+end
+function continuous(grid::Grid, states::Trajectory)
+  for ii = 2:length(states)
+    if ! in(states[ii], neighbors(grid, states[ii-1]))
+      return false
+    end
+  end
+
+  true
+end
+
+
 function continuous_ranges(states::Trajectory)
   ret = Vector{State}[]
 
