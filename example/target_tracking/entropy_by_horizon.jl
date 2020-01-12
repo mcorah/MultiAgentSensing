@@ -9,7 +9,7 @@ using JLD2
 close()
 
 data_file = "./data/horizon_entropy_data.jld2"
-reprocess = true
+reprocess = false
 
 steps = 100
 num_robots = 4
