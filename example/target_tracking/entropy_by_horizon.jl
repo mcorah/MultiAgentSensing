@@ -67,16 +67,30 @@ end
 entropies = Dict(key=>map(x->sum(entropy, x.target_filters), value.data)
                  for (key, value) in data)
 
-for solver in solver_strings
-  figure()
+data = map(product(solver_strings, horizons)) do (solver, horizon)
+  vcat(map(trials) do trial
+    entropies[solver, horizon, trial][trial_steps]
+  end...)
+end[:]
+titles = map(product(solver_strings, horizons)) do (solver, horizon)
+  string(solver, " ", horizon)
+end[:]
 
-  data = map(horizons) do horizon
-    vcat(map(trials) do trial
-      entropies[solver, horizon, trial][trial_steps]
-    end...)
-  end
+boxplot(data, notch=false, vert=false)
+title("Entropy reduction distribution")
+xlabel("Entropy (bits)")
+yticks(1:length(titles), titles)
 
-  boxplot(data, notch=false, vert=false)
-  title(string(solver))
-  xlabel("Entropy (bits)")
+save_fig("fig", "entropy_by_solver_horizon")
+
+means = map(mean, data)
+for (title, mean) in zip(titles, means)
+  println(title, "(mean): ", mean)
+end
+
+println()
+
+gaps = means[1:2:end] - means[2:2:end]
+for (horizon, gap) in zip(horizons, gaps)
+  println("Horizon: ", horizon, " Gap: ", gap)
 end
