@@ -41,7 +41,6 @@ function get_data()
 
         configs = MultiRobotTargetTrackingConfigs(num_robots,
                                                   horizon=horizon,
-                                                  solver_iterations=10,
                                                  )
 
         trial_data = target_tracking_experiment(steps=steps, num_robots=num_robots,
