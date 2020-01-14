@@ -27,7 +27,7 @@ end
 function solve_myopic(p::PartitionProblem; threaded=false)
   selection = ElementArray(p)(undef, get_num_agents(p))
 
-  optionally_threaded(1:get_num_agents(p), threaded=threaded) do
+  optionally_threaded(1:get_num_agents(p), threaded=threaded) do ii
     # Solve given no knowledge of prior decisions
     solution_element = solve_block(p, ii, empty(p))
 
