@@ -69,7 +69,8 @@ end
 entropies = Dict(key=>map(x->sum(entropy, x.target_filters), value.data)
                  for (key, value) in data)
 
-data = map(product(solver_strings, horizons)) do (solver, horizon)
+concatenated_entropy = map(product(solver_strings, horizons)) do (solver,
+                                                                  horizon)
   vcat(map(trials) do trial
     entropies[solver, horizon, trial][trial_steps]
   end...)
@@ -78,14 +79,14 @@ titles = map(product(solver_strings, horizons)) do (solver, horizon)
   string(solver, " ", horizon)
 end[:]
 
-boxplot(data, notch=false, vert=false)
+boxplot(concatenated_entropy, notch=false, vert=false)
 title("Entropy reduction distribution")
 xlabel("Entropy (bits)")
 yticks(1:length(titles), titles)
 
 save_fig("fig", "entropy_by_solver_horizon")
 
-means = map(mean, data)
+means = map(mean, concatenated_entropy)
 for (title, mean) in zip(titles, means)
   println(title, "(mean): ", mean)
 end
