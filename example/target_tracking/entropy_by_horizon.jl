@@ -43,8 +43,11 @@ function get_data()
                                                   horizon=horizon,
                                                  )
 
-        trial_data = target_tracking_experiment(steps=steps, num_robots=num_robots,
-                                                configs=configs)
+        trial_data = target_tracking_experiment(steps=steps,
+                                                num_robots=num_robots,
+                                                configs=configs,
+                                                solver=solver
+                                               )
 
         lock(data_mutex)
         data[string(solver), horizon, trial] =
