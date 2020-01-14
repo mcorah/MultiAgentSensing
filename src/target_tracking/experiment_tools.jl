@@ -1,7 +1,7 @@
 # This file provides tools for design of multi-robot target tracking experiments
 
 export target_tracking_experiment, target_tracking_instance,
-  iterate_target_tracking!
+  iterate_target_tracking!, visualize_experiment
 
 # Run a target tracking experiment for a given number of steps
 # By default, keep all data from each step
@@ -115,4 +115,64 @@ function copy_data(x)
    trajectories=x.trajectories,
    range_observations=x.range_observations
   )
+end
+
+#
+# Visualize experiments
+#
+
+function visualize_experiment(data::Vector,
+                              configs)
+  if length(data) == 0
+    println("There is no experiment data to visualize")
+    return
+  end
+
+  grid = configs.grid
+
+  figure()
+
+  plot_state_space(grid)
+  xlim([0, grid.width+1])
+  ylim([0, grid.height+1])
+
+  for (ii, step) in enumerate(data)
+    println("Step: ", ii)
+
+    plots = visualize_time_step(robot_states=step.robot_states,
+                                target_states=step.target_states,
+                                target_filters=step.target_filters,
+                                trajectories=step.trajectories)
+
+    # End of step (take input and clear the canvas
+
+    line = readline()
+    if line == "q"
+      break
+    end
+    foreach(x->x.remove(), plots)
+  end
+end
+
+function visualize_time_step(;robot_states,
+                             target_states,
+                             target_filters,
+                             trajectories)
+  plots=[]
+
+  for robot in robot_states
+    append!(plots, plot_trajectory([robot], color=:blue))
+  end
+
+  for trajectory in trajectories
+    append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
+  end
+
+  for target in target_states
+    append!(plots, plot_trajectory([target]))
+  end
+
+  append!(plots, visualize_filters(target_filters))
+
+  plots
 end
