@@ -27,6 +27,7 @@ struct NormalLookup
   end
 end
 
+const min_likelihood = 1e-6
 function evaluate_no_norm(l::NormalLookup; error::Float64, stddev::Float64)
   if stddev < 0.0
     error("Negative standard deviation: ", stddev)
@@ -37,7 +38,7 @@ function evaluate_no_norm(l::NormalLookup; error::Float64, stddev::Float64)
 
   # Since this is a normal pdf, take the limit for out-of-bounds values
   if index > length(l.pdfvals)
-    0.0
+    min_likelihood
   else
     l.pdfvals[index]
   end
