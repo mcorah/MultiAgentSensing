@@ -18,6 +18,10 @@ function entropy(prior::Filter)
   sum
 end
 
+function entropy(prior::Array{<:Filter})
+  sum(entropy, prior)
+end
+
 #
 # Measurement representation and updates
 #

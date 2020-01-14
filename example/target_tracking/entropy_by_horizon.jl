@@ -66,7 +66,7 @@ end
 
 @time data = get_data()
 
-entropies = Dict(key=>map(x->sum(entropy, x.target_filters), value.data)
+entropies = Dict(key=>map(x->entropy(x.target_filters), value.data)
                  for (key, value) in data)
 
 concatenated_entropy = map(product(solver_strings, horizons)) do (solver,
