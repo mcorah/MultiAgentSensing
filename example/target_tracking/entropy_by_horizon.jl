@@ -5,6 +5,7 @@ using PyPlot
 using Base.Iterators
 using Base.Threads
 using JLD2
+using Statistics
 
 close()
 
@@ -34,8 +35,10 @@ function get_data()
 
   if !isfile(data_file) || reprocess
     tests = product(solvers, horizons, trials)
-    for (ii, block) in enumerate(partition(tests, nthreads()))
-      println("Block num: ", ii)
+    test_partition = partition(tests, nthreads())
+
+    for (ii, block) in enumerate(test_partition)
+      println("Block num: ", ii, " of ", length(test_partition))
 
       @time @threads for (solver, horizon, trial) in block
 
@@ -80,7 +83,7 @@ titles = map(product(solver_strings, horizons)) do (solver, horizon)
 end[:]
 
 boxplot(concatenated_entropy, notch=false, vert=false)
-title("Entropy reduction distribution")
+title("Entropy distribution")
 xlabel("Entropy (bits)")
 yticks(1:length(titles), titles)
 
@@ -93,7 +96,8 @@ end
 
 println()
 
-gaps = means[1:2:end] - means[2:2:end]
+println("Sequential entropy is so much lower (better) than myopic:")
+gaps =  means[2:2:end] - means[1:2:end]
 for (horizon, gap) in zip(horizons, gaps)
   println("Horizon: ", horizon, " Gap: ", gap)
 end
