@@ -37,14 +37,14 @@ struct Grid <: StateSpace
 end
 
 # Construct default grids according to the number of robots
-const grid_cells_per_robot = 50
+const grid_cells_per_robot = 25
 function Grid(;num_robots)
   grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
   Grid(grid_size, grid_size)
 end
 
 # default number of targets as a function of the number of robots
-default_num_targets(num_robots) = num_robots / 2
+default_num_targets(num_robots) = round(Int64, num_robots * 5 / 4)
 
 get_states(width::Real, height::Real) = collect(product(1:width, 1:height))
 get_states(g::Grid) = g.states
@@ -123,7 +123,7 @@ struct RangingSensor
   variance_constant::Float64
   variance_scaling_factor::Float64
 
-  function RangingSensor(;variance_constant=0.5, variance_scaling_factor=0.2)
+  function RangingSensor(;variance_constant=0.5, variance_scaling_factor=0.5)
     new(variance_constant, variance_scaling_factor)
   end
 end
