@@ -221,6 +221,7 @@ function get_element_indices(agents::Vector)
   end
 end
 
+include("src/utils.jl")
 include("src/visualization.jl")
 include("src/normal_lookup_table.jl")
 include("src/solvers.jl")
