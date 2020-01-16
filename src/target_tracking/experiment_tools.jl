@@ -102,7 +102,8 @@ function iterate_target_tracking!(;robot_states::Vector{State},
    target_states=target_states,
    target_filters=target_filters,
    trajectories=trajectories,
-   range_observations=range_observations
+   range_observations=range_observations,
+   objective=solution.value
   )
 end
 
@@ -113,7 +114,8 @@ function copy_data(x)
    target_states=Array(x.target_states),
    target_filters=map(Filter, x.target_filters),
    trajectories=x.trajectories,
-   range_observations=x.range_observations
+   range_observations=x.range_observations,
+   objective=solution.value
   )
 end
 
