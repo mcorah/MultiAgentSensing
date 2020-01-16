@@ -22,9 +22,7 @@ process_update!(histogram_filter, transition_matrix(grid))
 
 range = 1:grid_size
 
-weights = map(range) do x
-  println("Evaluating: ", x)
-
+@time weights = thread_map(range) do x
   state = (x, 1)
 
   problem = MultiRobotTargetTrackingProblem([state, state],
@@ -32,9 +30,9 @@ weights = map(range) do x
                                             grid=grid,
                                             horizon=horizon)
 
-  @time weights = compute_weight_matrix(problem,
-                                        channel_capacity_method=
-                                          channel_capacities_mcts)
+  weights = compute_weight_matrix(problem,
+                                  channel_capacity_method=
+                                    channel_capacities_mcts)
 
   sum(weights) / 2
 end
