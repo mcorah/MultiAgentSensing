@@ -75,6 +75,14 @@ for ii = 2:steps
 
   append!(plots, visualize_filters(histogram_filters))
 
+  #
+  # Print a summary of the problem state
+  #
+  println("Objective: ", solution.objective,
+          " (", solution.objective / num_robots, " per robot)")
+  e = entropy(histogram_filters)
+  println("Entropy: ", e, " (", e / num_targets, " per target)")
+
   line = readline()
 
   if line == "q"
