@@ -6,12 +6,12 @@ using PyPlot
 
 close()
 
-grid_size = 31
-horizon = 5
+grid_size = 41
+horizon = 4
 sensor = RangingSensor()
 
 # place the target in the center of the grid
-target_state = (16,1)
+target_state = (21,1)
 
 grid = Grid(grid_size, grid_size)
 
@@ -27,8 +27,10 @@ weights = map(range) do x
 
   state = (x, 1)
 
-  problem = MultiRobotTargetTrackingProblem(grid, sensor, horizon, [histogram_filter],
-                                            [state, state])
+  problem = MultiRobotTargetTrackingProblem([state, state],
+                                            [histogram_filter],
+                                            grid=grid,
+                                            horizon=horizon)
 
   @time weights = compute_weight_matrix(problem,
                                         channel_capacity_method=
