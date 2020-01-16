@@ -13,9 +13,13 @@ export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
 
 const default_solver_information_samples = 1
 
-# This approximates the (half) the expected reward prior tests as we found that
-# using roughly half the typical reward results in the fastest convergence.
-exploration_constant(horizon) = 0.03 * horizon^2 + 0.05
+# This approximates the (half) the expected reward as prior tests indicated
+# that MCTS performs best in this regime
+#
+# The exact values were tuned based on the default configuration (number of
+# targets, sensor noise) for 4 and 8 robots and consideration of typical
+# objective values per robot as obtained from the multi-robot example script
+exploration_constant(horizon) = 0.18 * horizon^2 + 0.31
 
 # We map the horizon length to the number of samples according to approximately
 # where the average return crossed 97% in a prior test
