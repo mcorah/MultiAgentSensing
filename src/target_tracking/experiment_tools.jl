@@ -115,7 +115,7 @@ function copy_data(x)
    target_filters=map(Filter, x.target_filters),
    trajectories=x.trajectories,
    range_observations=x.range_observations,
-   objective=solution.value
+   objective=x.objective
   )
 end
 
