@@ -11,7 +11,7 @@ using Statistics
 close()
 
 data_file = "./data/rollout_library.jld2"
-reprocess = true
+reprocess = false
 
 steps = 60
 num_robots = [4, 6, 8, 10]
