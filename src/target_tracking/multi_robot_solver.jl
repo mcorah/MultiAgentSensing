@@ -43,6 +43,18 @@ function MultiRobotTargetTrackingConfigs(num_robots;
   MultiRobotTargetTrackingConfigs(;grid=grid, kwargs...)
 end
 
+# Copy constructor with overrides
+function
+  MultiRobotTargetTrackingConfigs(configs::MultiRobotTargetTrackingConfigs;
+                                  kwargs...)
+
+  fields = fieldnames(MultiRobotTargetTrackingConfigs)
+  old_settings = Dict(field => getfield(configs, field) for field in fields)
+  settings = merge(old_settings, kwargs)
+
+  MultiRobotTargetTrackingConfigs(; settings...)
+end
+
 # Solution elements consist of the robot index and the associated trajectory
 # We construct solutions as such because the output may not have the same
 # ordering as the robots
