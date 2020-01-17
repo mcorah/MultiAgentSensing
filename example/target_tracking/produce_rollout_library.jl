@@ -24,7 +24,7 @@ horizon = 4
 sample_steps = 20:5:steps
 
 # At this time, the appropriate number of samples for convergence is unknown
-# Using a large can improve results
+# Using a relatively large number can improve results
 num_iterations = 3000
 
 solver = solve_sequential
