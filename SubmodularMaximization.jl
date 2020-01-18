@@ -9,7 +9,13 @@ const tikzplotlib = PyNULL()
 const ag = PyNULL()
 
 function __init__()
-  copy!(tikzplotlib, pyimport("tikzplotlib"))
+  try
+    copy!(tikzplotlib, pyimport("tikzplotlib"))
+  catch e
+    println("Could not import tikzplotlib, trying matploblib2tikz instead")
+    copy!(tikzplotlib, pyimport("matplotlib2tikz"))
+  end
+
   copy!(ag, pyimport("mpl_toolkits.axes_grid1"))
 end
 #
