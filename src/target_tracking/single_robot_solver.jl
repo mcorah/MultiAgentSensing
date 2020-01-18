@@ -54,11 +54,11 @@ MDPState(m::MDPState, s::State) = MDPState(s, m.depth + 1, m)
 
 # The target tracking problem is an mdp with MDPStates for states
 # And target tracking States for actions
-struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
+struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: MDP{MDPState, State}
   grid::Grid
   sensor::RangingSensor
   horizon::Int64
-  target_filters::Vector{Filter{Int64}}
+  target_filters::Vector{F}
   prior_trajectories::Vector{Vector{State}}
 
   num_information_samples::Int64
@@ -67,13 +67,13 @@ struct SingleRobotTargetTrackingProblem <: MDP{MDPState, State}
 
   function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                             horizon::Integer,
-                                            filters::Vector{Filter{Int64}};
+                                            filters::Vector{T};
                                             prior_trajectories = Trajectory[],
                                             num_information_samples =
                                               default_solver_information_samples,
                                             rng = Random.GLOBAL_RNG
-                                           )
-    new(grid, sensor, horizon, filters, prior_trajectories,
+                                           ) where T <: AnyFilter
+    new{T}(grid, sensor, horizon, filters, prior_trajectories,
         num_information_samples, rng)
   end
 end
@@ -151,7 +151,6 @@ end
 function actions(model::SingleRobotTargetTrackingProblem, state::MDPState)
   neighbors(model.grid, state.state)
 end
-# I hope that the set of valid actions is not constant
 function actions(model::SingleRobotTargetTrackingProblem)
   println("providing all actions")
   get_states(model.grid)

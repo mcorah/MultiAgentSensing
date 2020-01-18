@@ -151,7 +151,7 @@ end
 
 const normal_lookup_table = NormalLookup(increment=0.001, max=4.0)
 
-likelihoods_buffer(states) = Array{Float64}(undef, size(states))
+likelihoods_buffer(states) = Array{Float64}(undef, length(states))
 
 # Computes (non-normalized) likelihoods of data
 function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
@@ -159,6 +159,8 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
                              range::Real;
                              buffer = likelihoods_buffer(target_states)
                             )
+
+  resize!(buffer, length(target_states))
 
   for (ii, target_state) in enumerate(target_states)
     distance = mean(grid, sensor, robot_state, target_state)

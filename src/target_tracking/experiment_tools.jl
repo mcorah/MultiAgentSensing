@@ -43,13 +43,13 @@ function target_tracking_instance(;num_robots::Int64,
   (
    robot_states = map(x->random_state(grid), 1:num_robots),
    target_states = target_states,
-   target_filters = map(x->Filter(grid, x), target_states)
+   target_filters = map(x->duplicate(grid, x), target_states)
   )
 end
 
 function iterate_target_tracking!(;robot_states::Vector{State},
                                   target_states::Vector{State},
-                                  target_filters::Vector{<:Filter},
+                                  target_filters::Vector{<:AnyFilter},
                                   configs::MultiRobotTargetTrackingConfigs,
                                   solver=solve_sequential)
   #
@@ -91,7 +91,7 @@ function iterate_target_tracking!(;robot_states::Vector{State},
   # Measurement update
   for (robot, observations) in zip(robot_states, range_observations)
     for (filter, observation) in zip(target_filters, observations)
-      measurement_update!(filter, robot, get_states(configs.grid),
+      measurement_update!(filter, robot, get_states(configs.grid, filter),
                           configs.sensor, configs.grid, observation)
     end
   end
@@ -112,7 +112,7 @@ function copy_data(x)
   (
    robot_states=Array(x.robot_states),
    target_states=Array(x.target_states),
-   target_filters=map(Filter, x.target_filters),
+   target_filters=map(duplicate, x.target_filters),
    trajectories=x.trajectories,
    range_observations=x.range_observations,
    objective=x.objective

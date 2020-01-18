@@ -9,6 +9,7 @@ close()
 steps = 100
 horizon = 5
 show_observations = false
+sparse = false
 
 num_partitions = 4
 
@@ -25,7 +26,12 @@ configs = MultiRobotTargetTrackingConfigs(grid=grid,
 robot_states = map(x->random_state(grid), 1:num_robots)
 target_states = map(x->random_state(grid), 1:num_targets)
 
-histogram_filters = map(x->Filter(grid, x), target_states)
+if sparse
+  global histogram_filters = map(x->SparseFilter(grid, x, threshold=1e-3),
+                                 target_states)
+else
+  global histogram_filters = map(x->Filter(grid, x), target_states)
+end
 
 solver = x->solve_n_partitions(num_partitions, x, threaded=true)
 
@@ -35,6 +41,8 @@ ylim([0, grid.height+1])
 
 
 for ii = 2:steps
+  foreach(drop_below_threshold!, histogram_filters)
+
   println("Step ", ii)
 
   @time solution = iterate_target_tracking!(robot_states=robot_states,

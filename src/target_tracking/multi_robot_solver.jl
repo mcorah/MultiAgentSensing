@@ -58,25 +58,25 @@ end
 # Solution elements consist of the robot index and the associated trajectory
 # We construct solutions as such because the output may not have the same
 # ordering as the robots
-struct MultiRobotTargetTrackingProblem <: PartitionProblem{Tuple{Int64,
+struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: PartitionProblem{Tuple{Int64,
                                                                  Trajectory}}
   # Target tracking problems are defined by vectors of robot states
   partition_matroid::Vector{State}
 
-  target_filters::Vector{Filter{Int64}}
+  target_filters::Vector{F}
 
   configs::MultiRobotTargetTrackingConfigs
 
   function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
-                                       target_filters::Vector{<:Filter},
-                                       configs::MultiRobotTargetTrackingConfigs)
-    new(robot_states, target_filters, configs)
+                 target_filters::Vector{F},
+                 configs::MultiRobotTargetTrackingConfigs) where F <: AnyFilter
+    new{F}(robot_states, target_filters, configs)
   end
 end
 
 # Construct a target tracking problem with configs. I may or may not need this
 function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
-                                         target_filters::Vector{<:Filter};
+                                         target_filters::Vector{<:AnyFilter};
                                          kwargs...)
   configs = MultiRobotTargetTrackingConfigs(;kwargs...)
   MultiRobotTargetTrackingProblem(robot_states, target_filters, configs)

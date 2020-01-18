@@ -54,10 +54,10 @@ function plot_observation(state, range; linestyle="-", kwargs...)
 end
 
 # Visualize a discrete histogram filter
-function visualize_filter(filter::Filter; kwargs...)
+function visualize_filter(filter::AnyFilter; kwargs...)
   visualize_filters([filter]; kwargs...)
 end
-function visualize_filters(filters::Vector{<:Filter}; show_colorbar = false)
+function visualize_filters(filters::Vector{<:AnyFilter}; show_colorbar = false)
   if length(filters) == 0
     error("No filters to visualize")
   end
@@ -70,5 +70,5 @@ function visualize_filters(filters::Vector{<:Filter}; show_colorbar = false)
   data = sum(get_data, filters)
 
   # Note: visualize filter does not normalize by default
-  visualize_pdf(data, show_colorbar = show_colorbar, limits=limits)
+  visualize_pdf(Matrix(data), show_colorbar = show_colorbar, limits=limits)
 end

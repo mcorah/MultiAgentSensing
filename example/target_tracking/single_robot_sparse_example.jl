@@ -2,6 +2,7 @@ using SubmodularMaximization
 using POMDPs
 using MCTS
 using PyPlot
+using Printf
 
 close()
 
@@ -22,7 +23,7 @@ target_states[1] = target_state
 robot_states = Array{State}(undef, steps)
 robot_states[1] = robot_state
 
-histogram_filter = Filter(grid, target_state)
+histogram_filter = SparseFilter(grid, target_state, threshold=1e-3)
 
 problem = SingleRobotTargetTrackingProblem(grid, sensor, horizon,
                                            [histogram_filter])
@@ -32,12 +33,16 @@ xlim([0, grid_size+1])
 ylim([0, grid_size+1])
 
 for ii = 2:steps
+  drop_below_threshold!(histogram_filter)
+
   println("Step ", ii)
+  @printf("Sparsity: %0.2f\n", sparsity(histogram_filter))
 
   # Before the target moves and the robot receives a measurement, execute robot
   # dynamics
   @time solution = solve_single_robot(problem, robot_state,
                                       n_iterations = iterations)
+
   global robot_state = solution.action
   trajectory = solution.trajectory
   robot_states[ii] = robot_state
@@ -51,8 +56,9 @@ for ii = 2:steps
 
   # After updating states, update the filter (in place for now)
   process_update!(histogram_filter, transition_matrix(grid))
-  measurement_update!(histogram_filter, robot_state, get_states(grid), sensor,
-                      grid, range_observation)
+  measurement_update!(histogram_filter, robot_state,
+                      get_states(histogram_filter), sensor, grid,
+                      range_observation)
 
   plots=[]
   append!(plots, plot_trajectory(robot_states[1:ii], color=:blue))

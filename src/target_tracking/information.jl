@@ -9,16 +9,17 @@ import Base.length
 
 nan_to_zero(x::Float64) = ifelse(isnan(x), 0.0, x)
 
-entropy_sum(prior::Filter) = sum(x -> nan_to_zero(-x * log(2, x)), get_data(prior))
-function entropy(prior::Filter)
+entropy_sum(prior::AnyFilter) = sum(x -> nan_to_zero(-x * log(2, x)),
+                                    get_values(prior))
+function entropy(prior::AnyFilter)
   sum = 0.0
-  @inbounds @simd for x = get_data(prior)
+  @inbounds @simd for x = get_values(prior)
     sum += nan_to_zero(-x * log(2, x))
   end
   sum
 end
 
-function entropy(prior::Array{<:Filter})
+function entropy(prior::Array{<:AnyFilter})
   sum(entropy, prior)
 end
 
@@ -69,12 +70,12 @@ end
 #
 
 # Assumption: all trajectories are at least as long as "step"
-function simulate_update_filter!(grid::Grid, filter::Filter,
+function simulate_update_filter!(grid::Grid, filter::AnyFilter,
                                  sensor::RangingSensor, target_state::State,
                                  trajectories::Vector{Trajectory}, step;
                                  rng=Random.GLOBAL_RNG,
                                  likelihood_buffer =
-                                  likelihoods_buffer(get_states(grid))
+                                  likelihoods_buffer(get_states(grid, filter))
                                 )
 
     for trajectory in trajectories
@@ -83,20 +84,20 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
       range_observation = generate_observation(grid, sensor, robot_state,
                                                target_state; rng=rng)
 
-      measurement_update!(filter, robot_state, get_states(grid), sensor, grid,
-                          range_observation, buffer=likelihood_buffer)
+      measurement_update!(filter, robot_state, get_states(grid, filter), sensor,
+                          grid, range_observation, buffer=likelihood_buffer)
     end
 end
 # Precondition: all observations before "step" have already been processed.
 # (this is reasonable because the filter update design would prevent processing
 # those observations afterward. As such, observations that precede the scope of
 # updates are malformed)
-function simulate_update_filter!(grid::Grid, filter::Filter,
+function simulate_update_filter!(grid::Grid, filter::AnyFilter,
                                  sensor::RangingSensor, target_state::State,
                                  observations::TimedObservations, step;
                                  rng=Random.GLOBAL_RNG,
                                  likelihood_buffer =
-                                  likelihoods_buffer(get_states(grid))
+                                  likelihoods_buffer(get_states(grid, filter))
                                 )
 
   # Process all observations at the current step
@@ -109,8 +110,8 @@ function simulate_update_filter!(grid::Grid, filter::Filter,
     range_observation = generate_observation(grid, sensor, robot_state,
                                              target_state; rng = rng)
 
-    measurement_update!(filter, robot_state, get_states(grid), sensor, grid,
-                        range_observation, buffer=likelihood_buffer)
+    measurement_update!(filter, robot_state, get_states(grid, filter), sensor,
+                        grid, range_observation, buffer=likelihood_buffer)
 
     advance!(observations)
   end
@@ -139,7 +140,7 @@ end
 const default_num_information_samples = 1000
 
 # Package a single trajectory in an array
-function finite_horizon_information(grid::Grid, prior::Filter,
+function finite_horizon_information(grid::Grid, prior::AnyFilter,
                                     sensor::RangingSensor,
                                     observation::Trajectory;
                                     prior_observations::Vector{Trajectory}=
@@ -152,7 +153,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
 end
 # Pull the number of time-steps from a vector of trajectories as appropriate
 # and drop that into the keyword arguments
-function finite_horizon_information(grid::Grid, prior::Filter,
+function finite_horizon_information(grid::Grid, prior::AnyFilter,
                                     sensor::RangingSensor,
                                     observations::Vector{Trajectory};
                                     prior_observations::Vector{Trajectory}=
@@ -192,7 +193,7 @@ end
 # step)
 information_counter = Threads.Atomic{Int64}(0)
 const samples_per_gc = 100_000
-function finite_horizon_information(grid::Grid, prior::Filter,
+function finite_horizon_information(grid::Grid, prior::AnyFilter,
                                     sensor::RangingSensor,
                                     posterior_observations::O,
                                     horizon::Integer;
@@ -211,7 +212,7 @@ function finite_horizon_information(grid::Grid, prior::Filter,
     GC.gc()
   end
 
-  prior_buffer = Filter(prior)
+  prior_buffer = duplicate(prior)
   reset_prior() = copy_filter!(prior, out=prior_buffer)
 
   # Compute entropies over the horizon, conditional on the prior trajectories
@@ -260,7 +261,7 @@ end
 # maintain the original.
 
 # Package timed observations before passing them into the main implementation
-function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
+function sample_finite_horizon_entropy!(grid::Grid, prior::AnyFilter,
                                        sensor::RangingSensor,
                                        observations::Vector{TimedObservation},
                                        b...;
@@ -270,7 +271,7 @@ function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
                                 TimedObservations(observations), b...;
                                 kwargs...)
 end
-function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
+function sample_finite_horizon_entropy!(grid::Grid, prior::AnyFilter,
                                        sensor::RangingSensor,
                                        observations::Union{Vector{Trajectory},
                                                            TimedObservations},
@@ -290,7 +291,7 @@ function sample_finite_horizon_entropy!(grid::Grid, prior::Filter,
   conditional_entropies = Float64[]
 
   neighbor_buffer = neighbors_buffer()
-  likelihood_buffer = likelihoods_buffer(get_states(grid))
+  likelihood_buffer = likelihoods_buffer(get_states(grid, prior))
 
   for step = 1:horizon
     # Update from prior state to the first time-step in the horizon
