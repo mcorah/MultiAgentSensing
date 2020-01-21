@@ -3,7 +3,9 @@
 using SubmodularMaximization
 using Profile
 
+sparse = false
 steps = 10000
+
 grid_size = 10
 num_observations = 3
 horizon = 5
@@ -14,8 +16,14 @@ sensor = RangingSensor()
 
 target_state = (2,2)
 
-# precomputation
-histogram_filter = Filter(grid, target_state)
+if sparse
+  global histogram_filter = SparseFilter(grid, target_state, threshold=1e-3)
+else
+  global histogram_filter = Filter(grid, target_state)
+end
+
+# Provide one step to produce some uncertainty
+process_update!(histogram_filter, transition_matrix(grid))
 
 # Create some fake observations and update the filter
 for ii = 1:num_observations
