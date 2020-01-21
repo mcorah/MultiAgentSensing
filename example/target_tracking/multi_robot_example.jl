@@ -3,6 +3,8 @@ using POMDPs
 using MCTS
 using PyPlot
 using Base.Iterators
+using Printf
+using Statistics
 
 close()
 
@@ -90,6 +92,10 @@ for ii = 2:steps
           " (", solution.objective / num_robots, " per robot)")
   e = entropy(histogram_filters)
   println("Entropy: ", e, " (", e / num_targets, " per target)")
+
+  if sparse
+    @printf("Sparsity: %0.2f\n", mean(sparsity, histogram_filters))
+  end
 
   line = readline()
 
