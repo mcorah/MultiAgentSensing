@@ -75,13 +75,21 @@ function sample_state(grid::Grid, prior::SparseFilter; rng=Random.GLOBAL_RNG)
 end
 
 # General process update
-function process_update!(prior::AnyFilter, transition_matrix)
+function process_update!(prior::Filter, transition_matrix)
 
   @inbounds @views mul!(get_buffer(prior)[:],
                         transition_matrix,
                         get_data(prior)[:])
 
   swap_buffer!(prior)
+
+  prior
+end
+function process_update!(prior::SparseFilter, transition_matrix)
+
+  prod = transition_matrix * get_data(prior)[:]
+
+  prior.data = reshape(prod, size(prior))
 
   prior
 end
