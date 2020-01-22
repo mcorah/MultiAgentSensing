@@ -15,7 +15,7 @@ reprocess = false
 
 num_trials = 100
 num_mcts_samples = 2 .^ (4:16)
-horizon = 5
+horizon = 4
 
 exploration_constants = 1.6 .* [0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 100.0]
 

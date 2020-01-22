@@ -8,7 +8,7 @@ steps = 10000
 
 grid_size = 10
 num_observations = 3
-horizon = 5
+horizon = 4
 num_information_samples = 10
 
 grid = Grid(grid_size, grid_size)

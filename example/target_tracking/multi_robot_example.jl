@@ -9,7 +9,7 @@ using Statistics
 close()
 
 steps = 100
-horizon = 5
+horizon = 4
 show_observations = false
 sparse = false
 
