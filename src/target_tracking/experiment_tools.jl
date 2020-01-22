@@ -43,7 +43,7 @@ function target_tracking_instance(;num_robots::Int64,
   (
    robot_states = map(x->random_state(grid), 1:num_robots),
    target_states = target_states,
-   target_filters = map(x->duplicate(grid, x), target_states)
+   target_filters = map(x->Filter(grid, x), target_states)
   )
 end
 
