@@ -43,8 +43,6 @@ ylim([0, grid.height+1])
 
 
 for ii = 2:steps
-  foreach(drop_below_threshold!, histogram_filters)
-
   println("Step ", ii)
 
   @time solution = iterate_target_tracking!(robot_states=robot_states,
@@ -92,6 +90,8 @@ for ii = 2:steps
           " (", solution.objective / num_robots, " per robot)")
   e = entropy(histogram_filters)
   println("Entropy: ", e, " (", e / num_targets, " per target)")
+
+  foreach(drop_below_threshold!, histogram_filters)
 
   if sparse
     @printf("Sparsity: %0.2f\n", mean(sparsity, histogram_filters))
