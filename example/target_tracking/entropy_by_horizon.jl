@@ -21,8 +21,7 @@ horizons = 1:6
 
 # We will drop a fraction of each trial so that the filters have time to
 # converge to steady states
-drop_fraction = 1/4
-trial_steps = (round(Int64, steps * drop_fraction)+1):steps
+trial_steps = 20:steps
 
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
