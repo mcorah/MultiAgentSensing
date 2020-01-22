@@ -4,7 +4,7 @@ using MCTS
 
 grid_size = 10
 iterations = 10
-horizon = 5
+horizon = 4
 max_num_robots = 10
 num_partitions = 3
 
