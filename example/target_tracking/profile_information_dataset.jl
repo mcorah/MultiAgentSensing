@@ -73,7 +73,10 @@ run_test(1)
 ## Run the profiler
 @profview run_test(1, print=false)
 
-ProfileView.closeall()
+print("Waiting for input...")
+readline()
+
+#ProfileView.closeall()
 @profview run_test(num_trials, print=false)
 
 println()
