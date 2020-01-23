@@ -90,7 +90,7 @@ function get_data()
 end
 
 println("Processing rollouts")
-results = get_data()
+@time results = get_data()
 
 println("Analyzing results")
 
