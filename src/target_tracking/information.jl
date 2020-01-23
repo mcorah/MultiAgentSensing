@@ -11,9 +11,16 @@ nan_to_zero(x::Float64) = ifelse(isnan(x), 0.0, x)
 
 entropy_sum(prior::AnyFilter) = sum(x -> nan_to_zero(-x * log(2, x)),
                                     get_values(prior))
-function entropy(prior::AnyFilter)
+function entropy(prior::Filter)
   sum = 0.0
   @inbounds @simd for x = get_values(prior)
+    sum += nan_to_zero(-x * log(2, x))
+  end
+  sum
+end
+function entropy(prior::SparseFilter)
+  sum = 0.0
+  @inbounds @simd for x = nonzeros(get_values(prior))
     sum += nan_to_zero(-x * log(2, x))
   end
   sum

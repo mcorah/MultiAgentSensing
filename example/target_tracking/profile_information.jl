@@ -2,6 +2,7 @@
 
 using SubmodularMaximization
 using Profile
+using ProfileView
 
 sparse = false
 steps = 10000
@@ -60,11 +61,10 @@ run_test(1)
 
 # Run the profiler
 Profile.init(n=1000000)
-@profile run_test(1, print=false)
+@profview run_test(1, print=false)
 
-Profile.clear()
 Profile.init(n=1000000)
-@profile run_test(steps, print=false)
+@profview run_test(steps, print=false)
 
 println()
-Profile.print(mincount=100)
+Profile.print(mincount=100, format=:flat)
