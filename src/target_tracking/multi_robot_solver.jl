@@ -119,3 +119,19 @@ function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
 
   (block, solution.trajectory)
 end
+
+function sample_block(p::MultiRobotTargetTrackingProblem, block::Integer)
+  horizon = p.configs.horizon
+  grid = p.configs.grid
+
+  trajectory = Array{State}(undef, horizon)
+
+  # (target dynamics are the same as random rollouts for tracking robots)
+  current_state = p.partition_matroid[block]
+  for ii in 1:horizon
+    current_state = target_dynamics(grid, current_state)
+    trajectory[ii] = current_state
+  end
+
+  (block, trajectory)
+end

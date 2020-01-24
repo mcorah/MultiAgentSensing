@@ -88,6 +88,15 @@ function solve_random(p::ExplicitPartitionProblem)
 
   evaluate_solution(p, map(x->rand(x), indices))
 end
+# In general we require a method to produce random solutions
+function sample_block(p::PartitionProblem, ind::Integer)
+  error("Please define sample_block method to enable random sampling")
+end
+function solve_random(p::PartitionProblem)
+  block_indices = 1:length(p.partition_matroid)
+
+  evaluate_solution(p, map(x->sample_block(p, x), block_indices))
+end
 
 ########################################################################
 # DAG solver variants
