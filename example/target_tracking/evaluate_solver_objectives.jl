@@ -48,10 +48,9 @@ all_configurations = product(solver_inds)
 num_mcts_samples = SubmodularMaximization.default_num_iterations[horizon]
 
 function get_data()
-
-  # Both guarded by the mutex
   results = Array{Float64}(undef, size(all_tests))
-  num_tests_completed = 0
+
+  num_tests_completed = Atomic{Int64}(0)
 
   if !isfile(data_file) || reprocess
 
@@ -72,12 +71,14 @@ function get_data()
       reward = solution.value
 
       results[solver_ind, sample_ind] = reward
-      num_tests_completed +=1
+
+      # (returns old value)
+      completed = atomic_add!(num_tests_completed, 1) + 1
 
       println("Solver: ", solver_strings[solver_ind],
               " Trial: ", sample_ind,
-              " (done, ", num_tests_completed, "/", length(all_tests),
-              @sprintf(" %0.2f", 100num_tests_completed/length(all_tests)), "%)"
+              " (done, ", completed, "/", length(all_tests),
+              @sprintf(" %0.2f", 100completed/length(all_tests)), "%)"
              )
     end
 
