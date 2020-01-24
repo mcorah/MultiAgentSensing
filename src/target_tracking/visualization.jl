@@ -1,4 +1,5 @@
 using PyPlot
+using LinearAlgebra
 
 export plot_state_space, plot_states, plot_trajectory, plot_robot,
   plot_observation, visualize_filter, visualize_filters
@@ -13,8 +14,32 @@ function plot_state_space(g::Grid; color=:k)
   scatter(xs, ys, color=color)
 end
 
+# When a robot or target crosses a boundary of the grid, that creates a
+# discontinuity.
+#
+# Cut the trajectory into continuous parts and add segments going off the grid
+# to visualize the wrap around.
+function wrap_discontinuities(states)
+  state_ranges = continuous_ranges(states)
+  ranges = convert(Array{Array{Tuple{Float64,Float64}}}, state_ranges)
+
+  # Add segments going off the grid to each discontinuity
+  for ii = 1:length(ranges) - 1
+    disc_start = last(ranges[ii])
+    disc_end = first(ranges[ii+1])
+
+    dir = disc_end .- disc_start
+    off_grid = -0.5 .* dir ./ norm(dir)
+
+    push!(ranges[ii], disc_start .+ off_grid)
+    insert!(ranges[ii+1], 1, disc_end .- off_grid)
+  end
+
+  ranges
+end
+
 function plot_states(states::Array{State}; kwargs...)
-  vcat(map(continuous_ranges(states)) do range
+  vcat(map(wrap_discontinuities(states)) do range
     xs = [x[1] for x in range]
     ys = [x[2] for x in range]
 
@@ -34,7 +59,7 @@ function plot_trajectory(states; color=:red, kwargs...)
   push!(ret, scatter(last[1], last[2], color=color, marker="^", edgecolors=:k,
                      s=object_scale))
 
-  range_plots = map(continuous_ranges(states)) do range
+  range_plots = map(wrap_discontinuities(states)) do range
     xs = [x[1] for x in range]
     ys = [x[2] for x in range]
     plot(xs, ys; color=color, kwargs...)
