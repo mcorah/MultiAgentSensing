@@ -62,7 +62,7 @@ for ii = 2:steps
 
   plots=[]
   for robot in robot_states
-    append!(plots, plot_trajectory([robot], color=:blue))
+    append!(plots, plot_quadrotor(robot, color=:blue))
   end
 
   for trajectory in trajectories
@@ -78,7 +78,7 @@ for ii = 2:steps
   end
 
   for target in target_states
-    append!(plots, plot_trajectory([target]))
+    append!(plots, plot_target(target))
   end
 
   append!(plots, visualize_filters(histogram_filters))
