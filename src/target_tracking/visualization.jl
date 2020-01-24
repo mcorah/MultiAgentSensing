@@ -7,6 +7,7 @@ export plot_state_space, plot_quadrotor, plot_target, plot_states,
 
 const object_scale = 13^2
 const default_linewidth = 2.0
+const default_cmap = "viridis"
 
 function plot_state_space(g::Grid; color=:k)
   states = get_states(g)
@@ -137,7 +138,9 @@ end
 function visualize_filter(filter::AnyFilter; kwargs...)
   visualize_filters([filter]; kwargs...)
 end
-function visualize_filters(filters::Vector{<:AnyFilter}; show_colorbar = false)
+function visualize_filters(filters::Vector{<:AnyFilter};
+                           show_colorbar = false,
+                           alpha=0.75)
   if length(filters) == 0
     error("No filters to visualize")
   end
@@ -150,5 +153,6 @@ function visualize_filters(filters::Vector{<:AnyFilter}; show_colorbar = false)
   data = sum(get_data, filters)
 
   # Note: visualize filter does not normalize by default
-  visualize_pdf(Matrix(data), show_colorbar = show_colorbar, limits=limits)
+  visualize_pdf(Matrix(data), show_colorbar = show_colorbar, limits=limits,
+               alpha=alpha, cmap=default_cmap)
 end
