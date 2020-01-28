@@ -5,16 +5,20 @@ using Base.Threads
 using JLD2
 using Statistics
 using Printf
+using Random
 
 close("all")
 
-data_file = "./data/entropy_by_solver.jld2"
-reprocess = true
+trial_name = "entropy_by_solver"
+data_file = string("./data/", trial_name, ".jld2")
+cache_folder = string("./data/", trial_name, "/")
+
+reprocess = false
 
 steps = 100
-num_robots = [5, 10, 15, 20]
+num_robots = [4, 8, 12, 16]
 
-trials = 1:20
+trials = 1:10
 
 # We will drop a fraction of each trial so that the filters have time to
 # converge to steady states
@@ -34,35 +38,56 @@ solver_strings = ["random",
 solver_inds = 1:length(solvers)
 
 
-all_tests = product(num_robots, solver_inds, trials)
-all_configurations = product(num_robots, solver_inds)
+all_tests = product(solver_inds, num_robots, trials)
+all_configurations = product(solver_inds, num_robots)
 
 function get_data()
   results = Dict{Any,Any}(key=>nothing for key in all_tests)
 
 
   if !isfile(data_file) || reprocess
+    if !isdir(cache_folder)
+      mkdir(cache_folder)
+    end
+
     num_tests_completed = Atomic{Int64}(0)
 
     start = time()
-    iters = collect(all_tests)
+    iters = shuffle!(collect(all_tests))
     @threads for trial_spec in iters
-      (num_robots, solver_ind, trial) = trial_spec
+      trial_start = time()
 
-      configs = MultiRobotTargetTrackingConfigs(num_robots,
-                                                horizon=horizon,
+      local trial_data, configs
+      trial_file = string(cache_folder, trial_name, " ", trial_spec, ".jld2")
+
+      # Cache data from each trial
+      if !isfile(trial_file) || reprocess
+        (solver_ind, num_robots, trial) = trial_spec
+
+        configs = MultiRobotTargetTrackingConfigs(num_robots,
+                                                  horizon=horizon,
+                                                 )
+
+        trial_data = target_tracking_experiment(steps=steps,
+                                                num_robots=num_robots,
+                                                configs=configs,
+                                                solver=solvers[solver_ind]
                                                )
 
-      trial_data = target_tracking_experiment(steps=steps,
-                                              num_robots=num_robots,
-                                              configs=configs,
-                                              solver=solvers[solver_ind]
-                                             )
+
+
+        @save trial_file trial_data configs
+      else
+        pritln("Loading: ", trial_file)
+        @load trial_file trial_data configs
+      end
+
+      elapsed = time() - start
+      trial_elapsed = time() - trial_start
 
       results[trial_spec] = (data=trial_data, configs=configs)
 
-      elapsed = time() - start
-
+      # (returns old value)
       completed = atomic_add!(num_tests_completed, 1) + 1
       completion = completed/length(all_tests)
       projected = elapsed / completion
@@ -73,9 +98,10 @@ function get_data()
               " Trial: ", trial)
       println(" (Done, ", completed, "/", length(all_tests),
               @sprintf(" %0.2f", 100completion), "%",
-              " Elapsed: ", @sprintf(" %0.0fs", elapsed),
-              " Total: ", @sprintf(" %0.2fh", projected / hour),
-              " Remaining: ", @sprintf(" %0.2fh", (projected - elapsed) / hour),
+              " Trial time: ", @sprintf("%0.0fs", trial_elapsed),
+              " Elapsed: ", @sprintf("%0.2fh", elapsed / hour),
+              " Total: ", @sprintf("%0.2fh", projected / hour),
+              " Remaining: ", @sprintf("%0.2fh", (projected - elapsed) / hour),
               ")"
              )
     end
@@ -93,21 +119,21 @@ end
 # Normalize by number of targets
 entropies = Dict(map(all_tests) do key
                    key => map(results[key].data) do x
-                     entropy(x.target_filters) / length(target_filters)
+                     entropy(x.target_filters) / length(x.target_filters)
                    end
                  end)
 
 # Concatenate all data for a set of trials
-concatenated_entropy = Dict(map(all_configurations) do
+concatenated_entropy = map(all_configurations) do configuration
   trial_data = map(trials) do trial
     entropies[configuration..., trial][trial_steps]
   end
 
-  configuration => vcat(trial_data...)
-end)
+  vcat(trial_data...)
+end[:]
 
-titles = map(all_configurations) do (num_robots, solver_ind)
-  string(num_robots, "-robots ", solver_strings)
+titles = map(all_configurations) do (solver_ind, num_robots)
+  string(num_robots, "-robots ", solver_strings[solver_ind])
 end[:]
 
 boxplot(concatenated_entropy, notch=false, vert=false)
