@@ -84,6 +84,7 @@ function get_data()
           @save trial_file trial_data configs
         catch e
           println(threadid(), "-Failed to save ", trial_spec)
+          continue
         end
 
         println(threadid(), "-Saved")
@@ -96,6 +97,7 @@ function get_data()
           @load trial_file trial_data configs
         catch e
           println(threadid(), "-Failed to load ", trial_spec)
+          continue
         end
 
         println(threadid(), "-Loaded")
