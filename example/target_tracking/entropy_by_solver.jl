@@ -44,6 +44,7 @@ all_configurations = product(solver_inds, num_robots)
 function get_data()
   results = Dict{Any,Any}(key=>nothing for key in all_tests)
 
+  load_save_lock = SpinLock()
 
   if !isfile(data_file) || reprocess
     if !isdir(cache_folder)
@@ -60,9 +61,12 @@ function get_data()
       local trial_data, configs
       trial_file = string(cache_folder, trial_name, " ", trial_spec, ".jld2")
 
+      (solver_ind, num_robots, trial) = trial_spec
+
+      println("Thread-", threadid(), " starting: ", trial_spec)
+
       # Cache data from each trial
       if !isfile(trial_file) || reprocess
-        (solver_ind, num_robots, trial) = trial_spec
 
         configs = MultiRobotTargetTrackingConfigs(num_robots,
                                                   horizon=horizon,
@@ -73,13 +77,29 @@ function get_data()
                                                 configs=configs,
                                                 solver=solvers[solver_ind]
                                                )
+        lock(load_save_lock)
+        print(threadid(), "-Saving: ", trial_spec, "...")
 
+        try
+          @save trial_file trial_data configs
+        catch e
+          println(threadid(), "-Failed to save ", trial_spec)
+        end
 
-
-        @save trial_file trial_data configs
+        println(threadid(), "-Saved")
+        unlock(load_save_lock)
       else
-        pritln("Loading: ", trial_file)
-        @load trial_file trial_data configs
+        lock(load_save_lock)
+        print(threadid(), "-Loading: ", trial_file, "...")
+
+        try
+          @load trial_file trial_data configs
+        catch e
+          println(threadid(), "-Failed to load ", trial_spec)
+        end
+
+        println(threadid(), "-Loaded")
+        unlock(load_save_lock)
       end
 
       elapsed = time() - start
@@ -93,6 +113,7 @@ function get_data()
       projected = elapsed / completion
       hour = 3600
 
+      lock(load_save_lock)
       println("Num. Robots: ", num_robots,
               " Solver: ", solver_strings[solver_ind],
               " Trial: ", trial)
@@ -104,6 +125,7 @@ function get_data()
               " Remaining: ", @sprintf("%0.2fh", (projected - elapsed) / hour),
               ")"
              )
+      unlock(load_save_lock)
     end
 
     @save data_file results
