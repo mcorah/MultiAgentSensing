@@ -9,9 +9,9 @@ using Random
 
 close("all")
 
-trial_name = "entropy_by_solver"
-data_file = string("./data/", trial_name, ".jld2")
-cache_folder = string("./data/", trial_name, "/")
+experiment_name = "entropy_by_solver"
+data_file = string("./data/", experiment_name, ".jld2")
+cache_folder = string("./data/", experiment_name, "/")
 
 reprocess = false
 
@@ -59,7 +59,7 @@ function get_data()
       trial_start = time()
 
       local trial_data, configs
-      trial_file = string(cache_folder, trial_name, " ", trial_spec, ".jld2")
+      trial_file = string(cache_folder, experiment_name, " ", trial_spec, ".jld2")
 
       (solver_ind, num_robots, trial) = trial_spec
 
