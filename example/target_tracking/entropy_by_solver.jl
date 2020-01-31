@@ -55,6 +55,10 @@ function get_data()
 
     start = time()
     iters = shuffle!(collect(all_tests))
+
+    # Error, protected by mutex
+    error = nothing
+
     @threads for trial_spec in iters
       trial_start = time()
 
@@ -63,10 +67,9 @@ function get_data()
 
       (solver_ind, num_robots, trial) = trial_spec
 
-      println("Thread-", threadid(), " starting: ", trial_spec)
-
       # Cache data from each trial
       if !isfile(trial_file) || reprocess
+        println("Thread-", threadid(), " running: ", trial_spec)
 
         configs = MultiRobotTargetTrackingConfigs(num_robots,
                                                   horizon=horizon,
@@ -77,31 +80,37 @@ function get_data()
                                                 configs=configs,
                                                 solver=solvers[solver_ind]
                                                )
-        lock(load_save_lock)
-        print(threadid(), "-Saving: ", trial_spec, "...")
-
         try
+          lock(load_save_lock)
+          print(threadid(), "-Saving: ", trial_spec, "...")
+
           @save trial_file trial_data configs
         catch e
+          # Save the error for later
+          error = e
+
           println(threadid(), "-Failed to save ", trial_spec)
           continue
+        finally
+          println(threadid(), "-Saved")
+          unlock(load_save_lock)
         end
-
-        println(threadid(), "-Saved")
-        unlock(load_save_lock)
       else
-        lock(load_save_lock)
-        print(threadid(), "-Loading: ", trial_file, "...")
-
         try
+          lock(load_save_lock)
+          print(threadid(), "-Loading: ", trial_file, "...")
+
           @load trial_file trial_data configs
+          println(threadid(), "-Loaded")
         catch e
+          # Save the error for later
+          error = e
+
           println(threadid(), "-Failed to load ", trial_spec)
           continue
+        finally
+          unlock(load_save_lock)
         end
-
-        println(threadid(), "-Loaded")
-        unlock(load_save_lock)
       end
 
       elapsed = time() - start
@@ -128,6 +137,11 @@ function get_data()
               ")"
              )
       unlock(load_save_lock)
+    end
+
+    if !isnothing(error)
+      println("Loading or producing results produce errors. Rethrowing.")
+      rethrow(error)
     end
 
     @save data_file results
