@@ -54,8 +54,10 @@ function get_data()
 
   if !isfile(data_file) || reprocess
 
+    start = time()
     iters = collect(all_tests)
     @threads for (solver_ind, sample_ind) in iters
+      trial_start = time()
 
       test = samples[sample_ind]
 
@@ -72,13 +74,24 @@ function get_data()
 
       results[solver_ind, sample_ind] = reward
 
+      elapsed = time() - start
+      trial_elapsed = time() - trial_start
+
       # (returns old value)
       completed = atomic_add!(num_tests_completed, 1) + 1
+      completion = completed/length(all_tests)
+      projected = elapsed / completion
+      hour = 3600
 
       println("Solver: ", solver_strings[solver_ind],
-              " Trial: ", sample_ind,
-              " (done, ", completed, "/", length(all_tests),
-              @sprintf(" %0.2f", 100completed/length(all_tests)), "%)"
+              " Trial: ", sample_ind)
+      println(" (Done, ", completed, "/", length(all_tests),
+              @sprintf(" %0.2f", 100completed/length(all_tests)), "%",
+              " Trial time: ", @sprintf("%0.0fs", trial_elapsed),
+              " Elapsed: ", @sprintf("%0.0fs", elapsed),
+              " Total: ", @sprintf("%0.2fh", projected / hour),
+              " Remaining: ", @sprintf("%0.2fh", (projected - elapsed) / hour),
+              ")"
              )
     end
 
