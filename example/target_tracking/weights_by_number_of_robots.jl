@@ -52,72 +52,76 @@ function get_data()
 
     num_tests_completed = Atomic{Int64}(0)
 
-    start = time()
-    iters = shuffle!(collect(all_tests))
-
-    # Error, protected by mutex during load/save/output
-    load_save_lock = SpinLock()
-    error = nothing
-
-    @threads for trial_spec in iters
-      trial_start = time()
-
-      num_robots, trial = trial_spec
-
-      local trial_data, configs
+    # First process any data that has been saved
+    remaining_tests = filter(collect(all_tests)) do trial_spec
       trial_file = string(cache_folder, experiment_name, " ", trial_spec, ".jld2")
 
       # Cache data from each trial
-      if !isfile(trial_file) || reprocess
-        println("Thread-", threadid(), " running: ", trial_spec)
-
-        # The nomenclature here is weird, but we will only be using a part of
-        # the trial and will implement that at computation time.
-        data, configs = weights_trials[trial_spec...]
-        trial_data = data[trial_steps]
-
-        # Iterate through the trial and compute weights
-        trial_weights = map(trial_data) do trial_step
-          robot_states = trial_step.robot_states
-          target_filters = trial_step.target_filters
-
-          problem = MultiRobotTargetTrackingProblem(robot_states, target_filters,
-                                                    configs)
-
-          compute_weight_matrix(problem)
-        end
-
+      if !reprocess && isfile(trial_file)
         try
-          lock(load_save_lock)
-          print(threadid(), "-Saving: ", trial_spec, "...")
-
-          @save trial_file trial_weights trial_data configs
-        catch e
-          # Save the error for later
-          error = e
-
-          println(threadid(), "-Failed to save ", trial_spec)
-          continue
-        finally
-          println(threadid(), "-Saved")
-          unlock(load_save_lock)
-        end
-      else
-        try
-          lock(load_save_lock)
           print(threadid(), "-Loading: ", trial_file, "...")
 
           @load trial_file trial_weights trial_data configs
           println(threadid(), "-Loaded")
-        catch e
-          # Save the error for later
-          error = e
 
+          results[trial_spec] = (
+                                 trial_weights=trial_weights,
+                                 trial_data=trial_data,
+                                 configs=configs
+                                )
+        catch e
           println(threadid(), "-Failed to load ", trial_spec)
-          continue
-        finally
-          unlock(load_save_lock)
+          return false
         end
+      end
+
+      true
+    end
+
+    # Mutex for load/save/output
+    load_save_lock = SpinLock()
+
+    start = time()
+    shuffle!(remaining_tests)
+    @threads for trial_spec in remaining_tests
+      println("Thread-", threadid(), " running: ", trial_spec)
+
+      trial_start = time()
+
+      num_robots, trial = trial_spec
+
+      trial_file = string(cache_folder, experiment_name, " ", trial_spec, ".jld2")
+
+      # The nomenclature here is weird, but we will only be using a part of
+      # the trial and will implement that at computation time.
+      data, configs = weights_trials[trial_spec...]
+      trial_data = data[trial_steps]
+
+      # Iterate through the trial and compute weights
+      trial_weights = map(trial_data) do trial_step
+        robot_states = trial_step.robot_states
+        target_filters = trial_step.target_filters
+
+        problem = MultiRobotTargetTrackingProblem(robot_states, target_filters,
+                                                  configs)
+
+        compute_weight_matrix(problem)
+      end
+
+      try
+        lock(load_save_lock)
+        print(threadid(), "-Saving: ", trial_spec, "...")
+
+        @save trial_file trial_weights trial_data configs
+      catch e
+        # Save the error for later
+        error = e
+
+        println(threadid(), "-Failed to save ", trial_spec)
+        continue
+      finally
+        println(threadid(), "-Saved")
+        unlock(load_save_lock)
       end
 
       elapsed = time() - start
@@ -131,14 +135,14 @@ function get_data()
 
       # (returns old value)
       completed = atomic_add!(num_tests_completed, 1) + 1
-      completion = completed/length(all_tests)
+      completion = completed/length(remaining_tests)
       projected = elapsed / completion
       hour = 3600
 
       lock(load_save_lock)
       println("Num. Robots: ", num_robots,
               " Trial: ", trial)
-      println(" (Done, ", completed, "/", length(all_tests),
+      println(" (Done, ", completed, "/", length(remaining_tests),
               @sprintf(" %0.2f", 100completion), "%",
               " Trial time: ", @sprintf("%0.0fs", trial_elapsed),
               " Elapsed: ", @sprintf("%0.2fh", elapsed / hour),
