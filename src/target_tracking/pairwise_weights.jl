@@ -75,7 +75,7 @@ function channel_capacity_by_target_time(p::MultiRobotTargetTrackingProblem,
                                          step, robot_index)
   configs = p.configs
 
-  # Note: X is a vector of TimedObservation
+  # Note: observations is a vector of TimedObservation
   function objective(observations)
     finite_horizon_information(configs.grid, filter, configs.sensor,
                                observations, step;
@@ -147,6 +147,14 @@ function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
                                            [filter],
                                            num_information_samples=
                                              configs.solver_information_samples)
+  function objective(observations)
+    finite_horizon_information(configs.grid, filter, configs.sensor,
+                               observations, configs.horizon;
+                               num_samples=
+                                configs.objective_information_samples,
+                               entropy_only_at_end=false
+                              ).reward
+  end
 
   state = p.partition_matroid[robot_index]
 
@@ -158,7 +166,7 @@ function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
   #
   # The tuple is a hack to put this in a format tha the multi-robot code can
   # recognize
-  objective(p, [(1, trajectory)])
+  objective([trajectory])
 end
 
 #
