@@ -162,21 +162,54 @@ entropies = Dict(map(all_tests) do key
                  end)
 
 # Concatenate all data for a set of trials
-concatenated_entropy = map(all_configurations) do configuration
+concatenated_entropy = Dict(map(all_configurations) do configuration
   trial_data = map(trials) do trial
     entropies[configuration..., trial][trial_steps]
   end
 
-  vcat(trial_data...)
-end[:]
+  configuration=>vcat(trial_data...)
+end[:])
 
 titles = map(all_configurations) do (solver_ind, num_robots)
   string(num_robots, "-robots ", solver_strings[solver_ind])
 end[:]
 
-boxplot(concatenated_entropy, notch=false, vert=false)
+boxplot([concatenated_entropy[c] for c in all_configurations][:],
+        notch=false,
+        vert=false)
+
 title("Entropy distribution")
 xlabel("Entropy per target (bits)")
 yticks(1:length(titles), titles)
 
 save_fig("fig", "entropy_by_solver")
+
+# Plot means to get output in an easier format
+
+figure()
+
+# Plot everything in a given order to get the labels to line up nicely
+solver_order = [1, 2, 6, 3, 4, 5]
+
+plot_args = Dict(3=>Dict(:color=>:k),
+                 4=>Dict(:color=>:k, :linestyle=>"--"),
+                 5=>Dict(:color=>:k, :linestyle=>"-."))
+
+for solver_ind in solver_order
+  entropies = map(n->concatenated_entropy[solver_ind, n], num_robots)
+
+  means = map(mean, entropies)
+  label = solver_strings[solver_ind]
+
+  # Process args
+  kwargs = get(plot_args, solver_ind, Dict())
+
+  plot(num_robots, means, label=label; kwargs...)
+end
+
+ylabel("Entropy per target (bits)")
+xlabel("Num. robots")
+legend(loc="upper right", ncol=3)
+grid()
+
+save_fig("fig", "entropy_by_solver_plot")
