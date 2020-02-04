@@ -85,15 +85,15 @@ function make_tight_colorbar(image)
 end
 
 function visualize_pdf(density::Matrix; limits = [0 1; 0 1], cmap = "viridis",
-                       show_colorbar = true)
+                       show_colorbar = true, kwargs...)
   ret = []
 
   xlim = limits[1,:]
   ylim = limits[2,:]
 
-  image = imshow(density', cmap=cmap, vmin=0.0, vmax=maximum(density[:]),
+  image = imshow(density'; cmap=cmap, vmin=0.0, vmax=maximum(density[:]),
                  extent=[xlim[1], xlim[2], ylim[1], ylim[2]],
-                 interpolation="nearest", origin="lower")
+                 interpolation="nearest", origin="lower", kwargs...)
   push!(ret, image)
 
   if show_colorbar
