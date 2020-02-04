@@ -54,6 +54,8 @@ function get_data()
 
     # First process any data that has been saved
     remaining_tests = filter(collect(all_tests)) do trial_spec
+      run_test = true
+
       trial_file = string(cache_folder, experiment_name, " ", trial_spec, ".jld2")
 
       # Cache data from each trial
@@ -69,14 +71,16 @@ function get_data()
                                  trial_data=trial_data,
                                  configs=configs
                                 )
+          run_test = false
         catch e
           println(threadid(), "-Failed to load ", trial_spec)
-          return false
         end
       end
 
-      true
+      run_test
     end
+
+    println("\n", length(remaining_tests), " tests remain\n")
 
     # Mutex for load/save/output
     load_save_lock = SpinLock()
