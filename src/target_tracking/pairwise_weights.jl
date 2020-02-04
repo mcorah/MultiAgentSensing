@@ -210,7 +210,7 @@ end
 compute_weight(a::Array{Float64}, b::Array{Float64}) = sum(min.(a, b))
 
 function compute_weight_matrix(p::MultiRobotTargetTrackingProblem;
-                               channel_capacity_method)
+                               channel_capacity_method=channel_capacities_mcts)
   n = get_num_agents(p)
 
   # Compute channel capacities for each robot
