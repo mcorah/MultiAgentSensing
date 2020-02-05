@@ -8,6 +8,7 @@ using JLD2
 using Statistics
 using Printf
 using Random
+using RosDataProcess
 
 close("all")
 
@@ -173,29 +174,91 @@ end
 
 @time results = get_data()
 
-normalized_weights = Dict(map(num_robots) do num_robots
+normalized_weights = map(num_robots) do num_robots
   trial_weights = map(trials) do trial
     trial = results[num_robots, trial]
 
     trial_weights = trial.trial_weights
-    objectives = map(x->x.objective, trial.trial_data.objective)
+    objectives = map(x->x.objective, trial.trial_data)
 
     total_weights = map(total_weight, trial_weights)
 
-    normalized_weights = total_weights ./ objectives
-
-    trial_spec => normalized_weights
+    total_weights ./ objectives
   end
 
-  num_robots => vcat(trial_weights...)
-end)
+  vcat(trial_weights...)
+end
 
-boxplot([normalized_weights[n] for n in num_robots],
-        notch=false)
+#boxplot([normalized_weights[n] for n in num_robots],
+        #notch=false)
+
+weights_series = TimeSeries(num_robots, hcat(normalized_weights...)')
+
+plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3)
+
 
 title("Target weights")
 ylabel("Cost bound over obj.")
 xlabel("Number of robots")
-xticks(1:length(num_robots), map(string, num_robots))
+#xticks(1:length(num_robots), map(string, num_robots))
 
 save_fig("fig", "weights_by_number_of_robots")
+
+#
+# Weights per num robots
+#
+
+figure()
+
+normalized_weights = map(num_robots) do num_robots
+  trial_weights = map(trials) do trial
+    trial = results[num_robots, trial]
+
+    trial_weights = trial.trial_weights
+
+    total_weights = map(total_weight, trial_weights)
+
+    total_weights / num_robots
+  end
+
+  vcat(trial_weights...)
+end
+
+boxplot(normalized_weights,
+        notch=false)
+
+
+title("Weights per num. robots")
+ylabel("Cost bound per num. robots")
+xlabel("Number of robots")
+xticks(1:length(num_robots), map(string, num_robots))
+
+save_fig("fig", "weights_per_num_robots")
+
+#
+# Plot objective values
+#
+
+figure()
+
+objective_values = Dict(map(num_robots) do num_robots
+  trial_objectives = map(trials) do trial
+    trial = results[num_robots, trial]
+
+    objectives = map(x->x.objective, trial.trial_data)
+
+    objectives / num_robots
+  end
+
+  num_robots => vcat(trial_objectives...)
+end)
+
+boxplot([objective_values[n] for n in num_robots],
+        notch=false)
+
+title("Objective values")
+ylabel("Cost bound over obj.")
+xlabel("Number of robots")
+xticks(1:length(num_robots), map(string, num_robots))
+
+save_fig("fig", "objective_values_by_number_of_robots")
