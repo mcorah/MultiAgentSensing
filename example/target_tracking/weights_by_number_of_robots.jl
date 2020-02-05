@@ -87,6 +87,7 @@ function get_data()
 
     start = time()
     shuffle!(remaining_tests)
+    trial_error = nothing
     @threads for trial_spec in remaining_tests
       println("Thread-", threadid(), " running: ", trial_spec)
 
@@ -119,7 +120,7 @@ function get_data()
         @save trial_file trial_weights trial_data configs
       catch e
         # Save the error for later
-        error = e
+        trial_error = e
 
         println(threadid(), "-Failed to save ", trial_spec)
         continue
@@ -157,9 +158,9 @@ function get_data()
       unlock(load_save_lock)
     end
 
-    if !isnothing(error)
-      println("Loading or producing results produce errors. Rethrowing.")
-      rethrow(error)
+    if !isnothing(trial_error)
+      println("Loading or producing results produce errors.")
+      error("One or more trials failed.")
     end
 
     @save data_file results
