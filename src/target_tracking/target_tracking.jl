@@ -73,9 +73,11 @@ function neighbors(g::Grid, state; buffer=neighbors_buffer())
   resize!(buffer, 0)
 
   for dir in dirs, offset in offsets
-    candidate = wrap(g, state .+ offset .* dir)
+    candidate = state .+ offset .* dir
 
-    push!(buffer, candidate)
+    if in_bounds(g, candidate)
+      push!(buffer, candidate)
+    end
   end
 
   push!(buffer, state)
@@ -134,13 +136,7 @@ variance(r::RangingSensor, distance) =
 stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
 
 # Distances in each direction are minimum distances around the grid
-function mean(g::Grid, r::RangingSensor, a, b)
-  diff = abs.(a .- b)
-
-  dists = min.(diff, dims(g) .- diff)
-
-  norm(dists)
-end
+mean(g::Grid, r::RangingSensor, a, b) = norm(a .- b)
 
 # sample a ranging observation
 function generate_observation(g::Grid, r::RangingSensor, a, b;
