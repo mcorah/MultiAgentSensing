@@ -2,6 +2,10 @@ using LinearAlgebra
 
 export MultiRobotTargetTrackingConfigs, MultiRobotTargetTrackingProblem
 
+# Automatically switch to sparse filters for large numbers of robots
+const num_robots_sparse_filtering_threshold = 15
+const sparsity_threshold=1e-3
+
 # Stores configuration variables for multi-robot target tracking
 struct MultiRobotTargetTrackingConfigs
   grid::Grid
@@ -70,7 +74,14 @@ struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: PartitionProblem{Tuple{I
   function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
                  target_filters::Vector{F},
                  configs::MultiRobotTargetTrackingConfigs) where F <: AnyFilter
-    new{F}(robot_states, target_filters, configs)
+    if length(robot_states) > num_robots_sparse_filtering_threshold
+      sparse_filters = map(x->SparseFilter(x, threshold=sparsity_threshold),
+                           target_filters)
+
+      new{SparseFilter{Int64}}(robot_states, sparse_filters, configs)
+    else
+      new{F}(robot_states, target_filters, configs)
+    end
   end
 end
 
