@@ -57,6 +57,13 @@ for ii = 2:steps
   trajectories = solution.trajectories
   range_observations = solution.range_observations
 
+  # Compute weights
+  problem = MultiRobotTargetTrackingProblem(robot_states, histogram_filters,
+                                            configs)
+  weight = total_weight(compute_weight_matrix(problem))
+
+  @printf("Weight per robot: %0.3f\n", weight / num_robots )
+
   #
   # Plot results
   #

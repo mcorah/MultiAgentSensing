@@ -138,7 +138,7 @@ end
 #
 # On the plus side, this should be a relatively easy problem for MCTS to solve
 function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
-                               filter::Filter; robot_index)
+                               filter::AnyFilter; robot_index)
   configs=p.configs
 
   # Construct a solver for the individual filter
@@ -210,11 +210,20 @@ end
 compute_weight(a::Array{Float64}, b::Array{Float64}) = sum(min.(a, b))
 
 function compute_weight_matrix(p::MultiRobotTargetTrackingProblem;
-                               channel_capacity_method=channel_capacities_mcts)
+                               channel_capacity_method=channel_capacities_mcts,
+                               threaded = false
+                              )
+  local capacities
+
   n = get_num_agents(p)
 
   # Compute channel capacities for each robot
-  capacities = map(x->channel_capacity_method(p, x), 1:n)
+  if threaded
+    capacities = map(x->channel_capacity_method(p, x), 1:n)
+  else
+    capacities = thread_map(x->channel_capacity_method(p, x), 1:n,
+                            Vector{Float64})
+  end
 
   weights = zeros(n,n)
 
