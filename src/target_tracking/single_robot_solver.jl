@@ -28,7 +28,7 @@ exploration_constant(horizon) = 0.18 * horizon^2 + 0.31
 #
 # Note: the last test indicated slow convergence for a horizon length of 2.
 const default_num_iterations = Dict(1=>512,
-                                    2=>1024,
+                                    2=>512,
                                     3=>1024,
                                     4=>1024,
                                     5=>2048,
