@@ -7,7 +7,7 @@ pygui(false)
 
 steps = 20
 grid_size = 10
-horizon = 2
+horizon = SubmodularMaximization.default_horizon
 iterations = 100
 
 grid = Grid(grid_size, grid_size)

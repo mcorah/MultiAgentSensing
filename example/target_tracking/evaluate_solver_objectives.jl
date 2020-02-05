@@ -31,7 +31,8 @@ sample_inds = 1:length(samples)
 data_file = "./data/evaluate_solver_objectives.jld2"
 reprocess = false
 
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
+
 solver_rounds = [2, 4, 8]
 solvers = [solve_myopic,
            map(num->prob->solve_n_partitions(num, prob), solver_rounds)...,

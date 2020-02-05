@@ -25,7 +25,8 @@ trials = 1:10
 trial_steps = 20:steps
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
+
 solver_rounds = [2, 4, 8]
 solvers = [solve_random,
            solve_myopic,

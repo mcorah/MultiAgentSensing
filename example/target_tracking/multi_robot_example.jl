@@ -9,7 +9,8 @@ using Statistics
 close()
 
 steps = 100
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
+
 show_observations = false
 sparse = false
 

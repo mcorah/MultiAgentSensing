@@ -5,7 +5,7 @@ using SubmodularMaximization: channel_capacity_by_target,
                               channel_capacity_by_target_time
 
 grid_size = 9
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
 
 # place the target in the center of the grid
 target_state = (5,5)

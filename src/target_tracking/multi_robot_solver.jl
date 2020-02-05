@@ -18,7 +18,7 @@ struct MultiRobotTargetTrackingConfigs
 
   function MultiRobotTargetTrackingConfigs(;
                                            grid,
-                                           horizon,
+                                           horizon=default_horizon,
                                            sensor=RangingSensor(),
                                            solver_iterations =
                                            default_num_iterations[horizon],

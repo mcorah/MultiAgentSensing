@@ -5,7 +5,7 @@ close()
 
 num_robots = 4
 steps = 10
-horizon = 5
+horizon = SubmodularMaximization.default_horizon
 
 configs = MultiRobotTargetTrackingConfigs(num_robots,
                                           horizon=horizon)

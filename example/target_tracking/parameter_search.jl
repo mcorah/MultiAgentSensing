@@ -14,7 +14,7 @@ num_robots = 4
 
 trials = 1:10
 
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
 
 steps = 60
 trial_steps = 20:steps

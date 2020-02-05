@@ -5,7 +5,7 @@ using D3Trees
 
 grid_size = 10
 iterations = 10
-horizon = 2
+horizon = SubmodularMaximization.default_horizon
 
 grid = Grid(grid_size, grid_size)
 sensor = RangingSensor()

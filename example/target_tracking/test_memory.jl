@@ -13,7 +13,7 @@ using JLD2
 using Profile
 
 num_mcts_samples = 2 ^ 14
-horizon = 5
+horizon = SubmodularMaximization.default_horizon
 
 grid_size = 10
 sensor = RangingSensor()

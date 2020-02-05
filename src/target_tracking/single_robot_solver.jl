@@ -13,6 +13,8 @@ export SingleRobotTargetTrackingProblem, MDPState, generate_solver,
 
 const default_solver_information_samples = 1
 
+const default_horizon = 2
+
 # This approximates the (half) the expected reward as prior tests indicated
 # that MCTS performs best in this regime
 #

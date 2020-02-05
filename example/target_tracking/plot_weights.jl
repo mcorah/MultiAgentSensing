@@ -7,7 +7,7 @@ using PyPlot
 close()
 
 grid_size = 41
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
 sensor = RangingSensor()
 
 # place the target in the center of the grid

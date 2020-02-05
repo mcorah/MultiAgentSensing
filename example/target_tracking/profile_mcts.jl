@@ -7,7 +7,7 @@ using Profile
 
 default_steps = 50
 grid_size = 10
-horizon = 5
+horizon = SubmodularMaximization.default_horizon
 iterations = 1000
 information_samples = 1
 

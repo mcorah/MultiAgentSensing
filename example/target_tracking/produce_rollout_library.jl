@@ -18,7 +18,7 @@ num_robots = [4, 6, 8, 10]
 
 trials = 1:20
 
-horizon = 4
+horizon = SubmodularMaximization.default_horizon
 
 # Keep samples from only a few (8) relevant time-steps in every trial
 sample_steps = 20:5:steps
