@@ -37,14 +37,15 @@ struct Grid <: StateSpace
 end
 
 # Construct default grids according to the number of robots
-const grid_cells_per_robot = 25
+const grid_cells_per_robot = 12.5
 function Grid(;num_robots)
   grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
   Grid(grid_size, grid_size)
 end
 
 # default number of targets as a function of the number of robots
-default_num_targets(num_robots) = round(Int64, num_robots * 5 / 4)
+const targets_per_robot = 1
+default_num_targets(num_robots) = round(Int64, num_robots * targets_per_robot)
 
 get_states(width::Real, height::Real) = collect(product(1:width, 1:height))
 get_states(g::Grid) = g.states
