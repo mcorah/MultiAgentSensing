@@ -24,7 +24,7 @@ experiment_name = string("minimal_weights_by_num_robots",
                          "_", grid_cells_per_robot)
 
 
-num_robots = [4, 8, 12, 16, 20, 24, 28, 32]
+num_robots = [4, 8, 12, 16, 20, 24, 28, 32, 36]
 
 steps = 20
 trial_steps = 15:steps
