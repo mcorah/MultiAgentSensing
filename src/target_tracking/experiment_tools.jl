@@ -245,8 +245,7 @@ function run_experiments(tests;
     shuffle!(remaining_tests)
     trial_backtrace = nothing
 
-    #spawn_for_each(remaining_tests) do trial_spec
-    @threads for trial_spec in remaining_tests
+    spawn_for_each(remaining_tests) do trial_spec
       id = threadid()
 
       lock(load_save_lock)
