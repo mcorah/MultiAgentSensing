@@ -7,79 +7,84 @@ using Statistics
 
 close("all")
 
-data_file = "./data/parameter_search.jld2"
 reprocess = false
+experiment_name = "parameter_search"
+data_folder = "./data"
 
-num_robots = 4
+
+num_robots = 8
 
 trials = 1:10
 
 horizon = SubmodularMaximization.default_horizon
 
-steps = 60
+steps = 50
 trial_steps = 20:steps
 
 # Main parameters for variation
-num_targets = [1, 2, 3, 4, 5]
-variance_scaling_factors = [0.1, 0.2, 0.3, 0.5]
-grid_sizes = [10, 14, 20, 25]
+num_targets = [4, 6, 8]
+variance_scaling_factors = [0.1, 0.5, 2.0, 3.0]
+grid_sizes = [10, 12, 14, 16]
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
 solvers = [solve_sequential, solve_myopic]
 solver_strings = map(string, solvers)
+solver_inds = 1:length(solvers)
 
-function get_data()
-  data_mutex = Mutex()
-  data = Dict()
+#
+# Code to run experiments
+#
 
-  if !isfile(data_file) || reprocess
-    tests = product(solvers, num_targets, variance_scaling_factors, grid_sizes,
-                    trials)
+tests = product(solver_inds, num_targets, variance_scaling_factors, grid_sizes,
+                trials)
 
-    test_partition = partition(tests, nthreads())
+function trial_fun(x)
+  (solver_ind, num_targets, variance_scaling_factor, grid_size, trial) = x
 
-    for (ii, block) in enumerate(test_partition)
-      println("Block num: ", ii, " of ", length(test_partition))
+  grid = Grid(grid_size, grid_size)
+  sensor = RangingSensor(variance_scaling_factor=variance_scaling_factor)
 
-      @time @threads for (solver, num_targets, variance_scaling_factor,
-                          grid_size, trial) in block
+  configs = MultiRobotTargetTrackingConfigs(horizon=horizon,
+                                            grid=grid,
+                                            sensor=sensor
+                                           )
 
-        grid = Grid(grid_size, grid_size)
-        sensor = RangingSensor(variance_scaling_factor=variance_scaling_factor)
+  trial_data = target_tracking_experiment(steps=steps,
+                                          num_robots=num_robots,
+                                          num_targets=num_targets,
+                                          configs=configs,
+                                          solver=solvers[solver_ind]
+                                         )
 
-        configs = MultiRobotTargetTrackingConfigs(horizon=horizon,
-                                                  grid=grid,
-                                                  sensor=sensor
-                                                 )
+  (data=trial_data, configs=configs)
+end
+function print_summary(x)
+  (solver_ind, num_targets, variance_scaling_factor, grid_size, trial) = x
 
-        trial_data = target_tracking_experiment(steps=steps,
-                                                num_robots=num_robots,
-                                                num_targets=num_targets,
-                                                configs=configs,
-                                                solver=solver
-                                               )
-
-        lock(data_mutex)
-        data[string(solver), num_targets, variance_scaling_factor, grid_size,
-             trial] = (data=trial_data, configs=configs)
-        unlock(data_mutex)
-      end
-    end
-
-    @save data_file data
-  else
-    @load data_file data
-  end
-
-  data
+  println("Solver: ", solver_strings[solver_ind],
+          " Num. targets: ", num_targets,
+          " Var scale: ", variance_scaling_factor,
+          " Grid size: ", grid_size,
+          " Trial: ", trial
+         )
 end
 
-@time data = get_data()
+@time data = run_experiments(tests,
+                             trial_fun=trial_fun,
+                             print_summary=print_summary,
+                             experiment_name=experiment_name,
+                             data_folder=data_folder,
+                             reprocess=reprocess
+                            )
+
+#
+# Preprocess data
+#
 
 entropies = Dict(key=>map(x->entropy(x.target_filters), value.data)
                  for (key, value) in data)
 
-concatenated_entropy = map(product(solver_strings, num_targets,
+concatenated_entropy = map(product(solver_inds, num_targets,
                                    variance_scaling_factors, grid_sizes)) do x
   vcat(map(trials) do trial
     entropies[x..., trial][trial_steps]
@@ -101,6 +106,10 @@ end[:]
 
 trials_per_figure = 20
 
+#
+# Produce bar plots of results
+#
+
 # Creates an "array" pairs of entropy/title-blocks
 figure_partition = zip(partition.((concatenated_entropy, titles),
                                   trials_per_figure)...)
@@ -118,6 +127,10 @@ for (ii, (concatenated_entropy, titles)) in enumerate(figure_partition)
 
   save_fig("fig", string("parameter_search_", ii))
 end
+
+#
+# Summarize results
+#
 
 println("Trial means")
 means = map(mean, concatenated_entropy)
