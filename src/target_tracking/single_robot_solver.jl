@@ -65,18 +65,15 @@ struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: MDP{MDPState, State}
 
   num_information_samples::Int64
 
-  rng::MersenneTwister
-
   function SingleRobotTargetTrackingProblem(grid::Grid, sensor::RangingSensor,
                                             horizon::Integer,
                                             filters::Vector{T};
                                             prior_trajectories = Trajectory[],
                                             num_information_samples =
-                                              default_solver_information_samples,
-                                            rng = Random.GLOBAL_RNG
+                                              default_solver_information_samples
                                            ) where T <: AnyFilter
     new{T}(grid, sensor, horizon, filters, prior_trajectories,
-        num_information_samples, rng)
+        num_information_samples)
   end
 end
 
@@ -131,7 +128,7 @@ function extract_trajectory(problem::SingleRobotTargetTrackingProblem,
     state = try
       action(MCTS.best_sanode_Q(MCTS.StateNode(tree, mdp_state)))
     catch e
-      target_dynamics(problem.grid, mdp_state.state; rng=problem.rng)
+      target_dynamics(problem.grid, mdp_state.state)
     end
 
     states[ii] = state
