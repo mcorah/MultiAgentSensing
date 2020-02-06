@@ -13,8 +13,7 @@ using RosDataProcess
 close("all")
 
 experiment_name = "weights_by_number_of_robots"
-data_file = string("./data/", experiment_name, ".jld2")
-cache_folder = string("./data/", experiment_name, "/")
+data_folder = "./data"
 
 reprocess = false
 
@@ -37,9 +36,6 @@ let
   global solver_results = results
 end
 
-all_tests = product(num_robots, trials)
-all_configurations = num_robots
-
 # Pull the relevant trials from the dataset
 weights_trials = Dict(map(all_tests) do test
   test => solver_results[solver_ind, test...]
@@ -48,6 +44,9 @@ end)
 #
 # Compute weights
 #
+
+all_tests = product(num_robots, trials)
+all_configurations = num_robots
 
 function trial_fun(x)
   num_robots, trial = trial_spec
@@ -138,8 +137,7 @@ normalized_weights = map(num_robots) do num_robots
   vcat(trial_weights...)
 end
 
-boxplot(normalized_weights,
-        notch=false)
+boxplot(normalized_weights, notch=false)
 
 
 title("Weights per num. robots")
