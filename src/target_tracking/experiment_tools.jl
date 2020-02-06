@@ -263,8 +263,9 @@ function run_experiments(tests;
         print(id, "-Saving: ", trial_spec, "...")
 
         trial_file = get_trial_file(trial_spec)
-
         @save trial_file trial_results
+
+        println(id, "-Saved")
       catch e
         # Save the error for later
         trial_backtrace = catch_backtrace()
@@ -272,7 +273,6 @@ function run_experiments(tests;
         println(id, "-Failed to save ", trial_spec)
         return
       finally
-        println(id, "-Saved")
         unlock(load_save_lock)
       end
 
