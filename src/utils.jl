@@ -31,13 +31,19 @@ end
 
 # Runs a simple worker on a number of tasks
 # Returns *nothing*
-function spawn_for_each(f::Function, X)
+function spawn_for_each(f::Function, X; threaded=true)
   next_job = Atomic{Int64}(1)
 
   # Spawn simple workers to run the tasks
-  @threads for _ in 1:nthreads()
-    while (index = atomic_add!(next_job, 1)) <= length(X)
-      f(X[index])
+  if threaded
+    @threads for _ in 1:nthreads()
+      while (index = atomic_add!(next_job, 1)) <= length(X)
+        f(X[index])
+      end
+    end
+  else
+    for x in X
+      f(x)
     end
   end
 

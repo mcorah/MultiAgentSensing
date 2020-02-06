@@ -30,7 +30,7 @@ steps = 20
 trial_steps = 15:steps
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
-solver = x->solve_n_partitions(2, x)
+solver = x->solve_n_partitions(2, x, threaded=true)
 
 #
 # Code to run experiments
@@ -60,7 +60,7 @@ function trial_fun(num_robots)
         problem = MultiRobotTargetTrackingProblem(robot_states, target_filters,
                                                   configs)
 
-        compute_weight_matrix(problem)
+        compute_weight_matrix(problem, threaded=true)
   end
 
   (trial_weights=weights, trial_data=trial_data, configs=configs)
@@ -74,7 +74,8 @@ end
                              print_summary=print_summary,
                              experiment_name=experiment_name,
                              data_folder=data_folder,
-                             reprocess=reprocess
+                             reprocess=reprocess,
+                             threaded=false
                             )
 
 normalized_weights = map(num_robots) do num_robots

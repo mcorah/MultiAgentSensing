@@ -195,7 +195,8 @@ function run_experiments(tests;
                          print_summary::Function = x->nothing,
                          experiment_name::String,
                          data_folder::String,
-                         reprocess=false
+                         reprocess=false,
+                         threaded=true
                         )
   # produce file names
   data_file = string(data_folder, "/", experiment_name, ".jld2")
@@ -245,7 +246,7 @@ function run_experiments(tests;
     shuffle!(remaining_tests)
     trial_backtrace = nothing
 
-    spawn_for_each(remaining_tests) do trial_spec
+    spawn_for_each(remaining_tests, threaded=threaded) do trial_spec
       id = threadid()
 
       lock(load_save_lock)
