@@ -200,7 +200,6 @@ plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3)
 title("Target weights")
 ylabel("Cost bound over obj.")
 xlabel("Number of robots")
-#xticks(1:length(num_robots), map(string, num_robots))
 
 save_fig("fig", "weights_by_number_of_robots")
 
