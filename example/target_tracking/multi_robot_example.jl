@@ -61,7 +61,7 @@ for ii = 2:steps
   # Compute weights
   problem = MultiRobotTargetTrackingProblem(robot_states, histogram_filters,
                                             configs)
-  weight = total_weight(compute_weight_matrix(problem))
+  @time weight = total_weight(compute_weight_matrix(problem; threaded=true))
 
   @printf("Weight per robot: %0.3f\n", weight / num_robots )
 

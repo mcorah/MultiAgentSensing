@@ -219,10 +219,10 @@ function compute_weight_matrix(p::MultiRobotTargetTrackingProblem;
 
   # Compute channel capacities for each robot
   if threaded
-    capacities = map(x->channel_capacity_method(p, x), 1:n)
-  else
     capacities = thread_map(x->channel_capacity_method(p, x), 1:n,
                             Vector{Float64})
+  else
+    capacities = map(x->channel_capacity_method(p, x), 1:n)
   end
 
   weights = zeros(n,n)
