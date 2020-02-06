@@ -104,9 +104,9 @@ function get_data()
       trial_data = data[trial_steps]
 
       # Iterate through the trial and compute weights
-      trial_weights = map(trial_data) do trial_step
-        robot_states = trial_step.robot_states
-        target_filters = trial_step.target_filters
+      trial_weights = map(trial_data) do step_data
+        robot_states = step_data.robot_states
+        target_filters = step_data.target_filters
 
         problem = MultiRobotTargetTrackingProblem(robot_states, target_filters,
                                                   configs)
