@@ -220,16 +220,16 @@ function run_experiments(tests;
       # Cache data from each trial
       if !reprocess && isfile(trial_file)
         try
-          print(threadid(), "-Loading: ", trial_file, "...")
+          print("Loading: ", trial_file, "...")
 
           @load trial_file trial_results
-          println(threadid(), "-Loaded")
+          println("Loaded")
 
           results[trial_spec] = trial_results
 
           run_test = false
         catch e
-          println(threadid(), "-Failed to load ", trial_spec)
+          println("Failed to load ", trial_spec)
         end
       end
 
@@ -247,8 +247,10 @@ function run_experiments(tests;
 
     #spawn_for_each(remaining_tests) do trial_spec
     @threads for trial_spec in remaining_tests
+      id = threadid()
+
       lock(load_save_lock)
-      println("Thread-", threadid(), " running: ", trial_spec)
+      println("Thread-", id, " running: ", trial_spec)
       unlock(load_save_lock)
 
       trial_start = time()
@@ -259,20 +261,19 @@ function run_experiments(tests;
       # Save results
       try
         lock(load_save_lock)
-        print(threadid(), "-Saving: ", trial_spec, "...")
+        print(id, "-Saving: ", trial_spec, "...")
 
         trial_file = get_trial_file(trial_spec)
 
-        @show trial_file
         @save trial_file trial_results
       catch e
         # Save the error for later
         trial_backtrace = catch_backtrace()
 
-        println(threadid(), "-Failed to save ", trial_spec)
+        println(id, "-Failed to save ", trial_spec)
         return
       finally
-        println(threadid(), "-Saved")
+        println(id, "-Saved")
         unlock(load_save_lock)
       end
 
