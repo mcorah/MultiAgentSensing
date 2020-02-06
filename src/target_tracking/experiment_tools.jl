@@ -1,7 +1,13 @@
 # This file provides tools for design of multi-robot target tracking experiments
 
+using JLD2
+using Printf
+using Random
+using Base.Threads
+using Base.Iterators
+
 export target_tracking_experiment, target_tracking_instance,
-  iterate_target_tracking!, visualize_experiment
+  iterate_target_tracking!, visualize_experiment, run_experiments
 
 # Run a target tracking experiment for a given number of steps
 # By default, keep all data from each step
@@ -177,4 +183,137 @@ function visualize_time_step(;robot_states,
   append!(plots, visualize_filters(target_filters))
 
   plots
+end
+
+# Run a number of experiments with helpful features for batch processing
+# * experiments run in parallel
+# * individual results get cached
+# * batch gets cached
+# * provides helpful output as trials run
+function run_experiments(tests;
+                         trial_fun::Function,
+                         print_summary::Function = x->nothing,
+                         experiment_name::String,
+                         data_folder::String,
+                         reprocess=false
+                        )
+  # produce file names
+  data_file = string(data_folder, "/", experiment_name, ".jld2")
+  trial_folder = string(data_folder, "/", experiment_name)
+  get_trial_file = x->string(trial_folder, experiment_name, " ", x, ".jld2")
+
+  results = Dict{Any,Any}(key=>nothing for key in tests)
+
+  if !isfile(data_file) || reprocess
+    if !isdir(trial_folder)
+      mkdir(trial_folder)
+    end
+
+    num_tests_completed = Atomic{Int64}(0)
+
+    # First process any data that has been saved
+    remaining_tests = filter(collect(tests)) do trial_spec
+      run_test = true
+
+      trial_file = get_trial_file(trial_spec)
+
+      # Cache data from each trial
+      if !reprocess && isfile(trial_file)
+        try
+          print(threadid(), "-Loading: ", trial_file, "...")
+
+          @load trial_file trial_results
+          println(threadid(), "-Loaded")
+
+          results[trial_spec] = trial_results
+
+          run_test = false
+        catch e
+          println(threadid(), "-Failed to load ", trial_spec)
+        end
+      end
+
+      run_test
+    end
+
+    println("\n", length(remaining_tests), " tests remain\n")
+
+    # Mutex for load/save/output
+    load_save_lock = SpinLock()
+
+    start = time()
+    shuffle!(remaining_tests)
+    trial_backtrace = nothing
+
+    #spawn_for_each(remaining_tests) do trial_spec
+    @threads for trial_spec in remaining_tests
+      lock(load_save_lock)
+      println("Thread-", threadid(), " running: ", trial_spec)
+      unlock(load_save_lock)
+
+      trial_start = time()
+
+      # Run trial
+      trial_results = trial_fun(trial_spec)
+
+      # Save results
+      try
+        lock(load_save_lock)
+        print(threadid(), "-Saving: ", trial_spec, "...")
+
+        trial_file = get_trial_file(trial_spec)
+
+        @show trial_file
+        @save trial_file trial_results
+      catch e
+        # Save the error for later
+        trial_backtrace = catch_backtrace()
+
+        println(threadid(), "-Failed to save ", trial_spec)
+        return
+      finally
+        println(threadid(), "-Saved")
+        unlock(load_save_lock)
+      end
+
+      # Store value
+      results[trial_spec] = trial_results
+
+      # Summarize completion status
+      elapsed = time() - start
+      trial_elapsed = time() - trial_start
+
+      # (returns old value)
+      completed = atomic_add!(num_tests_completed, 1) + 1
+      completion = completed/length(remaining_tests)
+      projected = elapsed / completion
+      hour = 3600
+
+      lock(load_save_lock)
+      print_summary(trial_spec)
+      println(" (Done, ", completed, "/", length(remaining_tests),
+              @sprintf(" %0.2f", 100completion), "%",
+              " Trial time: ", @sprintf("%0.0fs", trial_elapsed),
+              " Elapsed: ", @sprintf("%0.2fh", elapsed / hour),
+              " Total: ", @sprintf("%0.2fh", projected / hour),
+              " Remaining: ", @sprintf("%0.2fh", (projected - elapsed) / hour),
+              ")"
+             )
+      unlock(load_save_lock)
+    end
+
+    if !isnothing(trial_backtrace)
+      println("Loading or producing results produce errors. Backtrace:")
+      map(println, stacktrace(trial_backtrace))
+      println()
+
+      error("One or more trials failed.")
+    end
+
+    @save data_file results
+  else
+    @load data_file results
+  end
+
+  results
 end
