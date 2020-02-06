@@ -4,13 +4,14 @@ using Base.Iterators
 using Base.Threads
 using JLD2
 using Statistics
+using Histograms
 
 close("all")
 
-reprocess = false
 experiment_name = "parameter_search"
 data_folder = "./data"
 
+reprocess = false
 
 num_robots = 8
 
