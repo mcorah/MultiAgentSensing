@@ -105,6 +105,10 @@ end
 
 println("Analyzing results")
 
+#
+# Results by objective values
+#
+
 results_matrix = map(x->results[x], all_tests)
 boxplot(results_matrix', notch=false, vert=false)
 
@@ -113,3 +117,21 @@ xlabel("Mutual Information Objective (bits)")
 yticks(solver_inds, solver_strings)
 
 save_fig("fig", "solver_objectives")
+
+#
+# Results normalized by maximum objective values on each problem
+#
+
+# Max values over different solvers for each problem instance
+figure()
+
+maximum_values = maximum(results_matrix, dims=1)
+normalized_results = results_matrix ./ maximum_values
+
+boxplot(normalized_results', notch=false, vert=false)
+
+title("Normalized Objective Performance")
+xlabel("Objective (fraction of max)")
+yticks(solver_inds, solver_strings)
+
+save_fig("fig", "normalized_solver_objectives")
