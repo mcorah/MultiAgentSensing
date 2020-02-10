@@ -24,7 +24,7 @@ trials = 1:10
 solver_ind = 4 # dist-4
 
 # Drop the first n and keep every few after
-trial_steps = 20:5:100
+trial_steps = 20:100
 
 all_tests = product(num_robots, trials)
 all_configurations = num_robots
