@@ -26,6 +26,9 @@ solver_ind = 4 # dist-4
 # Drop the first n and keep every few after
 trial_steps = 20:5:100
 
+all_tests = product(num_robots, trials)
+all_configurations = num_robots
+
 #
 # Load and preprocess prior entropy results
 #
@@ -46,15 +49,12 @@ end)
 # Compute weights
 #
 
-all_tests = product(num_robots, trials)
-all_configurations = num_robots
-
 function trial_fun(x)
-  num_robots, trial = trial_spec
+  num_robots, trial = x
 
   # The nomenclature here is weird, but we will only be using a part of
   # the trial and will implement that at computation time.
-  data, configs = weights_trials[trial_spec...]
+  data, configs = weights_trials[x...]
   trial_data = data[trial_steps]
 
   # Iterate through the trial and compute weights
@@ -71,7 +71,7 @@ function trial_fun(x)
   (trial_weights=trial_weights, trial_data=trial_data, configs=configs)
 end
 function print_summary(x)
-  num_robots, trial = trial_spec
+  num_robots, trial = x
 
   println("Num. Robots: ", num_robots,
           " Trial: ", trial)

@@ -11,8 +11,6 @@ using Histograms
 
 close("all")
 
-trials = 1:10
-
 experiment_name = "evaluate_solver_objectives"
 data_folder = "./data"
 
@@ -35,11 +33,12 @@ num_mcts_samples = SubmodularMaximization.default_num_iterations[horizon]
 
 
 solver_rounds = [2, 4, 8]
-solvers = [solver_random,
+solvers = [solve_random,
            solve_myopic,
            map(num->prob->solve_n_partitions(num, prob), solver_rounds)...,
            solve_sequential]
-solver_strings = ["myopic",
+solver_strings = ["random",
+                  "myopic",
                   map(x->string("dist. ",x," rnds."), solver_rounds)...,
                   "sequential"]
 solver_inds = 1:length(solvers)
@@ -69,7 +68,7 @@ samples = vcat(map(trials) do trial
 # Evaluate results on solvers
 #
 
-all_tests = product(solver_inds, sample_inds)
+all_tests = product(solver_inds, 1:length(sample_inds))
 
 function trial_fun(x)
   solver_ind, sample_ind = x
@@ -103,8 +102,6 @@ end
                                 reprocess=reprocess
                                )
 
-println("Processing rollouts")
-@time results = get_data()
 
 println("Analyzing results")
 
