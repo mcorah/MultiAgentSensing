@@ -36,8 +36,7 @@ else
   global histogram_filters = map(x->Filter(grid, x), target_states)
 end
 
-#solver = x->solve_n_partitions(num_partitions, x, threaded=true)
-solver = x->solve_myopic(x, threaded=true)
+solver = x->solve_n_partitions(num_partitions, x, threaded=true)
 
 plot_state_space(grid)
 xlim([0, grid.width+1])
