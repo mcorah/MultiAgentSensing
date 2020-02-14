@@ -201,7 +201,7 @@ function run_experiments(tests;
   # produce file names
   data_file = string(data_folder, "/", experiment_name, ".jld2")
   trial_folder = string(data_folder, "/", experiment_name)
-  get_trial_file = x->string(trial_folder, experiment_name, " ", x, ".jld2")
+  get_trial_file = x->string(trial_folder, "/", experiment_name, " ", x, ".jld2")
 
   results = Dict{Any,Any}(key=>nothing for key in tests)
 
