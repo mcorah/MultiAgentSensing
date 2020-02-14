@@ -18,7 +18,7 @@ reprocess = false
 
 # Values taken from the entropy_by_solver script
 num_robots = 16
-trials = 1:10
+trials = 1:20
 solver_ind = 4 # dist-4
 
 # Drop the first n and keep every few after

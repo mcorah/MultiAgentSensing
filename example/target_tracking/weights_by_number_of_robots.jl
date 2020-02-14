@@ -19,8 +19,8 @@ data_folder = "./data"
 reprocess = false
 
 # Values taken from the entropy_by_solver script
-num_robots = 8:8:40
-trials = 1:10
+num_robots = 8:8:48
+trials = 1:20
 solver_ind = 4 # dist-4
 
 # Drop the first n and keep every few after

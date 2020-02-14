@@ -16,9 +16,9 @@ data_folder = "./data"
 reprocess = false
 
 steps = 100
-num_robots = 8:8:40
+num_robots = 8:8:48
 
-trials = 1:10
+trials = 1:20
 
 # We will drop a fraction of each trial so that the filters have time to
 # converge to steady states
