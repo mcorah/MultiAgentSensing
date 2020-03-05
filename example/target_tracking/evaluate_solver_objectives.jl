@@ -68,7 +68,7 @@ samples = vcat(map(trials) do trial
 # Evaluate results on solvers
 #
 
-all_tests = product(solver_inds, 1:length(sample_inds))
+all_tests = product(solver_inds, 1:length(samples))
 
 function trial_fun(x)
   solver_ind, sample_ind = x
