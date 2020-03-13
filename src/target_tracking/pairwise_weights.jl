@@ -194,7 +194,7 @@ end
 function channel_capacities_mcts(p::MultiRobotTargetTrackingProblem,
                                       robot_index::Integer)
   map(p.target_filters) do filter
-    channel_capacity_mcts(p, filter,robot_index=robot_index)
+    channel_capacity_mcts(p, filter, robot_index=robot_index)
   end
 end
 

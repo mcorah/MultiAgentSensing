@@ -124,7 +124,7 @@ save_fig("fig", "weights_by_number_of_robots")
 
 figure()
 
-normalized_weights = map(num_robots) do num_robots
+weight_per_robot = map(num_robots) do num_robots
   trial_weights = map(trials) do trial
     trial = results[num_robots, trial]
 
@@ -138,7 +138,7 @@ normalized_weights = map(num_robots) do num_robots
   vcat(trial_weights...)
 end
 
-boxplot(normalized_weights, notch=false)
+boxplot(weight_per_robot, notch=false)
 
 
 title("Weights per num. robots")
@@ -170,7 +170,7 @@ boxplot([objective_values[n] for n in num_robots],
         notch=false)
 
 title("Objective values")
-ylabel("Cost bound over obj.")
+ylabel("Objective value per num. robots")
 xlabel("Number of robots")
 xticks(1:length(num_robots), map(string, num_robots))
 
