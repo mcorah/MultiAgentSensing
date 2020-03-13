@@ -125,19 +125,25 @@ end
 struct RangingSensor
   variance_constant::Float64
   variance_scaling_factor::Float64
+  range_limit::Float64
 
-  function RangingSensor(;variance_constant=0.25, variance_scaling_factor=0.5)
-    new(variance_constant, variance_scaling_factor)
+  function RangingSensor(;variance_constant=0.25,
+                          variance_scaling_factor=0.5,
+                          range_limit=10)
+    new(variance_constant, variance_scaling_factor, range_limit)
   end
 end
 
+saturate_range(r::RangingSensor, distance) = min(r.range_limit, distance)
+
 variance(r::RangingSensor, distance) =
-  r.variance_constant + r.variance_scaling_factor * distance^2
+  (r.variance_constant
+   + r.variance_scaling_factor * saturate_range(r, distance)^2)
 
 stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
 
 # Distances in each direction are minimum distances around the grid
-mean(g::Grid, r::RangingSensor, a, b) = norm(a .- b)
+mean(g::Grid, r::RangingSensor, a, b) = saturate_range(r, norm(a .- b))
 
 # sample a ranging observation
 function generate_observation(g::Grid, r::RangingSensor, a, b;
