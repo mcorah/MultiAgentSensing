@@ -9,10 +9,10 @@ close("all")
 grid_size = 41
 horizon = SubmodularMaximization.default_horizon
 
-scaling_factors = [0.1, 0.5, 1.0, 2.0, 3.0]
+range_limits = [5.0, 10.0, 15.0, 20.0, Inf]
 
-for scaling_factor in scaling_factors
-  sensor = RangingSensor(variance_scaling_factor=scaling_factor)
+for range_limit in range_limits
+  sensor = RangingSensor(range_limit=range_limit)
 
   # place the target in the center of the grid
   target_state = (21,1)
@@ -40,12 +40,12 @@ for scaling_factor in scaling_factors
     sum(weights) / 2
   end
 
-  label = string("Scal. fact.: ", scaling_factor)
+  label = string("Range. lim.: ", range_limit)
   plot(range, weights, label=label)
 
   ratio = maximum(weights)/minimum(weights)
 
-  println("Scaling factor: ", scaling_factor, " Weights falloff ratio: ", ratio)
+  println("Range limit: ", range_limit, " Weights falloff ratio: ", ratio)
 end
 
 plot_title = string("Weights Falloff")
