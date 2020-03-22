@@ -14,23 +14,25 @@ data_folder = "./data"
 reprocess = false
 
 # Configuration
-targets_per_robot = 8 / 8
+targets_per_robot = 1
 variance_scaling_factor = 0.5
+range_limit = Inf
 grid_cells_per_robot = 10^2 / 8
 
 experiment_name = string("minimal_weights_by_num_robots",
                          "_", targets_per_robot,
                          "_", variance_scaling_factor,
+                         "_", range_limit,
                          "_", grid_cells_per_robot)
 
 
-num_robots = [4, 8, 12, 16, 20, 24, 28, 32, 36]
+num_robots = 4:4:40
 
-steps = 20
-trial_steps = 15:steps
+steps = 40
+trial_steps = 20:steps
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
-solver = x->solve_n_partitions(2, x, threaded=true)
+solver = x->solve_n_partitions(4, x, threaded=true)
 
 #
 # Code to run experiments
@@ -42,7 +44,8 @@ function trial_fun(num_robots)
   grid_size = round(Int64, sqrt(grid_cells_per_robot * num_robots))
   num_targets = round(Int64, targets_per_robot * num_robots)
 
-  sensor = RangingSensor(variance_scaling_factor=variance_scaling_factor)
+  sensor = RangingSensor(variance_scaling_factor=variance_scaling_factor,
+                         range_limit=range_limit)
   grid = Grid(grid_size, grid_size)
 
   configs = MultiRobotTargetTrackingConfigs(grid=grid, sensor=sensor)
@@ -92,6 +95,7 @@ plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3)
 
 title_string = string("Tgts. per rbt.:", targets_per_robot,
                       " Var. scale:", variance_scaling_factor,
+                      " Range lim.:", range_limit,
                       " Cells per rbt.:", grid_cells_per_robot)
 title(title_string)
 ylabel("Cost bound over obj.")
