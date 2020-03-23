@@ -285,7 +285,7 @@ end
 # range-limited solvers
 #######################
 
-export RangeSolver
+export RangeSolver, solve_communication_range_limit
 
 struct RangeSolver <: DAGSolver
   problem::PartitionProblem
@@ -294,6 +294,7 @@ struct RangeSolver <: DAGSolver
 end
 
 sequence(x::RangeSolver) = sequence(x.nominal_solver)
+partitions(x::RangeSolver) = partitions(x.nominal_solver)
 
 function in_neighbors(x::RangeSolver, agent_index)
   agents = x.problem.partition_matroid
@@ -309,4 +310,18 @@ function in_neighbors(x::RangeSolver, agent_index)
   end
 
   neighbors
+end
+
+function solve_communication_range_limit(p::PartitionProblem;
+                                         num_partitions,
+                                         communication_range,
+                                         threaded=false)
+  num_agents = length(p.partition_matroid)
+
+  partition_solver = generate_by_global_partition_size(num_agents,
+                                                       num_partitions)
+
+  range_solver = RangeSolver(p, partition_solver, communication_range)
+
+  solve_dag(range_solver, p, threaded=threaded)
 end

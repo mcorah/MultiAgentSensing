@@ -110,6 +110,10 @@ function get_state(p::MultiRobotTargetTrackingProblem, index)
   p.partition_matroid[index]
 end
 
+# Return agent center (which is just the state)
+# The original coverage code involved more complex agent representations.
+get_center(x::Tuple{Int64,Int64}) = [x...]
+
 function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
                      selections::Vector)
   configs = p.configs
