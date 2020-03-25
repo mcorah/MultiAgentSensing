@@ -19,6 +19,7 @@ sparse = false
 num_partitions = 4
 
 communication_range = 20
+robot_target_range_limit = 12
 
 print("Enter number of robots: ")
 num_robots = parse(Int64, readline())
@@ -28,7 +29,10 @@ num_targets = default_num_targets(num_robots)
 grid = Grid(num_robots=num_robots)
 
 configs = MultiRobotTargetTrackingConfigs(grid=grid,
-                                          horizon=horizon)
+                                          horizon=horizon,
+                                          robot_target_range_limit=
+                                            robot_target_range_limit
+                                         )
 
 robot_states = map(x->random_state(grid), 1:num_robots)
 target_states = map(x->random_state(grid), 1:num_targets)
