@@ -180,7 +180,10 @@ function sample_reward(model::SingleRobotTargetTrackingProblem,
                        trajectory::Trajectory; kwargs...)
 
   # Compute reward conditional on prior selections (trajectories)
-  sum(model.target_filters) do filter
+  #
+  # The more complex "mapreduce" method is necessary here instead of the simpler
+  # "sum" since we may encounter empty arrays.
+  mapreduce(+, model.target_filters, init=0.0) do filter
     finite_horizon_information(model.grid, filter, model.sensor,
                                trajectory;
                                prior_observations=model.prior_trajectories,
