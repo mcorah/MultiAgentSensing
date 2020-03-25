@@ -20,6 +20,8 @@ struct MultiRobotTargetTrackingConfigs
   # solution values
   objective_information_samples::Int64
 
+  robot_target_range_limit::Float64
+
   function MultiRobotTargetTrackingConfigs(;
                                            grid,
                                            horizon=default_horizon,
@@ -29,7 +31,8 @@ struct MultiRobotTargetTrackingConfigs
                                            solver_information_samples =
                                              default_solver_information_samples,
                                            objective_information_samples =
-                                             default_num_information_samples
+                                             default_num_information_samples,
+                                           robot_target_range_limit = Inf
                                           )
 
     new(grid, sensor, horizon, solver_iterations, solver_information_samples,
@@ -62,25 +65,35 @@ end
 # Solution elements consist of the robot index and the associated trajectory
 # We construct solutions as such because the output may not have the same
 # ordering as the robots
+#
+# Warning: this "problem" object may become invalid if any of the underlying
+# objects change and may copy some but not of the inputs.
 struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: PartitionProblem{Tuple{Int64,
                                                                  Trajectory}}
   # Target tracking problems are defined by vectors of robot states
   partition_matroid::Vector{State}
 
   target_filters::Vector{F}
+  filter_means::Vector{Tuple{Float64, Float64}}
 
   configs::MultiRobotTargetTrackingConfigs
 
   function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
                  target_filters::Vector{F},
                  configs::MultiRobotTargetTrackingConfigs) where F <: AnyFilter
+
     if length(robot_states) > num_robots_sparse_filtering_threshold
       sparse_filters = map(x->SparseFilter(x, threshold=sparsity_threshold),
                            target_filters)
 
-      new{SparseFilter{Int64}}(robot_states, sparse_filters, configs)
+      filter_means = compute_filter_means(sparse_filters)
+
+      new{SparseFilter{Int64}}(robot_states, sparse_filters, filter_means,
+                               configs)
     else
-      new{F}(robot_states, target_filters, configs)
+      filter_means = compute_filter_means(target_filters)
+
+      new{F}(robot_states, target_filters, filter_means, configs)
     end
   end
 end
@@ -110,9 +123,22 @@ function get_state(p::MultiRobotTargetTrackingProblem, index)
   p.partition_matroid[index]
 end
 
+
 # Return agent center (which is just the state)
 # The original coverage code involved more complex agent representations.
 get_center(x::Tuple{Int64,Int64}) = [x...]
+
+function filter_targets_in_range(p::MultiRobotTargetTrackingProblem,
+                                 block::Integer)
+  state = p.partition_matroid[block]
+
+  # filter by range, producing tuples
+  in_bounds = filter(collect(enumerate(p.filter_means))) do (_, mean)
+    norm(mean .- state) < p.configs.robot_target_range_limit
+  end
+
+  map(x->p.target_filters[x[1]], in_bounds)
+end
 
 function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
                      selections::Vector)
@@ -120,12 +146,20 @@ function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
 
   trajectories = map(last, selections)
 
+  # Select filters in range
+  local targets_in_range
+  if p.configs.robot_target_range_limit == Inf
+    targets_in_range = p.target_filters
+  else
+    targets_in_range = filter_targets_in_range(p, block)
+  end
+
   problem = SingleRobotTargetTrackingProblem(configs.grid, configs.sensor,
-                                           configs.horizon, p.target_filters,
-                                           prior_trajectories=trajectories,
-                                           num_information_samples=
+                                             configs.horizon, targets_in_range,
+                                             prior_trajectories=trajectories,
+                                             num_information_samples=
                                              configs.solver_information_samples
-                                           )
+                                            )
 
   state = get_state(p, block)
 
@@ -149,4 +183,10 @@ function sample_block(p::MultiRobotTargetTrackingProblem, block::Integer)
   end
 
   (block, trajectory)
+end
+
+function compute_filter_means(target_filters::Vector{<:AnyFilter})
+  map(target_filters) do x
+    Tuple{Float64, Float64}(weighted_average(x))
+  end
 end
