@@ -36,7 +36,7 @@ struct MultiRobotTargetTrackingConfigs
                                           )
 
     new(grid, sensor, horizon, solver_iterations, solver_information_samples,
-        objective_information_samples)
+        objective_information_samples, robot_target_range_limit)
   end
 end
 
