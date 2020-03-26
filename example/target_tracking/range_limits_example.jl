@@ -21,6 +21,9 @@ num_partitions = 4
 communication_range = 20
 robot_target_range_limit = 12
 
+# Use a larger range limit for weights to ensure accurate results
+weights_range_limit=20
+
 print("Enter number of robots: ")
 num_robots = parse(Int64, readline())
 
@@ -73,7 +76,10 @@ for ii = 2:steps
   # Compute weights
   problem = MultiRobotTargetTrackingProblem(robot_states, histogram_filters,
                                             configs)
-  @time weight = total_weight(compute_weight_matrix(problem; threaded=true))
+  @time weight = total_weight(compute_weight_matrix(problem,
+                                                    threaded=true,
+                                                    robot_target_range_limit=
+                                                    weights_range_limit))
 
   @printf("Weight per robot: %0.3f\n", weight / num_robots )
 

@@ -175,26 +175,49 @@ end
 #
 
 function channel_capacities_by_target_time(p::MultiRobotTargetTrackingProblem,
-                                           robot_index::Integer)
+                                           robot_index::Integer,
+                                           target_in_range =
+                                           (robot_index, target_index) -> true
+                                          )
   configs = p.configs
 
-  map(product(p.target_filters, 1:configs.horizon)) do (filter, step)
-    channel_capacity_by_target_time(p, filter, step=step,
-                                    robot_index=robot_index)
+  map(product(enumerate(p.target_filters), 1:configs.horizon)) do
+    ((target_index, filter), step)
+
+    if target_in_range(robot_index, target_index)
+      channel_capacity_by_target_time(p, filter, step=step,
+                                      robot_index=robot_index)
+    else
+      0.0
+    end
   end
 end
 
 function channel_capacities_by_target(p::MultiRobotTargetTrackingProblem,
-                                      robot_index::Integer)
-  map(p.target_filters) do filter
-    channel_capacity_by_target(p, filter,robot_index=robot_index)
+                                      robot_index::Integer,
+                                      target_in_range = (robot_index,
+                                                         target_index) -> true
+                                     )
+  map(enumerate(p.target_filters)) do (target_index, filter)
+    if target_in_range(robot_index, target_index)
+      channel_capacity_by_target(p, filter,robot_index=robot_index)
+    else
+      0.0
+    end
   end
 end
 
 function channel_capacities_mcts(p::MultiRobotTargetTrackingProblem,
-                                      robot_index::Integer)
-  map(p.target_filters) do filter
-    channel_capacity_mcts(p, filter, robot_index=robot_index)
+                                 robot_index::Integer,
+                                 target_in_range = (robot_index,
+                                                    target_index) -> true
+                                )
+  map(enumerate(p.target_filters)) do (target_index, filter)
+    if target_in_range(robot_index, target_index)
+      channel_capacity_mcts(p, filter, robot_index=robot_index)
+    else
+      0.0
+    end
   end
 end
 
@@ -211,18 +234,25 @@ compute_weight(a::Array{Float64}, b::Array{Float64}) = sum(min.(a, b))
 
 function compute_weight_matrix(p::MultiRobotTargetTrackingProblem;
                                channel_capacity_method=channel_capacities_mcts,
+                               robot_target_range_limit=Inf,
                                threaded = false
                               )
   local capacities
 
   n = get_num_agents(p)
 
+  function range_test(robot_index, target_index)
+    target_mean_distance(p, robot_index,
+                         target_index) < robot_target_range_limit
+  end
+
   # Compute channel capacities for each robot
+  channel_capacity(x) = channel_capacity_method(p, x, range_test)
+
   if threaded
-    capacities = thread_map(x->channel_capacity_method(p, x), 1:n,
-                            Vector{Float64})
+    capacities = thread_map(channel_capacity, 1:n, Vector{Float64})
   else
-    capacities = map(x->channel_capacity_method(p, x), 1:n)
+    capacities = map(channel_capacity, 1:n)
   end
 
   weights = zeros(n,n)

@@ -128,13 +128,25 @@ end
 # The original coverage code involved more complex agent representations.
 get_center(x::Tuple{Int64,Int64}) = [x...]
 
+# Returns distance from robot state to target mean
+# (due to convexity and Jensen's inequality, this is a lower bound on the range)
+function target_mean_distance(p::MultiRobotTargetTrackingProblem,
+                     robot_state::State, target_index::Integer)
+  norm(robot_state .- p.filter_means[target_index])
+end
+function target_mean_distance(p::MultiRobotTargetTrackingProblem,
+                     robot_index::Integer, target_index::Integer)
+  target_mean_distance(p, p.partition_matroid[robot_index], target_index)
+end
+
 function filter_targets_in_range(p::MultiRobotTargetTrackingProblem,
-                                 block::Integer)
-  state = p.partition_matroid[block]
+                                 robot_index::Integer;
+                                 range_limit=p.configs.robot_target_range_limit
+                                )
 
   # filter by range, producing tuples
-  in_bounds = filter(collect(enumerate(p.filter_means))) do (_, mean)
-    norm(mean .- state) < p.configs.robot_target_range_limit
+  in_bounds = filter(1:length(p.filter_means)) do target_index
+    target_mean_distance(p, robot_index, target_index) < range_limit
   end
 
   map(x->p.target_filters[x[1]], in_bounds)
