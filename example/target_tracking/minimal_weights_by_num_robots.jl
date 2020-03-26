@@ -1,3 +1,5 @@
+# Test for weights with a small set of trials
+
 using SubmodularMaximization
 using PyPlot
 using Base.Iterators
