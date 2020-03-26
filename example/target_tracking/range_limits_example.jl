@@ -57,6 +57,8 @@ ylim([0, grid.height+1])
 for ii = 2:steps
   println("Step ", ii)
 
+  prior_robot_states = Array(robot_states)
+
   @time solution = iterate_target_tracking!(robot_states=robot_states,
                                             target_states=target_states,
                                             target_filters=histogram_filters,
@@ -86,6 +88,11 @@ for ii = 2:steps
 
   for trajectory in trajectories
     append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
+  end
+
+  # Plot motion
+  for (prior, current) in zip(prior_robot_states, robot_states)
+    append!(plots, plot_states([prior, current], color=:blue, linestyle="-"))
   end
 
   if show_observations
