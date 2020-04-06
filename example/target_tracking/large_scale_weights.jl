@@ -18,7 +18,7 @@ reprocess = false
 
 num_robots = 8:8:100
 
-trials = 1:20
+trials = 1:5
 steps = 100
 trial_steps = 20:steps
 
