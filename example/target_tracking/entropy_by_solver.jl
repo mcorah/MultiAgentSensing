@@ -16,7 +16,7 @@ data_folder = "./data"
 reprocess = false
 
 steps = 100
-num_robots = 8:8:48
+num_robots = 8:8:40
 
 trials = 1:20
 
@@ -25,16 +25,27 @@ trials = 1:20
 trial_steps = 20:steps
 
 # Note: we will run trials in threads so the solvers do not have to be threaded
-horizon = SubmodularMaximization.default_horizon
+
+# Range limits
+communication_range = 20
+robot_target_range_limit = 12
+range_limit_partitions = 4
+range_limit_solver(x) = solve_communication_range_limit(x,
+                                                        num_partitions=
+                                                        range_limit_partitions,
+                                                        communication_range=
+                                                        communication_range)
 
 solver_rounds = [2, 4, 8]
-solvers = [solve_random,
-           solve_myopic,
-           map(num->prob->solve_n_partitions(num, prob), solver_rounds)...,
-           solve_sequential]
+solvers = [(solve_random, Inf),
+           (solve_myopic, Inf),
+           map(num->(prob->solve_n_partitions(num, prob), Inf), solver_rounds)...,
+           (range_limit_solver, robot_target_range_limit),
+           (solve_sequential, Inf)]
 solver_strings = ["random",
                   "myopic",
                   map(x->string("dist. ",x," rnds."), solver_rounds)...,
+                  string("rng. lim. ", range_limit_partitions, " rnds."),
                   "sequential"]
 solver_inds = 1:length(solvers)
 
@@ -44,21 +55,27 @@ all_configurations = product(solver_inds, num_robots)
 
 function trial_fun(x)
   (solver_ind, num_robots, trial) = x
+  solver, robot_target_range_limit = solvers[solver_ind]
 
-  configs = MultiRobotTargetTrackingConfigs(num_robots, horizon=horizon)
+  configs = MultiRobotTargetTrackingConfigs(num_robots,
+                                            robot_target_range_limit=
+                                            robot_target_range_limit
+                                           )
 
   trial_data = target_tracking_experiment(steps=steps,
                                           num_robots=num_robots,
                                           configs=configs,
-                                          solver=solvers[solver_ind]
+                                          solver=solver
                                          )
   (data=trial_data, configs=configs)
 end
 function print_summary(x)
   (solver_ind, num_robots, trial) = x
+  _, robot_target_range_limit = solvers[solver_ind]
 
   println("Num. Robots: ", num_robots,
           " Solver: ", solver_strings[solver_ind],
+          " Robot-Target Range Limit: ", robot_target_range_limit,
           " Trial: ", trial)
 end
 
@@ -105,11 +122,12 @@ save_fig("fig", "entropy_by_solver")
 figure()
 
 # Plot everything in a given order to get the labels to line up nicely
-solver_order = [1, 2, 6, 3, 4, 5]
+solver_order = [3, 4, 5, 6, 1, 2, 7]
 
 plot_args = Dict(3=>Dict(:color=>:k),
                  4=>Dict(:color=>:k, :linestyle=>"--"),
-                 5=>Dict(:color=>:k, :linestyle=>"-."))
+                 5=>Dict(:color=>:k, :linestyle=>":"),
+                 6=>Dict(:color=>:k, :linestyle=>"-."))
 
 for solver_ind in solver_order
   entropies = map(n->concatenated_entropy[solver_ind, n], num_robots)
@@ -125,7 +143,7 @@ end
 
 ylabel("Entropy per target (bits)")
 xlabel("Num. robots")
-legend(loc="upper right", ncol=3)
+legend(loc="upper right", ncol=2)
 grid()
 
 save_fig("fig", "entropy_by_solver_plot")
