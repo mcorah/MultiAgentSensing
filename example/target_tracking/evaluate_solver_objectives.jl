@@ -26,20 +26,26 @@ sample_inds = 20:100
 
 library_solver_ind = 4 # dist-4
 
-horizon = SubmodularMaximization.default_horizon
-
-# We have to override the number of samples used to generate the library
-num_mcts_samples = SubmodularMaximization.default_num_iterations[horizon]
-
+# Range limits
+communication_range = 20
+robot_target_range_limit = 12
+range_limit_partitions = 4
+range_limit_solver(x) = solve_communication_range_limit(x,
+                                                        num_partitions=
+                                                        range_limit_partitions,
+                                                        communication_range=
+                                                        communication_range)
 
 solver_rounds = [2, 4, 8]
-solvers = [solve_random,
-           solve_myopic,
-           map(num->prob->solve_n_partitions(num, prob), solver_rounds)...,
-           solve_sequential]
+solvers = [(solve_random, Inf),
+           (solve_myopic, Inf),
+           map(num->(prob->solve_n_partitions(num, prob), Inf), solver_rounds)...,
+           (range_limit_solver, robot_target_range_limit),
+           (solve_sequential, Inf)]
 solver_strings = ["random",
                   "myopic",
                   map(x->string("dist. ",x," rnds."), solver_rounds)...,
+                  string("rng. lim. ", range_limit_partitions, " rnds."),
                   "sequential"]
 solver_inds = 1:length(solvers)
 
@@ -72,25 +78,30 @@ all_tests = product(solver_inds, 1:length(samples))
 
 function trial_fun(x)
   solver_ind, sample_ind = x
+  solver, robot_target_range_limit = solvers[solver_ind]
 
   test = samples[sample_ind]
 
+
   sample = test.sample
-  configs = MultiRobotTargetTrackingConfigs(test.configs;
-                                            horizon = horizon,
-                                            solver_iterations = num_mcts_samples)
+  configs = MultiRobotTargetTrackingConfigs(test.configs,
+                                            robot_target_range_limit=
+                                            robot_target_range_limit
+                                           )
 
   problem = MultiRobotTargetTrackingProblem(sample.robot_states,
                                             sample.target_filters,
                                             configs)
-  solution = solvers[solver_ind](problem)
+  solution = solver(problem)
 
   solution.value
 end
 function print_summary(x)
   solver_ind, sample_ind = x
+  _, robot_target_range_limit = solvers[solver_ind]
 
   println("Solver: ", solver_strings[solver_ind],
+          " Robot-Target Range Limit: ", robot_target_range_limit,
           " Sample: ", sample_ind)
 end
 
