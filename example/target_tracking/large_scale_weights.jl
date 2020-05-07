@@ -86,34 +86,6 @@ end
                                )
 
 #
-# Plot weights by objective values
-#
-
-normalized_weights = map(num_robots) do num_robots
-  trial_weights = map(trials) do trial
-    trial = results[num_robots, trial]
-
-    trial_weights = trial.trial_weights
-    objectives = map(x->x.objective, trial.trial_data)
-
-    total_weights = map(total_weight, trial_weights)
-
-    total_weights ./ objectives
-  end
-
-  vcat(trial_weights...)
-end
-
-weights_series = TimeSeries(num_robots, hcat(normalized_weights...)')
-plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3)
-
-title("Target weights")
-ylabel("Cost bound over obj.")
-xlabel("Number of robots")
-
-save_fig("fig", "large_scale_weights_by_number_of_robots")
-
-#
 # Weights per num robots
 #
 
@@ -133,23 +105,24 @@ weight_per_robot = map(num_robots) do num_robots
   vcat(trial_weights...)
 end
 
-boxplot(weight_per_robot, notch=false)
+weights_color=:blue
 
+weights_series = TimeSeries(num_robots, hcat(weight_per_robot...)')
+plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3,
+            color=weights_color, label="weights")
 
-title("Weights per num. robots")
-ylabel("Cost bound per num. robots")
-xlabel("Number of robots")
-xticks(1:length(num_robots), map(string, num_robots))
+tick_params(axis=:y, labelcolor=weights_color)
+ylabel("Cost bound per num. robots", color=weights_color)
 
-save_fig("fig", "large_scale_weights_per_num_robots")
+weights_axis = gca()
 
 #
 # Plot objective values
 #
 
-figure()
+twinx()
 
-objective_values = Dict(map(num_robots) do num_robots
+objective_values = map(num_robots) do num_robots
   trial_objectives = map(trials) do trial
     trial = results[num_robots, trial]
 
@@ -158,15 +131,26 @@ objective_values = Dict(map(num_robots) do num_robots
     objectives / num_robots
   end
 
-  num_robots => vcat(trial_objectives...)
-end)
+  vcat(trial_objectives...)
+end
 
-boxplot([objective_values[n] for n in num_robots],
-        notch=false)
+objective_color=:red
 
-title("Objective values")
-ylabel("Objective value per num. robots")
+objective_series = TimeSeries(num_robots, hcat(objective_values...)')
+plot_trials(objective_series, mean=true, marker=".", markersize=25, linewidth=3,
+            color=objective_color, label="objective")
+
+tick_params(axis=:y, labelcolor=objective_color)
+ylabel("Objective value per num. robots", color=objective_color)
+
+objective_axis = gca()
+
+lines1, labels1 = weights_axis.get_legend_handles_labels()
+lines2, labels2 = objective_axis.get_legend_handles_labels()
+
+legend(vcat(lines1, lines2), vcat(labels1, labels2), loc="lower right")
+
 xlabel("Number of robots")
-xticks(1:length(num_robots), map(string, num_robots))
+title("Weights and objective values per num. robots")
 
-save_fig("fig", "large_scale_objective_values_by_number_of_robots")
+save_fig("fig", "large_scale_weights_per_num_robots")
