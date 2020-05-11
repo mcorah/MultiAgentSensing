@@ -19,7 +19,7 @@ data_folder = "./data"
 reprocess = false
 
 # Values taken from the entropy_by_solver script
-num_robots = 8:8:48
+num_robots = 8:8:40
 trials = 1:20
 solver_ind = 4 # dist-4
 
@@ -113,7 +113,7 @@ plot_trials(weights_series, mean=true, marker=".", markersize=25, linewidth=3)
 
 
 title("Target weights")
-ylabel("Cost bound over obj.")
+ylabel("Redundancy over obj.")
 xlabel("Number of robots")
 
 save_fig("fig", "weights_by_number_of_robots")
@@ -142,7 +142,7 @@ boxplot(weight_per_robot, notch=false)
 
 
 title("Weights per num. robots")
-ylabel("Cost bound per num. robots")
+ylabel("Redundancy per robot")
 xlabel("Number of robots")
 xticks(1:length(num_robots), map(string, num_robots))
 
@@ -170,7 +170,7 @@ boxplot([objective_values[n] for n in num_robots],
         notch=false)
 
 title("Objective values")
-ylabel("Objective value per num. robots")
+ylabel("Objective value per robot")
 xlabel("Number of robots")
 xticks(1:length(num_robots), map(string, num_robots))
 
