@@ -105,7 +105,8 @@ end
 # partitioning robots and pruning edges
 ########################################################################
 
-export DAGSolver, solve_dag, sequence, in_neighbors, deleted_edge_weight, solve
+export DAGSolver, solve_dag, sequence, in_neighbors, deleted_edge_weight,
+solve_problem
 
 abstract type DAGSolver end
 # in_neighbors(d::DAGSolver, agent_index) = <agent in neighbors>
@@ -137,7 +138,8 @@ function solve_dag(d::DAGSolver, p::PartitionProblem; threaded=false)
   evaluate_solution(p, selections)
 end
 
-solve(d::DAGSolver, p::PartitionProblem; kwargs...) = solve_dag(d, p; kwargs...)
+solve_problem(d::DAGSolver, p::PartitionProblem; kwargs...) =
+  solve_dag(d, p; kwargs...)
 
 function deleted_edge_weight(d::DAGSolver, W::Array{Float64})
   weight = 0.0
@@ -202,7 +204,7 @@ end
 sequence(p::PartitionSolver) = vcat(p.partitions...)
 partitions(p::PartitionSolver) = p.partitions
 
-rank(p::PartitionSolver) = length(p.agent_partition_numbers)
+solver_rank(p::PartitionSolver) = length(p.agent_partition_numbers)
 communication_span(p::PartitionSolver) = length(partitions(p))
 
 function in_neighbors(p::PartitionSolver, agent_index)

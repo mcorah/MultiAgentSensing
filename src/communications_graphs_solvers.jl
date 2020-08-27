@@ -107,11 +107,11 @@ end
 
 # Multi-hop communications
 
-rank(x::MultiHopSolver) = rank(x.nominal_solver)
+solver_rank(x::MultiHopSolver) = solver_rank(x.nominal_solver)
 communication_span(x::MultiHopSolver) =
 (x.hops - 1) * communication_span(x.nominal_solver)
 function communication_messages(x::MultiHopSolver)
-  num_agents = rank(x)
+  num_agents = solver_rank(x)
   sum(agent_index->length(in_neighbors(x, agent_index)), 1:num_agents)
 end
 # Robots send a single decision at a time
