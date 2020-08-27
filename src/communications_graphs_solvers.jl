@@ -9,8 +9,9 @@ using LinearAlgebra
 #
 # * communication_span: "time" span for communications.
 # * communication_messages: Total number of messages sent during execution
-# * communication_volume: Sum of messages multiplied by the number of decisions
-#   in each message
+#   including each hop
+# * communication_volume: Sum of messages and hops multiplied by the number of
+#   decisions in each message
 
 ###############################
 # Adjacenty matrix and plotting
@@ -166,9 +167,15 @@ end
 solver_rank(x::MultiHopSolver) = solver_rank(x.nominal_solver)
 communication_span(x::MultiHopSolver) =
   x.hops * (communication_span(x.nominal_solver) - 1)
+# Number of messages multiplied by the number of hops the message travels
 function communication_messages(x::MultiHopSolver)
   num_agents = solver_rank(x)
-  sum(agent_index->length(in_neighbors(x, agent_index)), 1:num_agents)
+
+  sum(1:num_agents) do a
+    mapreduce(+, in_neighbors(x, a), init=0) do b
+      path_distance(x.adjacency, a, b)
+    end
+  end
 end
 # Robots send a single decision at a time
 communication_volume(x::MultiHopSolver) = communication_messages(x)
@@ -196,15 +203,25 @@ function solve_problem(::SequentialCommunicationSolver,
   solve_sequential(p)
 end
 # Each robot except the first receives a single message from the previous
-# containing all prior decisions
+# containing all prior decisions. Include path lengths
 function communication_messages(x::SequentialCommunicationSolver)
-  size(x.adjacency, 1) - 1
+  num_agents = solver_rank(x)
+
+  sum(1:num_agents-1) do index
+    path_distance(x.adjacency, index, index + 1)
+  end
 end
+# Sum of message hops times message size
+# The message size is equal to the index of the sender
 function communication_volume(x::SequentialCommunicationSolver)
-  messages = communication_messages(x)
-  div(messages * (messages + 1), 2)
+  num_agents = solver_rank(x)
+
+  sum(1:num_agents-1) do index
+    index * path_distance(x.adjacency, index, index + 1)
+  end
 end
 # Span is the distance from each agent to the next
+# This will be the same as the communication_messages
 function communication_span(x::SequentialCommunicationSolver)
   num_agents = solver_rank(x)
 
