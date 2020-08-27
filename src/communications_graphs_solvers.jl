@@ -45,6 +45,38 @@ function make_hop_adjacency(adjacency::Matrix{Int64}, hops::Int64)
   mat
 end
 
+# Ugly implementation of Dijkstra
+function shortest_path(adjacency::Matrix, a::Integer, b::Integer)
+  dist = fill(Inf, size(adjacency, 1))
+  dist[a] = 0
+  prev = fill(0, size(adjacency, 1))
+
+  inds = collect(1:size(adjacency, 1))
+
+  sort_inds() = sort!(inds, by=x->dist[x], rev = true)
+
+  while !isempty(inds)
+    sort_inds()
+    least = pop!(inds)
+
+    # Update
+    for index in findall(x -> x > 0, adjacency[least,:])
+      new_dist = dist[least] + 1
+      if dist[index] > new_dist
+        dist[index] = new_dist
+        prev[index] = least
+      end
+    end
+  end
+
+  path = [b]
+  while prev[path[end]] != 0
+    push!(path, prev[path[end]])
+  end
+
+  (dist[b], path)
+end
+
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
   adjacency = make_adjacency_matrix(problem, range)
 
@@ -63,6 +95,21 @@ function plot_adjacency(problem::ExplicitPartitionProblem, adjacency::Array)
       plot(x, y, color="black")
     end
   end
+end
+
+function plot_shortest_path(problem::ExplicitPartitionProblem, adjacency, a, b)
+  (dist, path) = shortest_path(adjacency, a, b)
+
+  x = Float64[]
+  y = Float64[]
+  for ii in path
+    center = get_center(problem, ii)
+
+    push!(x , first(center))
+    push!(y, last(center))
+  end
+
+  plot(x, y, color="red")
 end
 
 ##################

@@ -34,6 +34,9 @@ f(x) = mean_area_coverage(x, 100)
 
 problem = ExplicitPartitionProblem(f, agents)
 
+# Leave an adjacency matrix around for fun
+adjacency = make_adjacency_matrix(problem, communication_radius)
+
 function evaluate_solver(make_solver, name)
   println("$name solver running")
   solver = make_solver(problem)
