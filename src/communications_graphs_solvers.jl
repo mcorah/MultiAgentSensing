@@ -3,6 +3,15 @@
 using Statistics
 using LinearAlgebra
 
+# Methods for evaluating communication statistics
+#
+# WARNING: Call after solving a problem
+#
+# * communication_span: "time" span for communications.
+# * communication_messages: Total number of messages sent during execution
+# * communication_volume: Sum of messages multiplied by the number of decisions
+#   in each message
+
 ###############################
 # Adjacenty matrix and plotting
 ###############################
@@ -112,3 +121,15 @@ function solve_multi_hop(p::PartitionProblem;
 
   solve_dag(multi_hop_solver, p, threaded=threaded)
 end
+
+# Multi-hop communications
+
+rank(x::MultiHopSolver) = rank(x.nominal_solver)
+communication_span(x::MultiHopSolver) =
+(x.hops - 1) * communication_span(x.nominal_solver)
+function communication_messages(x::MultiHopSolver)
+  num_agents = rank(x)
+  sum(agent_index->length(in_neighbors(x, agent_index)), 1:num_agents)
+end
+# Robots send a single decision at a time
+communication_volume(x::MultiHopSolver) = communication_messages(x)

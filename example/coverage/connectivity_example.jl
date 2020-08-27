@@ -56,7 +56,10 @@ function evaluate_solver(make_solver, name)
 
   title("$name Solver ($coverage)")
 
-  @show coverage
+  println("Coverage: ", coverage)
+  println("Span: ", communication_span(solver))
+  println("Messages: ", communication_messages(solver))
+  println("Volume: ", communication_volume(solver))
 end
 
 function make_hop_solver(p)

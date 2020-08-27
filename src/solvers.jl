@@ -200,6 +200,9 @@ end
 sequence(p::PartitionSolver) = vcat(p.partitions...)
 partitions(p::PartitionSolver) = p.partitions
 
+rank(p::PartitionSolver) = length(p.agent_partition_numbers)
+communication_span(p::PartitionSolver) = length(partitions(p))
+
 function in_neighbors(p::PartitionSolver, agent_index)
   partition_index = p.agent_partition_numbers[agent_index]
 

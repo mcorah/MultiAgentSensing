@@ -240,6 +240,8 @@ include("src/solvers.jl")
 export make_adjacency_matrix, plot_adjacency, make_hop_adjacency,
 solve_multi_hop
 
+export communication_span, communication_messages, communication_volume
+
 export MultiHopSolver
 include("src/communications_graphs_solvers.jl")
 
