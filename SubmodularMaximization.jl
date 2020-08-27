@@ -237,7 +237,10 @@ include("src/normal_lookup_table.jl")
 include("src/solvers.jl")
 
 # Support for solvers with range-based communication graphs
-export make_adjacency_matrix, plot_adjacency
+export make_adjacency_matrix, plot_adjacency, make_hop_adjacency,
+solve_multi_hop
+
+export MultiHopSolver
 include("src/communications_graphs_solvers.jl")
 
 include("src/coverage/coverage.jl")

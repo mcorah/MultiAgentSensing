@@ -54,9 +54,12 @@ function evaluate_solver(solver, name)
   @show coverage
 end
 
-evaluate_solver(solve_sequential, "Sequential")
+function solve_hops(p)
+  solve_multi_hop(p::PartitionProblem;
+                  num_partitions = 3,
+                  num_hops = 2,
+                  communication_range = communication_radius,
+                  threaded=false)
+end
 
-#for num_partitions in [2, 4, 8]
-  #solve_n(p) = solve_n_partitions(num_partitions, p)
-  #evaluate_solver(solve_n, "Partition-$num_partitions")
-#end
+evaluate_solver(solve_hops, "Sequential")

@@ -1,11 +1,16 @@
 # This file provides versions of solvers based on communication graphs
 
 using Statistics
+using LinearAlgebra
+
+###############################
+# Adjacenty matrix and plotting
+###############################
 
 function make_adjacency_matrix(problem::ExplicitPartitionProblem, range)
   num_agents = get_num_agents(problem)
 
-  adjacency = zeros(num_agents, num_agents)
+  adjacency = zeros(Int64, num_agents, num_agents)
 
   for ii in 1:num_agents, jj in 1:ii-1
     center_ii = get_center(get_agent(problem, ii))
@@ -18,6 +23,17 @@ function make_adjacency_matrix(problem::ExplicitPartitionProblem, range)
   end
 
   adjacency
+end
+
+# Ugly lines to propagate the matrix a few hops
+function make_hop_adjacency(adjacency::Matrix{Int64}, hops::Int64)
+  mat = (adjacency + I)^hops
+  map(x -> (x > 0 ? 1 : 0), mat)
+  for ii = 1:size(mat, 1)
+    mat[ii, ii] = 0
+  end
+
+  mat
 end
 
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
@@ -38,4 +54,61 @@ function plot_adjacency(problem::ExplicitPartitionProblem, adjacency::Array)
       plot(x, y, color="black")
     end
   end
+end
+
+##################
+# Multi-hop solver
+##################
+
+struct MultiHopSolver <: DAGSolver
+  adjacency::Array
+  hop_adjacency::Array
+  hops::Integer
+  nominal_solver::DAGSolver
+
+  function MultiHopSolver(problem::PartitionProblem;
+                          solver::DAGSolver,
+                          communication_range,
+                          num_hops)
+
+    adjacency = make_adjacency_matrix(problem, communication_range)
+
+    hop_adjacency = make_hop_adjacency(adjacency, num_hops)
+
+    new(adjacency, hop_adjacency, num_hops, solver)
+  end
+end
+
+sequence(x::MultiHopSolver) = sequence(x.nominal_solver)
+partitions(x::MultiHopSolver) = partitions(x.nominal_solver)
+
+# Keep only neighbors that are within the communication range
+function in_neighbors(x::MultiHopSolver, agent_index)
+  nominal_neighbors = in_neighbors(x.nominal_solver, agent_index)
+
+  neighbors = Int64[]
+  for neighbor in nominal_neighbors
+    if x.hop_adjacency[agent_index, neighbor] > 0
+      push!(neighbors, neighbor)
+    end
+  end
+
+  neighbors
+end
+
+function solve_multi_hop(p::PartitionProblem;
+                         num_partitions,
+                         communication_range,
+                         num_hops,
+                         threaded=false)
+  num_agents = length(p.partition_matroid)
+
+  partition_solver = generate_by_global_partition_size(num_agents,
+                                                       num_partitions)
+
+  multi_hop_solver = MultiHopSolver(p, solver=partition_solver,
+                                    communication_range=communication_range,
+                                    num_hops=num_hops)
+
+  solve_dag(multi_hop_solver, p, threaded=threaded)
 end
