@@ -43,9 +43,7 @@ function visualize_agents(agents, colors)
       plot_element(element; color = rgb_tuple(color))
     end
 
-    plot_circle(Circle(agent.center, agent.radius);
-                linestyle=station_style, color = rgb_tuple(color),
-                linewidth = 3.0)
+    plot_agent(agent, color=rgb_tuple(color))
   end
 
   nothing

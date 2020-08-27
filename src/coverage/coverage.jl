@@ -74,10 +74,20 @@ function plot_circle(circle::Circle; x...)
   plot_circle(circle.center; radius = circle.radius, x...)
 end
 
-function plot_element(circle::Circle; color = "k")
+function plot_element(circle::Circle; color = "k", alpha = 0.3)
   center = circle.center
   scatter([center[1]], [center[2]], color = color, s = 4*agent_scale,
-          marker = sensor_center)
+          marker = sensor_center, alpha = alpha)
+end
+
+function plot_agent(agent; color = "k")
+  center = agent.center
+  scatter([center[1]], [center[2]], color = color, s = 9*agent_scale,
+          marker = "o", alpha = 0.3)
+
+  plot_circle(Circle(agent.center, agent.radius);
+              linestyle=station_style, color = color,
+              linewidth = 3.0)
 end
 
 function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
