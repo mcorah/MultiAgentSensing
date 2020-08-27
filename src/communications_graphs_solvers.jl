@@ -105,23 +105,6 @@ function in_neighbors(x::MultiHopSolver, agent_index)
   neighbors
 end
 
-function solve_multi_hop(p::PartitionProblem;
-                         num_partitions,
-                         communication_range,
-                         num_hops,
-                         threaded=false)
-  num_agents = length(p.partition_matroid)
-
-  partition_solver = generate_by_global_partition_size(num_agents,
-                                                       num_partitions)
-
-  multi_hop_solver = MultiHopSolver(p, solver=partition_solver,
-                                    communication_range=communication_range,
-                                    num_hops=num_hops)
-
-  solve_dag(multi_hop_solver, p, threaded=threaded)
-end
-
 # Multi-hop communications
 
 rank(x::MultiHopSolver) = rank(x.nominal_solver)
