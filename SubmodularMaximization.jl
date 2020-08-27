@@ -240,7 +240,7 @@ include("src/solvers.jl")
 
 # Support for solvers with range-based communication graphs
 export make_adjacency_matrix, plot_adjacency, plot_shortest_path,
-make_hop_adjacency, shortest_path, path_distance, solve_multi_hop
+make_hop_adjacency, shortest_path, path_distance, is_connected, solve_multi_hop
 
 export communication_span, communication_messages, communication_volume
 

@@ -79,6 +79,13 @@ end
 
 path_distance(x...) = shortest_path(x...)[1]
 
+# Check connectivity via matrix exponentiation
+function is_connected(adjacency::Matrix)
+  paths = (adjacency + I) ^ (size(adjacency, 1) - 1)
+
+  all(x -> x > 0, paths)
+end
+
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
   adjacency = make_adjacency_matrix(problem, range)
 
