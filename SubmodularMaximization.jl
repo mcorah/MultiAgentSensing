@@ -31,7 +31,7 @@ export  PartitionProblem, PartitionElement, ElementArray, Solution,
   get_num_agents, solve_block, objective, evaluate_solution, empty
 
 # Explicit interface
-export ExplicitPartitionProblem, get_element
+export ExplicitPartitionProblem, get_element, get_agent, get_center
 
 # General methods that probably need updates
 export marginal_gain, compute_weight, compute_weight_matrix, mean_weight,
@@ -149,6 +149,8 @@ get_element(partition_matroid, x) =
 get_agent(problem::ExplicitPartitionProblem, x) =
   get_agent(problem.partition_matroid, x)
 get_agent(partition_matroid::Vector, x) = partition_matroid[x]
+
+get_center(p::PartitionProblem, x) = get_center(get_agent(p, x))
 
 objective(p::ExplicitPartitionProblem, X) =
   p.objective(map(x->get_element(p.partition_matroid, x), X))

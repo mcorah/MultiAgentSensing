@@ -54,8 +54,8 @@ function plot_adjacency(problem::ExplicitPartitionProblem, adjacency::Array)
   num_agents = get_num_agents(problem)
 
   for ii in 1:num_agents, jj in 1:ii-1
-    center_ii = get_center(get_agent(problem, ii))
-    center_jj = get_center(get_agent(problem, jj))
+    center_ii = get_center(problem, ii)
+    center_jj = get_center(problem, jj)
 
     if adjacency[ii,jj] > 0
       x = map(first, [center_ii, center_jj])
