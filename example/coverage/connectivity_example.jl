@@ -38,7 +38,7 @@ function evaluate_solver(make_solver, name)
   println("$name solver running")
   solver = make_solver(problem)
 
-  @time solution = solve_dag(solver, problem, threaded=true)
+  @time solution = solve(solver, problem, threaded=true)
 
   figure()
   xlim([0, 1])
