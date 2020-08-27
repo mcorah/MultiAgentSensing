@@ -156,7 +156,7 @@ end
 
 solver_rank(x::MultiHopSolver) = solver_rank(x.nominal_solver)
 communication_span(x::MultiHopSolver) =
-(x.hops - 1) * communication_span(x.nominal_solver)
+  x.hops * (communication_span(x.nominal_solver) - 1)
 function communication_messages(x::MultiHopSolver)
   num_agents = solver_rank(x)
   sum(agent_index->length(in_neighbors(x, agent_index)), 1:num_agents)
