@@ -163,3 +163,44 @@ function communication_messages(x::MultiHopSolver)
 end
 # Robots send a single decision at a time
 communication_volume(x::MultiHopSolver) = communication_messages(x)
+
+#################################################
+# Sequential solver with communication statistics
+#################################################
+
+struct SequentialCommunicationSolver
+  adjacency::Array
+end
+
+function SequentialCommunicationSolver(problem::PartitionProblem,
+                                       communication_range)
+  adjacency = make_adjacency_matrix(problem, communication_range)
+
+  SequentialCommunicationSolver(adjacency)
+end
+
+solver_rank(x::SequentialCommunicationSolver) = size(x.adjacency, 1)
+
+# Simply solve using the standard sequential solver
+function solve_problem(::SequentialCommunicationSolver,
+                       p::PartitionProblem; kwargs...)
+  solve_sequential(p)
+end
+# Each robot except the first receives a single message from the previous
+# containing all prior decisions
+function communication_messages(x::SequentialCommunicationSolver)
+  size(x.adjacency, 1) - 1
+end
+function communication_volume(x::SequentialCommunicationSolver)
+  messages = communication_messages(x)
+  div(messages * (messages + 1), 2)
+end
+# Span is the distance from each agent to the next
+function communication_span(x::SequentialCommunicationSolver)
+  num_agents = solver_rank(x)
+
+  sum(1:num_agents - 1) do index
+    (dist, _) = shortest_path(x.adjacency, index, index + 1)
+    dist
+  end
+end

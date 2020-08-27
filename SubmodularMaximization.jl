@@ -244,7 +244,7 @@ make_hop_adjacency, shortest_path, solve_multi_hop
 
 export communication_span, communication_messages, communication_volume
 
-export MultiHopSolver
+export MultiHopSolver, SequentialCommunicationSolver
 include("src/communications_graphs_solvers.jl")
 
 include("src/coverage/coverage.jl")
