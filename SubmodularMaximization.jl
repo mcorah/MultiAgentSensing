@@ -146,6 +146,10 @@ get_element(problem::ExplicitPartitionProblem, x) =
 get_element(partition_matroid, x) =
   get_block(partition_matroid[x[1]])[x[2]]
 
+get_agent(problem::ExplicitPartitionProblem, x) =
+  get_agent(problem.partition_matroid, x)
+get_agent(partition_matroid::Vector, x) = partition_matroid[x]
+
 objective(p::ExplicitPartitionProblem, X) =
   p.objective(map(x->get_element(p.partition_matroid, x), X))
 
@@ -231,6 +235,10 @@ include("src/utils.jl")
 include("src/visualization.jl")
 include("src/normal_lookup_table.jl")
 include("src/solvers.jl")
+
+# Support for solvers with range-based communication graphs
+export make_adjacency_matrix, plot_adjacency
+include("src/communications_graphs_solvers.jl")
 
 include("src/coverage/coverage.jl")
 include("src/coverage/probabilistic_coverage.jl")
