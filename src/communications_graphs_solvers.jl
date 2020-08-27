@@ -77,6 +77,8 @@ function shortest_path(adjacency::Matrix, a::Integer, b::Integer)
   (dist[b], path)
 end
 
+path_distance(x...) = shortest_path(x...)[1]
+
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
   adjacency = make_adjacency_matrix(problem, range)
 
@@ -200,7 +202,6 @@ function communication_span(x::SequentialCommunicationSolver)
   num_agents = solver_rank(x)
 
   sum(1:num_agents - 1) do index
-    (dist, _) = shortest_path(x.adjacency, index, index + 1)
-    dist
+    path_distance(x.adjacency, index, index + 1)
   end
 end
