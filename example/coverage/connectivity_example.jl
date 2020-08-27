@@ -16,6 +16,9 @@ num_agents = 10
 num_sensors = 10
 nominal_area = 2.0
 
+num_hops = 2
+num_partitions = 3
+
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 2 * sensor_radius
 
@@ -31,9 +34,11 @@ f(x) = mean_area_coverage(x, 100)
 
 problem = ExplicitPartitionProblem(f, agents)
 
-function evaluate_solver(solver, name)
+function evaluate_solver(make_solver, name)
   println("$name solver running")
-  @time solution = solver(problem)
+  solver = make_solver(problem)
+
+  @time solution = solve_dag(solver, problem, threaded=true)
 
   figure()
   xlim([0, 1])
@@ -54,12 +59,15 @@ function evaluate_solver(solver, name)
   @show coverage
 end
 
-function solve_hops(p)
-  solve_multi_hop(p::PartitionProblem;
-                  num_partitions = 3,
-                  num_hops = 2,
-                  communication_range = communication_radius,
-                  threaded=false)
+function make_hop_solver(p)
+  num_agents = length(p.partition_matroid)
+
+  partition_solver = generate_by_global_partition_size(num_agents,
+                                                       num_partitions)
+
+  MultiHopSolver(p, solver=partition_solver,
+                 communication_range=communication_radius,
+                 num_hops=num_hops)
 end
 
-evaluate_solver(solve_hops, "Sequential")
+evaluate_solver(make_hop_solver, "RSP Hops")
