@@ -46,6 +46,9 @@ function make_hop_adjacency(adjacency::Matrix{Int64}, hops::Int64)
   mat
 end
 
+neighbors(adjacency::Matrix{Int64}, index) =
+  findall(x -> x > 0, adjacency[index,:])
+
 # Ugly implementation of Dijkstra
 function shortest_path(adjacency::Matrix, a::Integer, b::Integer)
   dist = fill(Inf, size(adjacency, 1))
@@ -61,7 +64,7 @@ function shortest_path(adjacency::Matrix, a::Integer, b::Integer)
     least = pop!(inds)
 
     # Update
-    for index in findall(x -> x > 0, adjacency[least,:])
+    for index in neighbors(adjacency, least)
       new_dist = dist[least] + 1
       if dist[index] > new_dist
         dist[index] = new_dist
