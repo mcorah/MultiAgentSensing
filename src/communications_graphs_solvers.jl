@@ -110,6 +110,8 @@ function plot_adjacency(problem::ExplicitPartitionProblem, adjacency::Array)
   end
 end
 
+# Plots the shortest path.
+# * Note that ret[1].remove() will remove the path
 function plot_shortest_path(problem::ExplicitPartitionProblem, adjacency, a, b)
   (dist, path) = shortest_path(adjacency, a, b)
 
