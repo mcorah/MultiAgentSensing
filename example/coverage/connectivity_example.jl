@@ -77,7 +77,7 @@ function make_hop_solver(p)
 end
 
 function make_sequential_solver(p)
-  solver = SequentialCommunicationSolver(p, communication_radius)
+  SequentialCommunicationSolver(p, communication_radius)
 end
 
 for (make_solver, name) in [(make_hop_solver, "RSP Hops"),
