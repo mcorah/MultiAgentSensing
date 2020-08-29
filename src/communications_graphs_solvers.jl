@@ -251,8 +251,12 @@ end
 # * Messages are maps from ids to values rather than vectors containing all
 #   assignments
 
+# Abstract auctions type for brevity when defining the local auctions type
+abstract type AbstractAuctionSolver end
+abstract type AbstractAuctionAgent end
+
 # We will evaluate message counts and such
-mutable struct AuctionSolver
+mutable struct AuctionSolver <: AbstractAuctionSolver
   adjacency::Matrix
 
   # We will allow for convergence before reaching the span
@@ -279,7 +283,7 @@ end
 
 
 # Contains details for a given agent (its assignments and index)
-struct AuctionAgent
+struct AuctionAgent <: AbstractAuctionAgent
   index::Integer
   assignments::Vector{ExplicitSolutionElement}
 end
@@ -288,32 +292,34 @@ AuctionAgent(index::Integer) = AuctionAgent(index, ExplicitSolutionElement[])
 # Constructor for incrementing the assignments
 AuctionAgent(a::AuctionAgent, s::Vector) = AuctionAgent(a.index, s)
 
-get_index(x::AuctionAgent) = x.index
+get_index(x::AbstractAuctionAgent) = x.index
 # Returns the agent's current list of assignments to all agents
-get_assignments(x::AuctionAgent) = x.assignments
+get_assignments(x::AbstractAuctionAgent) = x.assignments
 # Returns the assignment to this agent
-get_assignment(agent::AuctionAgent) =
+get_assignment(agent::AbstractAuctionAgent) =
   first(filter(x->first(x) == get_index(agent), get_assignments(agent)))
 
-neighbors(adjacency::Matrix, a::AuctionAgent) = neighbors(adjacency, a.index)
+neighbors(adjacency::Matrix, a::AbstractAuctionAgent) =
+  neighbors(adjacency, a.index)
 
 # Get the set of neighbors by adjacency and filtering
-function neighbors(adjacency::Matrix, agents::Vector{AuctionAgent},
-                   a::AuctionAgent)
+function neighbors(adjacency::Matrix, agents::Vector{<:AbstractAuctionAgent},
+                   a::AbstractAuctionAgent)
   ns = neighbors(adjacency, a)
 
   filter(x -> in(x.index,ns), agents)
 end
 
-is_solved(x::AuctionSolver) = x.solved
-assert_solved(x::AuctionSolver) =
+is_solved(x::AbstractAuctionSolver) = x.solved
+assert_solved(x::AbstractAuctionSolver) =
   is_solved(x) ? true : error("Solve problem before calling")
 
-communication_span(x::AuctionSolver) = assert_solved(x) && x.span
-communication_messages(x::AuctionSolver) = assert_solved(x) && x.messages
-communication_volume(x::AuctionSolver) = assert_solved(x) && x.volume
+communication_span(x::AbstractAuctionSolver) = assert_solved(x) && x.span
+communication_messages(x::AbstractAuctionSolver) =
+  assert_solved(x) && x.messages
+communication_volume(x::AbstractAuctionSolver) = assert_solved(x) && x.volume
 
-function converged(agents::Vector{AuctionAgent})
+function converged(agents::Vector{<:AbstractAuctionAgent})
   # As a proxy for requiring maximal assignments, use the fact that the rank is
   # equal to the number of agents
   ( all(x -> length(x.assignments) == length(agents), agents)
