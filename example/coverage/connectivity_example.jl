@@ -80,8 +80,16 @@ function make_sequential_solver(p)
   SequentialCommunicationSolver(p, communication_radius)
 end
 
-for (make_solver, name) in [(make_hop_solver, "RSP Hops"),
-                            (make_sequential_solver, "Sequential")
+# Converging auction solver
+# (should converge in the same time as the sequential solver or faster)
+function make_auction_solver(p)
+  AuctionSolver(p, communication_radius)
+end
+
+for (make_solver, name) in [
+                            (make_hop_solver, "RSP Hops"),
+                            (make_sequential_solver, "Sequential"),
+                            (make_auction_solver, "Auction")
                            ]
   evaluate_solver(make_solver, name)
 end

@@ -235,3 +235,175 @@ function communication_span(x::SequentialCommunicationSolver)
     path_distance(x.adjacency, index, index + 1)
   end
 end
+
+################
+# Auction solver
+################
+
+# Based on the distributed planner in
+# by Choi et al. Transactions on Robots, 2009
+# as well as the work of
+# Luo et al. IROS, 2016
+#
+# Modifications:
+# * Each agent has its own set of actions as for the definition of the
+#   PartitionProblem type
+# * Messages are maps from ids to values rather than vectors containing all
+#   assignments
+
+# We will evaluate message counts and such
+mutable struct AuctionSolver
+  adjacency::Matrix
+
+  # We will allow for convergence before reaching the span
+  nominal_span::Integer
+
+  span::Integer
+  messages::Integer
+  volume::Integer
+
+  solved::Bool
+
+  AuctionSolver(adjacency, span) = new(adjacency, span, 0, 0, 0, false)
+end
+
+# Second term is the upper bound on convergence time
+# (longest possible path times number of assignments)
+AuctionSolver(adjacency) = AuctionSolver(adjacency, size(adjacency, 1)^2)
+
+function AuctionSolver(problem::PartitionProblem, communication_range)
+  adjacency = make_adjacency_matrix(problem, communication_range)
+
+  AuctionSolver(adjacency)
+end
+
+
+# Contains details for a given agent (its assignments and index)
+struct AuctionAgent
+  index::Integer
+  assignments::Vector{ExplicitSolutionElement}
+end
+
+AuctionAgent(index::Integer) = AuctionAgent(index, ExplicitSolutionElement[])
+# Constructor for incrementing the assignments
+AuctionAgent(a::AuctionAgent, s::Vector) = AuctionAgent(a.index, s)
+
+get_index(x::AuctionAgent) = x.index
+# Returns the agent's current list of assignments to all agents
+get_assignments(x::AuctionAgent) = x.assignments
+# Returns the assignment to this agent
+get_assignment(agent::AuctionAgent) =
+  first(filter(x->first(x) == get_index(agent), get_assignments(agent)))
+
+neighbors(adjacency::Matrix, a::AuctionAgent) = neighbors(adjacency, a.index)
+
+# Get the set of neighbors by adjacency and filtering
+function neighbors(adjacency::Matrix, agents::Vector{AuctionAgent},
+                   a::AuctionAgent)
+  ns = neighbors(adjacency, a)
+
+  filter(x -> in(x.index,ns), agents)
+end
+
+is_solved(x::AuctionSolver) = x.solved
+assert_solved(x::AuctionSolver) =
+  is_solved(x) ? true : error("Solve problem before calling")
+
+communication_span(x::AuctionSolver) = assert_solved(x) && x.span
+communication_messages(x::AuctionSolver) = assert_solved(x) && x.messages
+communication_volume(x::AuctionSolver) = assert_solved(x) && x.volume
+
+function converged(agents::Vector{AuctionAgent})
+  # As a proxy for requiring maximal assignments, use the fact that the rank is
+  # equal to the number of agents
+  ( all(x -> length(x.assignments) == length(agents), agents)
+  # Assert that all agents have the same assignments
+  && all(x -> Set(x.assignments) == Set(first(agents).assignments), agents))
+end
+
+# Priority goes to agents with lower indices
+priority(a::Int64, b::Int64) = a < b
+priority(a::Tuple{Int64,Int64}, b::Tuple{Int64,Int64}) =
+  priority(first(a), first(b)) ||
+  (first(a) == first(b) && priority(last(a), last(b)))
+
+# Run general greedy assignment
+#
+# Being careful to
+# * Break ties deterministically, even within proposed assignments
+#   (to ensure convergence)
+# * Track independence
+function greedy_assignment(problem::ExplicitPartitionProblem,
+                           agent::AuctionAgent,
+                           assignments::Vector)
+  block = get_element_indices(problem, get_index(agent))
+
+  # Construct a local ground with the current block and incoming assignments
+  G = convert(Vector{ExplicitSolutionElement}, union(block, assignments...))
+
+  # Assignments
+  X = ExplicitSolutionElement[]
+
+  # Greedy selection process
+  while !isempty(G)
+    values = map(G) do x
+      marginal_gain(y->objective(problem, y), x, X)
+    end
+
+    max_value = maximum(values)
+    maximizers = G[findall(x->x==max_value, values)]
+
+    # Priority goes to least index
+    max_priority = first(sort(maximizers; lt=priority))
+
+    # Conditionally add the new solution element
+    if independent(union(X, [max_priority]))
+      X = union(X, [max_priority])
+    end
+
+    # Element either assigned or cannot be added to this or future solutions
+    setdiff!(G, [max_priority])
+  end
+
+  X
+end
+
+function solve_problem(solver::AuctionSolver, problem::PartitionProblem;
+                       kwargs...)
+  num_agents = get_num_agents(problem)
+  adjacency = solver.adjacency
+  agents = map(x->AuctionAgent(x), 1:num_agents)
+
+  for ii in 1:solver.nominal_span
+    # Update span
+    solver.span += 1
+
+    updated_agents = map(agents) do agent
+      ns = neighbors(adjacency, agents, agent)
+
+      assignments = map(get_assignments, ns)
+
+      # Update messages and volume
+      solver.messages += length(ns)
+      solver.volume += sum(length, assignments)
+
+      # Construct the new set of assigments
+      new_assignments = greedy_assignment(problem, agent, assignments)
+
+      AuctionAgent(agent, new_assignments)
+    end
+
+    agents[:] = updated_agents
+
+    if converged(agents)
+      break
+    end
+  end
+
+  solver.solved = true
+
+  assignments = map(get_assignment, agents)
+
+  # Return the solution
+  evaluate_solution(problem, assignments)
+end
