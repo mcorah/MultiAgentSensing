@@ -240,7 +240,7 @@ end
 # A set is independent if it contains at most one assignment to each agent
 # Tuple consist of agent and agent-index
 independent(x::Set{ExplicitSolutionElement}) =
-  length(x) == length(Set(map(first, x)))
+  length(x) == length(Set(map(first, collect(x))))
 independent(x) = independent(Set(x))
 
 include("src/utils.jl")
