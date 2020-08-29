@@ -385,7 +385,7 @@ function solve_problem(solver::AuctionSolver, problem::PartitionProblem;
 
       # Update messages and volume
       solver.messages += length(ns)
-      solver.volume += sum(length, assignments)
+      solver.volume += mapreduce(length, +, assignments, init=0)
 
       # Construct the new set of assigments
       new_assignments = greedy_assignment(problem, agent, assignments)
