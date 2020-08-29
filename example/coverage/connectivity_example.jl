@@ -48,7 +48,7 @@ function evaluate_solver(make_solver, name)
   ylim([0, 1])
   colors = generate_colors(agents)
   visualize_agents(agents, colors)
-  #visualize_solution(problem, solution, colors)
+  visualize_solution(problem, solution, colors)
 
   plot_adjacency(problem, communication_radius)
 
