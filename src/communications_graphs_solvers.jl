@@ -46,7 +46,7 @@ function make_hop_adjacency(adjacency::Matrix{Int64}, hops::Int64)
   mat
 end
 
-neighbors(adjacency::Matrix{Int64}, index) =
+neighbors(adjacency::Matrix{<:Integer}, index::Integer) =
   findall(x -> x > 0, adjacency[index,:])
 
 # Ugly implementation of Dijkstra
@@ -154,6 +154,7 @@ sequence(x::MultiHopSolver) = sequence(x.nominal_solver)
 partitions(x::MultiHopSolver) = partitions(x.nominal_solver)
 
 # Keep only neighbors that are within the communication range
+# Note: in-neighbors for the DAG solver
 function in_neighbors(x::MultiHopSolver, agent_index)
   nominal_neighbors = in_neighbors(x.nominal_solver, agent_index)
 
