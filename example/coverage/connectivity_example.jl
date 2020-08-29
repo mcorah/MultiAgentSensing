@@ -16,14 +16,14 @@ num_agents = 10
 num_sensors = 10
 nominal_area = 2.0
 
-num_hops = 2
-num_partitions = 3
+num_hops = 1
+num_partitions = 8
 
 sensor_radius = sqrt(nominal_area / (num_agents * pi))
 station_radius = 2 * sensor_radius
 
-# works out to 2/3 of the radius for all interactions after two hops
-communication_radius = station_radius
+# works out to the maximum radius for all interactions
+communication_radius = 3*station_radius
 
 agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                                num_sensors)
