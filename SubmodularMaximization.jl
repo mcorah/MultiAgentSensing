@@ -41,7 +41,8 @@ total_weight, extract_triangle, visualize_solution
 export Agent, generate_agents,
   generate_colors,
   visualize_agents,
-  get_element_indices
+  get_element_indices,
+  independent
 
 # Solvers
 export solve_optimal, solve_worst, solve_myopic, solve_random, solve_sequential
@@ -235,6 +236,12 @@ function get_element_indices(agents::Vector)
     get_element_indices(agents, agent_index)
   end
 end
+
+# A set is independent if it contains at most one assignment to each agent
+# Tuple consist of agent and agent-index
+independent(x::Set{ExplicitSolutionElement}) =
+  length(x) == length(Set(map(first, x)))
+independent(x) = independent(Set(x))
 
 include("src/utils.jl")
 include("src/visualization.jl")
