@@ -345,7 +345,7 @@ function greedy_assignment(problem::ExplicitPartitionProblem,
   X = ExplicitSolutionElement[]
 
   # Greedy selection process
-  while !isempty(G)
+  while !isempty(G) && can_augment(X, G)
     values = map(G) do x
       marginal_gain(y->objective(problem, y), x, X)
     end
