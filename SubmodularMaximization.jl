@@ -239,9 +239,10 @@ end
 
 # A set is independent if it contains at most one assignment to each agent
 # Tuple consist of agent and agent-index
-independent(x::Set{ExplicitSolutionElement}) =
-  length(x) == length(Set(map(first, collect(x))))
-independent(x) = independent(Set(x))
+independent(x) = length(x) == length(Set(map(first, x)))
+
+# Returns true if any element of Y can be added to X
+can_augment(x, Y) = any(y->independent(vcat(x, y)), Y)
 
 include("src/utils.jl")
 include("src/visualization.jl")
