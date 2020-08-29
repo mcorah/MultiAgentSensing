@@ -100,6 +100,8 @@ end
 
 objective(p::PartitionProblem, X) = error("Objective not defined for ",
                                           typeof(p))
+# Define the solution for individual solution elements
+objective(p::PartitionProblem{T}, X::T) where T = objective(p, [X])
 
 evaluate_solution(p::PartitionProblem, X) =
   Solution(objective(p, X), X)
@@ -136,7 +138,8 @@ solve_block(p::PartitionProblem, block::Integer, selections::Vector) =
 # of blocks
 #
 # (agent_index, block_index)
-struct ExplicitPartitionProblem <: PartitionProblem{Tuple{Int64,Int64}}
+const ExplicitSolutionElement = Tuple{Int64,Int64}
+struct ExplicitPartitionProblem <: PartitionProblem{ExplicitSolutionElement}
   objective::Function
   partition_matroid::Vector
 end
@@ -152,7 +155,7 @@ get_agent(partition_matroid::Vector, x) = partition_matroid[x]
 
 get_center(p::PartitionProblem, x) = get_center(get_agent(p, x))
 
-objective(p::ExplicitPartitionProblem, X) =
+objective(p::ExplicitPartitionProblem, X::Vector{ExplicitSolutionElement}) =
   p.objective(map(x->get_element(p.partition_matroid, x), X))
 
 marginal_gain(f, x, Y) = f(vcat([x], Y)) - f(Y)
