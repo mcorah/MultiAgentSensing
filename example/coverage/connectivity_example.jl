@@ -6,9 +6,7 @@ using SubmodularMaximization
 
 close("all")
 
-name = "connectiviy_example"
-data_path = "./data/$name"
-mkpath(data_path)
+name = "connectivity_example"
 
 #num_agents = 50
 num_agents = 10
