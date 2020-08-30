@@ -299,6 +299,8 @@ get_assignments(x::AbstractAuctionAgent) = x.assignments
 get_assignment(agent::AbstractAuctionAgent) =
   first(filter(x->first(x) == get_index(agent), get_assignments(agent)))
 
+num_assignments(agent::AbstractAuctionAgent) = length(get_assignments(agent))
+
 neighbors(adjacency::Matrix, a::AbstractAuctionAgent) =
   neighbors(adjacency, a.index)
 
