@@ -22,35 +22,51 @@ trials = 1:100
 
 num_steps = 2 .^ (2:4)
 
+sensor_radius(num_agents) = sqrt(nominal_area / (num_agents * pi))
+station_radius(num_agents) = 2 * sensor_radius(num_agents)
+
+# works out to the maximum radius for all interactions
+communication_radius(num_agents) = 3*station_radius(num_agents)
+
 #
 # Define the solver factories
 #
 
 function make_hop_solver(p, num_partitions)
   num_agents = length(p.partition_matroid)
+  radius = communication_radius(num_agents)
 
   partition_solver = generate_by_global_partition_size(num_agents,
                                                        num_partitions)
 
   MultiHopSolver(p, solver=partition_solver,
-                 communication_range=communication_radius,
+                 communication_range=radius,
                  num_hops=num_hops)
 end
 
 function make_sequential_solver(p)
-  SequentialCommunicationSolver(p, communication_radius)
+  num_agents = length(p.partition_matroid)
+  radius = communication_radius(num_agents)
+
+  SequentialCommunicationSolver(p, radius)
 end
 
 # Converging auction solver
 # (should converge in the same time as the sequential solver or faster)
 function make_auction_solver(p, x...)
-  AuctionSolver(p, communication_radius, x...)
+  num_agents = length(p.partition_matroid)
+  radius = communication_radius(num_agents)
+
+  AuctionSolver(p, radius, x...)
 end
 
 # Converging auction solver
 # (should converge in the same time as the sequential solver or faster)
 function make_local_auction_solver(p, x...)
-  LocalAuctionSolver(p, communication_radius, x...)
+  num_agents = length(p.partition_matroid)
+  radius = communication_radius(num_agents)
+
+  LocalAuctionSolver(p, radius, x...)
 end
 
 #
@@ -73,6 +89,24 @@ solver_strings = map(last, solvers_strings)
 solver_inds = 1:length(solver_factories)
 all_tests = product(solver_inds, num_agents, trials)
 
+# We need the problem to be connected to avoid bad things
+function generate_connected_problem(agent_specification, num_agents)
+  agents = generate_agents(agent_specification, num_agents)
+
+  f(x) = mean_area_coverage(x, 100)
+
+  problem = ExplicitPartitionProblem(f, agents)
+
+  radius = communication_radius(num_agents)
+  adjacency = make_adjacency_matrix(problem, radius)
+
+  if is_connected(adjacency)
+    problem
+  else
+    generate_connected_problem(agent_specification, num_agents)
+  end
+end
+
 #
 # Construct and run trials
 #
@@ -81,20 +115,11 @@ function trial_fun(x)
   (solver_ind, num_agents, trial) = x
   make_solver = solver_factories[solver_ind]
 
-  sensor_radius = sqrt(nominal_area / (num_agents * pi))
-  station_radius = 2 * sensor_radius
-
-  # works out to the maximum radius for all interactions
-  communication_radius = 3*station_radius
-
-  agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
+  agent_specification = CircleAgentSpecification(sensor_radius(num_agents),
+                                                 station_radius(num_agents),
                                                  num_sensors)
 
-  agents = generate_agents(agent_specification, num_agents)
-
-  f(x) = mean_area_coverage(x, 100)
-
-  problem = ExplicitPartitionProblem(f, agents)
+  problem = generate_connected_problem(agent_specification, num_agents)
 
   solver = make_solver(problem)
 
