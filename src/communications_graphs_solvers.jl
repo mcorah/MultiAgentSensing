@@ -276,10 +276,10 @@ end
 # (longest possible path times number of assignments)
 AuctionSolver(adjacency) = AuctionSolver(adjacency, size(adjacency, 1)^2)
 
-function AuctionSolver(problem::PartitionProblem, communication_range)
+function AuctionSolver(problem::PartitionProblem, communication_range, x...)
   adjacency = make_adjacency_matrix(problem, communication_range)
 
-  AuctionSolver(adjacency)
+  AuctionSolver(adjacency, x...)
 end
 
 
@@ -454,10 +454,11 @@ end
 LocalAuctionSolver(adjacency) =
   LocalAuctionSolver(adjacency, size(adjacency, 1)^2)
 
-function LocalAuctionSolver(problem::PartitionProblem, communication_range)
+function LocalAuctionSolver(problem::PartitionProblem, communication_range,
+                            x...)
   adjacency = make_adjacency_matrix(problem, communication_range)
 
-  LocalAuctionSolver(adjacency)
+  LocalAuctionSolver(adjacency, x...)
 end
 
 
