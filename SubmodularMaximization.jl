@@ -242,7 +242,11 @@ end
 independent(x) = length(x) == length(Set(map(first, x)))
 
 # Returns true if any element of Y can be added to X
-can_augment(x, Y) = any(y->independent(vcat(x, y)), Y)
+can_augment(x, Y::Vector) = any(y->independent(vcat(x, y)), Y)
+# Can agent index add solution elements to x in a partition matroid
+can_augment(x, index::Int64) = !in(index, map(first, x))
+# Can a given solution be added to x
+can_augment(x, e::ExplicitSolutionElement) = can_augment(x, first(e))
 
 include("src/utils.jl")
 include("src/visualization.jl")
