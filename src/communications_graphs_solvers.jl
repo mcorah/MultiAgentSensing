@@ -259,8 +259,9 @@ abstract type AbstractAuctionAgent end
 mutable struct AuctionSolver <: AbstractAuctionSolver
   adjacency::Matrix
 
-  # We will allow for convergence before reaching the span
-  nominal_span::Integer
+  # We will allow for convergence before reaching the maximum number of steps
+  # (equivalent span plus 1)
+  nominal_steps::Integer
 
   span::Integer
   messages::Integer
@@ -382,9 +383,12 @@ function solve_problem(solver::AuctionSolver, problem::PartitionProblem;
   adjacency = solver.adjacency
   agents = map(x->AuctionAgent(x), 1:num_agents)
 
-  for ii in 1:solver.nominal_span
+  for ii in 1:solver.nominal_steps
     # Update span
-    solver.span += 1
+    if ii != 1
+      # Skip the first round (which we can complete without communication)
+      solver.span += 1
+    end
 
     updated_agents = map(agents) do agent
       ns = neighbors(adjacency, agents, agent)
@@ -392,8 +396,10 @@ function solve_problem(solver::AuctionSolver, problem::PartitionProblem;
       assignments = map(get_assignments, ns)
 
       # Update messages and volume
-      solver.messages += length(ns)
-      solver.volume += mapreduce(length, +, assignments, init=0)
+      if ii != 1
+        solver.messages += length(ns)
+        solver.volume += mapreduce(num_assignments, +, ns, init=0)
+      end
 
       # Construct the new set of assigments
       new_assignments = greedy_assignment(problem, agent, assignments)
