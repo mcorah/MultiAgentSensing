@@ -86,10 +86,17 @@ function make_auction_solver(p)
   AuctionSolver(p, communication_radius)
 end
 
+# Converging auction solver
+# (should converge in the same time as the sequential solver or faster)
+function make_local_auction_solver(p)
+  LocalAuctionSolver(p, communication_radius)
+end
+
 for (make_solver, name) in [
                             (make_hop_solver, "RSP Hops"),
                             (make_sequential_solver, "Sequential"),
-                            (make_auction_solver, "Auction")
+                            (make_auction_solver, "Auction"),
+                            (make_local_auction_solver, "Local Auction")
                            ]
   evaluate_solver(make_solver, name)
 end
