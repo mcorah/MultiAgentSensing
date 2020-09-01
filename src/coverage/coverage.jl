@@ -60,7 +60,10 @@ end
 
 function make_agent(agent_specification::CircleAgentSpecification)
   agent_center = rand(2)
-
+  make_agent(agent_specification, agent_center)
+end
+function make_agent(agent_specification::CircleAgentSpecification,
+                    agent_center::Vector{Float64})
   make_sensor() = Circle(agent_center + agent_specification.station_radius *
                         rand_in_circle(),
                         agent_specification.sensor_radius)

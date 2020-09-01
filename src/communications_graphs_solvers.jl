@@ -1,6 +1,7 @@
 # This file provides versions of solvers based on communication graphs
 
 using Statistics
+using StatsBase
 using LinearAlgebra
 
 # Methods for evaluating communication statistics
@@ -90,21 +91,33 @@ function is_connected(adjacency::Matrix)
   all(x -> x > 0, paths)
 end
 
+function sample_circle()
+  r = sqrt(rand())
+  theta = 2*pi*rand()
+  r * [cos(theta);sin(theta)]
+end
+
 # We need the problem to be connected to avoid bad things
 function generate_connected_problem(agent_specification, num_agents;
                                     communication_radius,
                                     objective)
-  while true
-    agents = generate_agents(agent_specification, num_agents)
+  # Sample the agents
+  agents = [make_agent(agent_specification)]
+  for ii in 1:num_agents-1
+    seed = get_center(sample(agents))
 
-    problem = ExplicitPartitionProblem(objective, agents)
+    # sample centers until one is in the unit square
+    while true
+      center = seed + communication_radius * sample_circle()
 
-    adjacency = make_adjacency_matrix(problem, communication_radius)
-
-    if is_connected(adjacency)
-      return problem
+      if all(x -> 0 <= x <= 1, center)
+        push!(agents, make_agent(agent_specification, center))
+        break
+      end
     end
   end
+
+  problem = ExplicitPartitionProblem(objective, agents)
 end
 
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
