@@ -112,7 +112,7 @@ function trial_fun(x)
 
   solution = solve_problem(solver, problem, threaded=false)
 
-  (solver=solver, problem=problem, solution=solution)
+  (solver=solver, solution=solution)
 end
 function print_summary(x)
   (solver_ind, num_agents, trial) = x
