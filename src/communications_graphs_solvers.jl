@@ -344,7 +344,9 @@ priority(a::Tuple{Int64,Int64}, b::Tuple{Int64,Int64}) =
 # * Track independence
 function greedy_assignment(problem::ExplicitPartitionProblem,
                            agent::AuctionAgent,
-                           assignments::Vector)
+                           assignments::Vector;
+                           prior_selections = ExplicitSolutionElement[]
+                          )
   block = get_element_indices(problem, get_index(agent))
 
   # Construct a local ground with the current block and incoming assignments
@@ -353,7 +355,9 @@ function greedy_assignment(problem::ExplicitPartitionProblem,
                                                      assignments...))
 
   # Assignments
-  X = ExplicitSolutionElement[]
+  X = prior_selections
+
+  filter!(x->can_augment(X, x), G)
 
   # Greedy selection process
   while !isempty(G)
@@ -406,8 +410,15 @@ function solve_problem(solver::AuctionSolver, problem::PartitionProblem;
         solver.volume += mapreduce(num_assignments, +, ns, init=0)
       end
 
+      # Identify decisions that have reached consensus
+      least_difference = minimum(ns) do neighbor
+        first_difference(agent, neighbor, include_unassigned=true)
+      end
+      prior_selections = get_assignments(agent)[1:least_difference-1]
+
       # Construct the new set of assigments
-      new_assignments = greedy_assignment(problem, agent, assignments)
+      new_assignments = greedy_assignment(problem, agent, assignments,
+                                          prior_selections=prior_selections)
 
       AuctionAgent(agent, new_assignments)
     end
