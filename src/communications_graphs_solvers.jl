@@ -90,6 +90,23 @@ function is_connected(adjacency::Matrix)
   all(x -> x > 0, paths)
 end
 
+# We need the problem to be connected to avoid bad things
+function generate_connected_problem(agent_specification, num_agents;
+                                    communication_radius,
+                                    objective)
+  while true
+    agents = generate_agents(agent_specification, num_agents)
+
+    problem = ExplicitPartitionProblem(objective, agents)
+
+    adjacency = make_adjacency_matrix(problem, communication_radius)
+
+    if is_connected(adjacency)
+      return problem
+    end
+  end
+end
+
 function plot_adjacency(problem::ExplicitPartitionProblem, range::Real)
   adjacency = make_adjacency_matrix(problem, range)
 

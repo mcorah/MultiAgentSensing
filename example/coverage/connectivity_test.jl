@@ -90,24 +90,6 @@ solver_strings = map(last, solvers_strings)
 solver_inds = 1:length(solver_factories)
 all_tests = product(solver_inds, num_agents, trials)
 
-# We need the problem to be connected to avoid bad things
-function generate_connected_problem(agent_specification, num_agents)
-  while true
-    agents = generate_agents(agent_specification, num_agents)
-
-    f(x) = mean_area_coverage(x, 100)
-
-    problem = ExplicitPartitionProblem(f, agents)
-
-    radius = communication_radius(num_agents)
-    adjacency = make_adjacency_matrix(problem, radius)
-
-    if is_connected(adjacency)
-      return problem
-    end
-  end
-end
-
 #
 # Construct and run trials
 #
@@ -120,7 +102,11 @@ function trial_fun(x)
                                                  station_radius(num_agents),
                                                  num_sensors)
 
-  problem = generate_connected_problem(agent_specification, num_agents)
+  problem = generate_connected_problem(agent_specification, num_agents,
+                                       objective =
+                                        x -> mean_area_coverage(x, 100),
+                                       communication_radius =
+                                        communication_radius(num_agents))
 
   solver = make_solver(problem)
 
