@@ -191,7 +191,7 @@ end
 
 for spec in plot_specs
   figure()
-  for solver_ind in solver_inds
+  for solver_ind in reverse(solver_inds)
     data = map(spec.get, series_by_solver[solver_ind])
     plot_trials(data,
                 label=solver_strings[solver_ind],
