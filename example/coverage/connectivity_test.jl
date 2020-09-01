@@ -4,6 +4,7 @@ using Statistics
 using Base.Iterators
 
 using SubmodularMaximization
+using RosDataProcess
 
 close("all")
 
@@ -142,3 +143,38 @@ end
                                 data_folder=data_folder,
                                 reprocess=reprocess
                                )
+
+solver_groups = 3
+solver_configurations = length(num_steps) + 1
+# One color for each solver group
+colors = repeat(RosDataProcess.generate_colors(solver_groups), inner=num_steps)
+# One style for each solver configuration
+style_atoms = [(0, (1, 1)), # densely dotted
+               (0, (2, 1, 1, 0)), # densely dashed
+               (0, (2, 1, 1, 1, 1, 0)), # dashdotdotted
+               "-"
+              ]
+styles = repeat(style_atoms, outer=solver_groups)
+
+# Plot objective values
+series_by_solver = Any[]
+for solver_ind in solver_inds
+  solver_data = map(product(num_agents, trials)) do (num_agents, trial)
+    results[solver_ind, num_agents, trial]
+  end
+  push!(series_by_solver, TimeSeries(num_agents, solver_data))
+end
+
+figure()
+for solver_ind in solver_inds
+  data = map(x -> x.solution.value, series_by_solver[solver_ind])
+  plot_trials(data,
+              label=solver_strings[solver_ind],
+              linestyle=styles[solver_ind],
+              color=colors[solver_ind],
+              mean=true,
+              standard_error=true)
+end
+legend(ncol=3)
+xlabel("Num. Agents")
+ylabel("Objective (fraction of unit area)")
