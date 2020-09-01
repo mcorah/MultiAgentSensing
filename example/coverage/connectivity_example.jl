@@ -26,11 +26,11 @@ communication_radius = 3*station_radius
 agent_specification = CircleAgentSpecification(sensor_radius, station_radius,
                                                num_sensors)
 
-agents = generate_agents(agent_specification, num_agents)
-
 f(x) = mean_area_coverage(x, 100)
 
-problem = ExplicitPartitionProblem(f, agents)
+problem = generate_connected_problem(agent_specification, num_agents,
+                                     communication_radius=communication_radius,
+                                     objective=f)
 
 # Leave an adjacency matrix around for fun
 adjacency = make_adjacency_matrix(problem, communication_radius)
@@ -44,8 +44,8 @@ function evaluate_solver(make_solver, name)
   figure()
   xlim([0, 1])
   ylim([0, 1])
-  colors = generate_colors(agents)
-  visualize_agents(agents, colors)
+  colors = generate_colors(problem.partition_matroid)
+  visualize_agents(problem.partition_matroid, colors)
   visualize_solution(problem, solution, colors)
 
   plot_adjacency(problem, communication_radius)
