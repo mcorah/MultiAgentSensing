@@ -348,7 +348,9 @@ function greedy_assignment(problem::ExplicitPartitionProblem,
   block = get_element_indices(problem, get_index(agent))
 
   # Construct a local ground with the current block and incoming assignments
-  G = convert(Vector{ExplicitSolutionElement}, union(block, assignments...))
+  G = convert(Vector{ExplicitSolutionElement}, union(block,
+                                                     get_assignments(agent),
+                                                     assignments...))
 
   # Assignments
   X = ExplicitSolutionElement[]
