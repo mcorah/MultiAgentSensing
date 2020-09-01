@@ -482,11 +482,27 @@ get_values(x::LocalAuctionAgent) = x.values
 get_value_assignment(x::LocalAuctionAgent, index::Integer) =
   (get_values(x)[index], get_assignments(x)[index])
 
-function first_difference(a::LocalAuctionAgent, b::LocalAuctionAgent)
+# Returns the first difference between a and b
+#
+# If including unassigned values, assignments past the length of the shorter are
+# considered. If both arrays are the same up to that point, the first difference
+# is at length(shorter) + 1
+#
+# Else return nothing if there is no difference up to the length of the shorter
+function first_difference(a::AbstractAuctionAgent, b::AbstractAuctionAgent;
+                          include_unassigned = false
+                         )
   len = min(num_assignments(a), num_assignments(b))
-  findfirst(x-> x[1] != x[2],
-            collect(zip(get_assignments(a)[1:len],
-                        get_assignments(b)[1:len])))
+
+  index = findfirst(x-> x[1] != x[2],
+                    collect(zip(get_assignments(a)[1:len],
+                                get_assignments(b)[1:len])))
+
+  if isnothing(index) && include_unassigned
+    min(num_assignments(a), num_assignments(b)) + 1
+  else
+    index
+  end
 end
 
 function dominates(a::Tuple{Float64,ExplicitSolutionElement},
