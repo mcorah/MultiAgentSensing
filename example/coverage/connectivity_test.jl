@@ -151,7 +151,7 @@ colors = repeat(RosDataProcess.generate_colors(solver_groups), inner=num_steps)
 # One style for each solver configuration
 style_atoms = [(0, (1, 1)), # densely dotted
                (0, (2, 1, 1, 0)), # densely dashed
-               (0, (2, 1, 1, 1, 1, 0)), # dashdotdotted
+               (0, (2, 1, 1, 1, 1, 0)), # dashdotted
                "-"
               ]
 styles = repeat(style_atoms, outer=solver_groups)
