@@ -26,14 +26,14 @@ point_in_circle(circle::Circle, point) =
   point_in_circle(circle.center, circle.radius, point)
 
 function point_covered(circles, x, y)
-  covered = false
-
   #optimized point_in_circle code runs about ten times faster
-  @inbounds @simd for circle in circles
-    covered |= (x - circle.center[1])^2 + (y - circle.center[2])^2 < circle.radius^2
+  @inbounds for circle in circles
+    if (x - circle.center[1])^2 + (y - circle.center[2])^2 < circle.radius^2
+      return true
+    end
   end
 
-  covered
+  false
 end
 
 mean_coverage(circles, points) =
