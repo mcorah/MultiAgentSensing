@@ -169,6 +169,19 @@ plot_specs = [
               (get = x -> x.solution.value,
                ylabel = "Objective (fraction of unit area)",
                name = "objective"),
+              (get = x -> communication_span(x.solver),
+               ylabel = "Messaging span",
+               name = "span"),
+              (get = x -> communication_messages(x.solver),
+               ylabel = "Messages sent",
+               name = "messages",
+               after = [loglog]
+              ),
+              (get = x -> communication_volume(x.solver),
+               ylabel = "Messaging volume",
+               name = "volume",
+               after = [loglog]
+              ),
              ]
 
 fig_dir = "fig/connectivity_test"
@@ -190,6 +203,10 @@ for spec in plot_specs
   legend(ncol=3)
   xlabel("Num. Agents")
   ylabel(spec.ylabel)
+
+  if in(:after, keys(spec))
+    foreach(x->x(), spec.after)
+  end
 
   save_latex(fig_dir, spec.name)
 end
