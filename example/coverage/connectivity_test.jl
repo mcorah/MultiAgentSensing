@@ -165,16 +165,31 @@ for solver_ind in solver_inds
   push!(series_by_solver, TimeSeries(num_agents, solver_data))
 end
 
-figure()
-for solver_ind in solver_inds
-  data = map(x -> x.solution.value, series_by_solver[solver_ind])
-  plot_trials(data,
-              label=solver_strings[solver_ind],
-              linestyle=styles[solver_ind],
-              color=colors[solver_ind],
-              mean=true,
-              standard_error=true)
+plot_specs = [
+              (get = x -> x.solution.value,
+               ylabel = "Objective (fraction of unit area)",
+               name = "objective"),
+             ]
+
+fig_dir = "fig/connectivity_test"
+if !isdir(fig_dir)
+  mkpath(fig_dir)
 end
-legend(ncol=3)
-xlabel("Num. Agents")
-ylabel("Objective (fraction of unit area)")
+
+for spec in plot_specs
+  figure()
+  for solver_ind in solver_inds
+    data = map(spec.get, series_by_solver[solver_ind])
+    plot_trials(data,
+                label=solver_strings[solver_ind],
+                linestyle=styles[solver_ind],
+                color=colors[solver_ind],
+                mean=true,
+                standard_error=true)
+  end
+  legend(ncol=3)
+  xlabel("Num. Agents")
+  ylabel(spec.ylabel)
+
+  save_latex(fig_dir, spec.name)
+end
