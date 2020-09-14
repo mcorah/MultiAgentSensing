@@ -18,7 +18,7 @@ nominal_area = 2.0
 
 num_hops = 1
 
-num_agents = 10:10:50
+num_agents = 10:10:100
 trials = 1:50
 
 num_steps = 2 .^ (2:4)
@@ -122,6 +122,8 @@ function print_summary(x)
           " Trial: ", trial)
 end
 
+println("Loading data / Running experiments")
+
 @time results = run_experiments(all_tests,
                                 trial_fun=trial_fun,
                                 print_summary=print_summary,
@@ -129,6 +131,8 @@ end
                                 data_folder=data_folder,
                                 reprocess=reprocess
                                )
+
+println("Plotting")
 
 solver_groups = 3
 solver_configurations = length(num_steps) + 1
@@ -142,7 +146,6 @@ style_atoms = [(0, (1, 1)), # densely dotted
               ]
 styles = repeat(style_atoms, outer=solver_groups)
 
-# Plot objective values
 series_by_solver = Any[]
 for solver_ind in solver_inds
   solver_data = map(product(num_agents, trials)) do (num_agents, trial)
@@ -157,7 +160,9 @@ plot_specs = [
                name = "objective"),
               (get = x -> communication_span(x.solver),
                ylabel = "Messaging span",
-               name = "span"),
+               name = "span",
+               after = [loglog]
+              ),
               (get = x -> communication_messages(x.solver),
                ylabel = "Messages sent",
                name = "messages",
@@ -176,6 +181,8 @@ if !isdir(fig_dir)
 end
 
 for spec in plot_specs
+  println("  Plot: " * spec.name)
+
   figure()
   for solver_ind in reverse(solver_inds)
     data = map(spec.get, series_by_solver[solver_ind])
@@ -194,5 +201,7 @@ for spec in plot_specs
     foreach(x->x(), spec.after)
   end
 
+  println("  Saving")
   save_latex(fig_dir, spec.name)
+  println("  Saved")
 end
