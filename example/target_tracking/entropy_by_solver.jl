@@ -1,4 +1,5 @@
 using SubmodularMaximization
+using RosDataProcess
 using PyPlot
 using Base.Iterators
 using Base.Threads
