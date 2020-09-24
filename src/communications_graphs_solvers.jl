@@ -64,6 +64,10 @@ function shortest_path(adjacency::Matrix, a::Integer, b::Integer)
     sort_inds()
     least = pop!(inds)
 
+    if least == b
+      break
+    end
+
     # Update
     for index in neighbors(adjacency, least)
       new_dist = dist[least] + 1
