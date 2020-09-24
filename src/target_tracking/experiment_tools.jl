@@ -7,7 +7,8 @@ using Base.Threads
 using Base.Iterators
 
 export target_tracking_experiment, target_tracking_instance,
-  iterate_target_tracking!, visualize_experiment, run_experiments
+  iterate_target_tracking!, visualize_experiment, visualize_time_step,
+  run_experiments
 
 # Run a target tracking experiment for a given number of steps
 # By default, keep all data from each step
@@ -169,7 +170,7 @@ function visualize_time_step(;robot_states,
   plots=[]
 
   for robot in robot_states
-    append!(plots, plot_trajectory([robot], color=:blue))
+    append!(plots, plot_quadrotor(robot, color=:blue, scale=0.3))
   end
 
   for trajectory in trajectories
@@ -177,7 +178,7 @@ function visualize_time_step(;robot_states,
   end
 
   for target in target_states
-    append!(plots, plot_trajectory([target]))
+    append!(plots, plot_target(target))
   end
 
   append!(plots, visualize_filters(target_filters))
