@@ -10,8 +10,8 @@ to_file(s) = replace(lowercase(s), " " => "_")
 
 function save_fig(fig_path, title)
   tikzplotlib.save("$(fig_path)/$(to_file(title)).tex",
-                       figureheight="\\figureheight",
-                       figurewidth="\\figurewidth",
+                       axis_height="\\figureheight",
+                       axis_width="\\figurewidth",
                        show_info=false)
 end
 
