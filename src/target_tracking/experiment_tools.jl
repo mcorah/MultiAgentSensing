@@ -241,7 +241,7 @@ function run_experiments(tests;
     println("\n", length(remaining_tests), " tests remain\n")
 
     # Mutex for load/save/output
-    load_save_lock = SpinLock()
+    load_save_lock = ReentrantLock()
 
     start = time()
     shuffle!(remaining_tests)
