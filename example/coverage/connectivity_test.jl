@@ -18,8 +18,8 @@ nominal_area = 2.0
 
 num_hops = 1
 
-num_agents = 10:10:100
-trials = 1:50
+num_agents = 2 .^ (3:8)
+trials = 1:25
 
 num_steps = 2 .^ (2:4)
 
