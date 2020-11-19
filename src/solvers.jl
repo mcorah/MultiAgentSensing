@@ -53,7 +53,7 @@ end
 #############################################################
 # Solvers that require direct access to the partition matroid
 #
-# Optimal, worst-case, and ranomized solvers
+# Optimal, worst-case, and randomized solvers
 #
 # These solvers require explicit representations
 #############################################################
