@@ -23,7 +23,7 @@ get_states(g::Grid, _::AnyFilter) = get_states(g)
 
 get_states(::Grid, f::SparseFilter) = get_states(f)
 function get_states(f::SparseFilter)
-  vec = get_values(f)
+  vec = Histograms.get_values(f)
   states = State[]
 
   # Use the existing machinery to produce the appropriate indices
@@ -60,7 +60,7 @@ function sample_state(grid::Grid, prior::Filter; rng=Random.GLOBAL_RNG)
   index_to_state(grid, ind)
 end
 function sample_state(grid::Grid, prior::SparseFilter; rng=Random.GLOBAL_RNG)
-  vec = get_values(prior)
+  vec = Histograms.get_values(prior)
 
   # returns the linear index of the sampled state
   ind = sample(rng, vec.nzind, Weights(vec.nzval))
@@ -83,7 +83,7 @@ end
 function process_update!(prior::SparseFilter, transition_matrix)
   # Note that the values and buffer are vectors that represent the flattened
   # state grid
-  mul!(get_buffer(prior), transition_matrix, get_values(prior))
+  mul!(get_buffer(prior), transition_matrix, Histograms.get_values(prior))
 
   swap_buffer!(prior)
 
@@ -103,7 +103,7 @@ end
 # Note: likelihoods should match the positions of the non-zeros for sparse
 # matrices
 function measurement_update!(prior::Filter, likelihoods::Vector{Float64})
-  vals = get_values(prior)
+  vals = Histograms.get_values(prior)
 
   # update belief in place
   @inbounds @simd for ii in 1:length(vals)
@@ -119,7 +119,7 @@ function measurement_update!(prior::Filter, likelihoods::Vector{Float64})
   prior
 end
 function measurement_update!(prior::SparseFilter, likelihoods::Vector{Float64})
-  vals = get_values(prior).nzval
+  vals = Histograms.get_values(prior).nzval
 
   # update belief in place
   @inbounds @simd for ii in 1:length(vals)
