@@ -1,3 +1,5 @@
+# Implements the mutual information objective for the target tracking problem
+
 using LinearAlgebra
 using Base.Iterators
 using Statistics
