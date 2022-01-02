@@ -5,8 +5,8 @@ using SparseArrays
 using Random
 
 export Grid, State, get_states, dims, num_states, neighbors, random_state,
-  target_dynamics, RangingSensor, generate_observation, compute_likelihoods,
-  transition_matrix, default_num_targets, continuous
+  target_dynamics, RangingSensor, CoverageSensor, generate_observation,
+  compute_likelihoods, transition_matrix, default_num_targets, continuous
 
 import Distributions.mean
 
@@ -121,6 +121,10 @@ function target_dynamics(g::Grid, s; rng=Random.GLOBAL_RNG,
   sample(rng, neighbors(g, s, buffer=buffer))
 end
 
+#################
+# Ranging sensors
+#################
+
 # variance of observations is: constant + scaling * norm_squared
 struct RangingSensor
   variance_constant::Float64
@@ -172,6 +176,18 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
   end
 
   buffer
+end
+
+##################
+# Coverage sensors
+##################
+
+struct CoverageSensor
+  range_limit::Float64
+
+  function CoverageSensor(; range_limit=10)
+    new(range_limit)
+  end
 end
 
 # produces an array of continuous ranges of states in the intput trajectory
