@@ -1,11 +1,5 @@
 using LinearAlgebra
 
-export MultiRobotTargetTrackingConfigs, MultiRobotTargetTrackingProblem
-
-# Automatically switch to sparse filters for large numbers of robots
-const num_robots_sparse_filtering_threshold = 15
-const sparsity_threshold=1e-3
-
 abstract type AbstractTargetProblem <: PartitionProblem{Tuple{Int64,
                                                               Trajectory}}
 end
