@@ -196,9 +196,3 @@ function sample_block(p::MultiRobotTargetTrackingProblem, block::Integer)
 
   (block, trajectory)
 end
-
-function compute_filter_means(target_filters::Vector{<:AnyFilter})
-  map(target_filters) do x
-    Tuple{Float64, Float64}(weighted_average(x))
-  end
-end
