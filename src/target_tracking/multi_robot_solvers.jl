@@ -6,6 +6,10 @@ export MultiRobotTargetTrackingConfigs, MultiRobotTargetTrackingProblem
 const num_robots_sparse_filtering_threshold = 15
 const sparsity_threshold=1e-3
 
+abstract type AbstractTargetProblem <: PartitionProblem{Tuple{Int64,
+                                                              Trajectory}}
+end
+
 # Stores configuration variables for multi-robot target tracking
 struct MultiRobotTargetTrackingConfigs
   grid::Grid
@@ -119,10 +123,9 @@ function objective(p::MultiRobotTargetTrackingProblem, X)
   end
 end
 
-function get_state(p::MultiRobotTargetTrackingProblem, index)
+function get_state(p::AbstractTargetProblem, index)
   p.partition_matroid[index]
 end
-
 
 # Return agent center (which is just the state)
 # The original coverage code involved more complex agent representations.
@@ -181,7 +184,7 @@ function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
   (block, solution.trajectory)
 end
 
-function sample_block(p::MultiRobotTargetTrackingProblem, block::Integer)
+function sample_block(p::AbstractTargetProblem, block::Integer)
   horizon = p.configs.horizon
   grid = p.configs.grid
 
