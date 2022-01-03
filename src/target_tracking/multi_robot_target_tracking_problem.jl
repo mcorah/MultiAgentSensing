@@ -68,6 +68,49 @@ function
   MultiRobotTargetTrackingConfigs(; settings...)
 end
 
+# Solution elements consist of the robot index and the associated trajectory
+# We construct solutions as such because the output may not have the same
+# ordering as the robots
+#
+# Warning: this "problem" object may become invalid if any of the underlying
+# objects change and may copy some but not of the inputs.
+struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractTargetProblem
+  # Target tracking problems are defined by vectors of robot states
+  partition_matroid::Vector{State}
+
+  target_filters::Vector{F}
+  filter_means::Vector{Tuple{Float64, Float64}}
+
+  configs::MultiRobotTargetTrackingConfigs
+
+  function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
+                 target_filters::Vector{F},
+                 configs::MultiRobotTargetTrackingConfigs) where F <: AnyFilter
+
+    if length(robot_states) > num_robots_sparse_filtering_threshold
+      sparse_filters = map(x->SparseFilter(x, threshold=sparsity_threshold),
+                           target_filters)
+
+      filter_means = compute_filter_means(sparse_filters)
+
+      new{SparseFilter{Int64}}(robot_states, sparse_filters, filter_means,
+                               configs)
+    else
+      filter_means = compute_filter_means(target_filters)
+
+      new{F}(robot_states, target_filters, filter_means, configs)
+    end
+  end
+end
+
+# Construct a target tracking problem with configs. I may or may not need this
+function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
+                                         target_filters::Vector{<:AnyFilter};
+                                         kwargs...)
+  configs = MultiRobotTargetTrackingConfigs(;kwargs...)
+  MultiRobotTargetTrackingProblem(robot_states, target_filters, configs)
+end
+
 function compute_filter_means(target_filters::Vector{<:AnyFilter})
   map(target_filters) do x
     Tuple{Float64, Float64}(weighted_average(x))
