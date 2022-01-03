@@ -111,6 +111,72 @@ function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
   MultiRobotTargetTrackingProblem(robot_states, target_filters, configs)
 end
 
+function objective(p::MultiRobotTargetTrackingProblem, X)
+  configs = p.configs
+
+  trajectories = map(last, X)
+
+  sum(p.target_filters) do filter
+    finite_horizon_information(configs.grid, filter, configs.sensor,
+                               trajectories;
+                               num_samples=configs.objective_information_samples
+                              ).reward
+  end
+end
+
+# Returns distance from robot state to target mean
+# (due to convexity and Jensen's inequality, this is a lower bound on the range)
+function target_mean_distance(p::MultiRobotTargetTrackingProblem,
+                     robot_state::State, target_index::Integer)
+  norm(robot_state .- p.filter_means[target_index])
+end
+function target_mean_distance(p::MultiRobotTargetTrackingProblem,
+                     robot_index::Integer, target_index::Integer)
+  target_mean_distance(p, p.partition_matroid[robot_index], target_index)
+end
+
+function filter_targets_in_range(p::MultiRobotTargetTrackingProblem,
+                                 robot_index::Integer;
+                                 range_limit=p.configs.robot_target_range_limit
+                                )
+
+  # filter by range, producing tuples
+  in_bounds = filter(1:length(p.filter_means)) do target_index
+    target_mean_distance(p, robot_index, target_index) < range_limit
+  end
+
+  map(x->p.target_filters[x[1]], in_bounds)
+end
+
+function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
+                     selections::Vector)
+  configs = p.configs
+
+  trajectories = map(last, selections)
+
+  # Select filters in range
+  local targets_in_range
+  if p.configs.robot_target_range_limit == Inf
+    targets_in_range = p.target_filters
+  else
+    targets_in_range = filter_targets_in_range(p, block)
+  end
+
+  problem = SingleRobotTargetTrackingProblem(configs.grid, configs.sensor,
+                                             configs.horizon, targets_in_range,
+                                             prior_trajectories=trajectories,
+                                             num_information_samples=
+                                             configs.solver_information_samples
+                                            )
+
+  state = get_state(p, block)
+
+  solution = solve_single_robot(problem, state,
+                                n_iterations=configs.solver_iterations)
+
+  (block, solution.trajectory)
+end
+
 function compute_filter_means(target_filters::Vector{<:AnyFilter})
   map(target_filters) do x
     Tuple{Float64, Float64}(weighted_average(x))
