@@ -1,10 +1,10 @@
 using LinearAlgebra
 
-abstract type AbstractTargetProblem <: PartitionProblem{Tuple{Int64,
-                                                              Trajectory}}
+abstract type AbstractMultiRobotProblem <: PartitionProblem{Tuple{Int64,
+                                                                  Trajectory}}
 end
 
-function get_state(p::AbstractTargetProblem, index)
+function get_state(p::AbstractMultiRobotProblem, index)
   p.partition_matroid[index]
 end
 
@@ -12,7 +12,7 @@ end
 # The original coverage code involved more complex agent representations.
 get_center(x::Tuple{Int64,Int64}) = [x...]
 
-function sample_block(p::AbstractTargetProblem, block::Integer)
+function sample_block(p::AbstractMultiRobotProblem, block::Integer)
   horizon = p.configs.horizon
   grid = p.configs.grid
 
