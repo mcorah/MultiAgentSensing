@@ -74,7 +74,7 @@ end
 #
 # Warning: this "problem" object may become invalid if any of the underlying
 # objects change and may copy some but not of the inputs.
-struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractTargetProblem
+struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractMultiRobotProblem
   # Target tracking problems are defined by vectors of robot states
   partition_matroid::Vector{State}
 
