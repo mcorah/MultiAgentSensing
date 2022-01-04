@@ -8,8 +8,9 @@ using Random
 import POMDPs.isterminal
 import POMDPs.actions
 
-export AbstractSingleRobotProblem, SingleRobotTargetTrackingProblem, MDPState,
-generate_solver, solve_single_robot, isterminal
+export AbstractSingleRobotProblem, SingleRobotTargetTrackingProblem,
+SingleRobotTargetCoverageProblem, MDPState, generate_solver, solve_single_robot,
+isterminal
 
 const default_solver_information_samples = 1
 
@@ -77,6 +78,26 @@ struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractSingleRobotProb
                                               default_solver_information_samples
                                            ) where T <: AnyFilter
     new{T}(grid, sensor, horizon, filters, prior_trajectories,
+        num_information_samples)
+  end
+end
+
+struct SingleRobotTargetCoverageProblem <: AbstractSingleRobotProblem
+  grid::Grid
+  sensor::CoverageSensor
+  horizon::Int64
+  target_states::Vector{State}
+  prior_trajectories::Vector{Vector{State}}
+
+  num_information_samples::Int64
+
+  function SingleRobotTargetCoverageProblem(grid, sensor, horizon,
+                                            target_states;
+                                            prior_trajectories = Trajectory[],
+                                            num_information_samples =
+                                              default_solver_information_samples
+                                           )
+    new(grid, sensor, horizon, target_states, prior_trajectories,
         num_information_samples)
   end
 end
@@ -194,6 +215,22 @@ function sample_reward(model::SingleRobotTargetTrackingProblem,
                                prior_observations=model.prior_trajectories,
                                num_samples=model.num_information_samples,
                                kwargs...).reward
+  end
+end
+
+# Coverage reward for target coverage problems
+# * Computes *exact* reward for all targets and sums
+function sample_reward(model::SingleRobotTargetCoverageProblem,
+                       trajectory::Trajectory; rng = Nothing, kwargs...)
+
+  # Compute reward conditional on prior selections (trajectories)
+  #
+  # The more complex "mapreduce" method is necessary here instead of the simpler
+  # "sum" since we may encounter empty arrays.
+  mapreduce(+, model.target_states, init=0.0) do filter
+    finite_horizon_coverage(model.grid, filter, model.sensor, trajectory;
+                            prior_observations=model.prior_trajectories,
+                            kwargs...).reward
   end
 end
 
