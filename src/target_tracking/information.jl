@@ -152,13 +152,10 @@ const default_num_information_samples = 1000
 function finite_horizon_information(grid::Grid, prior::AnyFilter,
                                     sensor::RangingSensor,
                                     observation::Trajectory;
-                                    prior_observations::Vector{Trajectory}=
-                                    Trajectory[],
                                     kwargs...
                                    )
 
-  finite_horizon_information(grid, prior, sensor, [observation];
-                             prior_observations=prior_observations, kwargs...)
+  finite_horizon_information(grid, prior, sensor, [observation]; kwargs...)
 end
 # Pull the number of time-steps from a vector of trajectories as appropriate
 # and drop that into the keyword arguments

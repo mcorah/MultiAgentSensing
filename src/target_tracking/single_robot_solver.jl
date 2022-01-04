@@ -55,11 +55,11 @@ MDPState(state) = MDPState(state, 0, nothing)
 MDPState(m::MDPState, s::State) = MDPState(s, m.depth + 1, m)
 
 # Abstract implementation of something like a single-robot tracking problem
+# These single-robot problems are mdps with MDPStates for states
+# and target tracking/coverage States for actions
 abstract type AbstractSingleRobotProblem <: MDP{MDPState, State}
 end
 
-# The target tracking problem is an mdp with MDPStates for states
-# And target tracking States for actions
 struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractSingleRobotProblem
   grid::Grid
   sensor::RangingSensor
@@ -179,7 +179,8 @@ function state_trajectory(state::MDPState)
   ret
 end
 
-# sample reward for all targets and sum
+# Information reward for target tracking problems
+# * sample reward for all targets and sums
 function sample_reward(model::SingleRobotTargetTrackingProblem,
                        trajectory::Trajectory; kwargs...)
 
