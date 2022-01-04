@@ -10,10 +10,6 @@
 
 export MultiRobotTargetCoverageConfigs, MultiRobotTargetCoverageProblem
 
-# Automatically switch to sparse filters for large numbers of robots
-const num_robots_sparse_filtering_threshold = 15
-const sparsity_threshold=1e-3
-
 # Stores configuration variables for multi-robot target tracking
 struct MultiRobotTargetCoverageConfigs
   grid::Grid
