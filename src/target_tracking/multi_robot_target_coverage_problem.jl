@@ -85,8 +85,8 @@ function objective(p::MultiRobotTargetCoverageProblem, X)
 
   trajectories = map(last, X)
 
-  sum(p.target_states) do target
-    finite_horizon_coverage(configs.grid, state, configs.sensor,
+  sum(p.target_states) do target_state
+    finite_horizon_coverage(configs.grid, target_state, configs.sensor,
                             trajectories;
                            ).reward
   end
