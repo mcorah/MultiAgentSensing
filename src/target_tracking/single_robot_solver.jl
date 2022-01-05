@@ -142,7 +142,7 @@ function extract_trajectory(problem::AbstractSingleRobotProblem,
                             tree::MCTS.MCTSTree,
                             initial_state::State)
 
-  # Recal that our State objects are the actions in the MDP
+  # Recall that our State objects are the actions in the MDP
   states = Vector{State}(undef, horizon(problem))
 
   mdp_state = MDPState(initial_state)
@@ -227,8 +227,8 @@ function sample_reward(model::SingleRobotTargetCoverageProblem,
   #
   # The more complex "mapreduce" method is necessary here instead of the simpler
   # "sum" since we may encounter empty arrays.
-  mapreduce(+, model.target_states, init=0.0) do filter
-    finite_horizon_coverage(model.grid, filter, model.sensor, trajectory;
+  mapreduce(+, model.target_states, init=0.0) do target_state
+    finite_horizon_coverage(model.grid, target_state, model.sensor, trajectory;
                             prior_trajectories=model.prior_trajectories,
                             kwargs...).reward
   end
