@@ -47,10 +47,16 @@ for ii = 2:steps
 
   plots=[]
   append!(plots, plot_trajectory(robot_states[1:ii], color=:blue))
-  append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
   # Replace with a method that plots the range and which targets are in range
   #append!(plots, plot_observation(robot_state, range_observation, color=:blue))
   append!(plots, plot_trajectory(target_states[1:ii]))
+  append!(plots, plot_states(trajectory, color=:blue, linestyle=":"))
+
+  coverage = finite_horizon_coverage(grid, target_states[ii-1], sensor,
+                                     trajectory)
+  println("Reward: ", coverage.reward,
+          ", Incremental rewards: ", coverage.incremental_coverage)
+  println("Trajectory: ", trajectory)
 
   line = readline()
 
