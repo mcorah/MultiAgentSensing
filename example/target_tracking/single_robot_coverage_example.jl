@@ -22,9 +22,6 @@ target_states[1] = target_state
 robot_states = Array{State}(undef, steps)
 robot_states[1] = robot_state
 
-problem = SingleRobotTargetCoverageProblem(grid, sensor, horizon,
-                                           [target_state])
-
 plot_state_space(grid)
 xlim([0, grid_size+1])
 ylim([0, grid_size+1])
@@ -34,6 +31,9 @@ for ii = 2:steps
 
   # Before the target moves and the robot receives a measurement, execute robot
   # dynamics
+
+  problem = SingleRobotTargetCoverageProblem(grid, sensor, horizon,
+                                             [target_state])
   @time solution = solve_single_robot(problem, robot_state,
                                       n_iterations = iterations)
   global robot_state = solution.action
