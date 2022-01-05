@@ -57,16 +57,18 @@ function finite_horizon_coverage(grid::Grid, target_state::State,
                                  prior_trajectories::Vector{Trajectory}=
                                  Trajectory[])
 
+  horizon = length(first(trajectories))
+
   # We will include coverage from the initial state on
   # (note that coverage at the initial state is deterministic)
-  incremental_coverage = Vector{Float64}(undef, size(trajectories))
+  incremental_coverage = Vector{Float64}(undef, horizon)
 
   # Initialize a sparse target distribution. Note that the threshold will not
   # come into play as states will not be filtered.
   target_state_distribution = SparseFilter(grid, target_state, threshold=0.0)
 
   # Iterate over the horizon
-  for ii in 1:length(trajectories)
+  for ii in 1:horizon
     # Extract the current state of each robot
     primary_states = [trajectory[ii] for trajectory in trajectories]
     prior_states = [trajectory[ii] for trajectory in prior_trajectories]
