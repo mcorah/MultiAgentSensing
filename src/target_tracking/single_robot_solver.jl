@@ -229,7 +229,7 @@ function sample_reward(model::SingleRobotTargetCoverageProblem,
   # "sum" since we may encounter empty arrays.
   mapreduce(+, model.target_states, init=0.0) do filter
     finite_horizon_coverage(model.grid, filter, model.sensor, trajectory;
-                            prior_observations=model.prior_trajectories,
+                            prior_trajectories=model.prior_trajectories,
                             kwargs...).reward
   end
 end
