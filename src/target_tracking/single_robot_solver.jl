@@ -89,16 +89,10 @@ struct SingleRobotTargetCoverageProblem <: AbstractSingleRobotProblem
   target_states::Vector{State}
   prior_trajectories::Vector{Vector{State}}
 
-  num_information_samples::Int64
-
   function SingleRobotTargetCoverageProblem(grid, sensor, horizon,
                                             target_states;
-                                            prior_trajectories = Trajectory[],
-                                            num_information_samples =
-                                              default_solver_information_samples
-                                           )
-    new(grid, sensor, horizon, target_states, prior_trajectories,
-        num_information_samples)
+                                            prior_trajectories = Trajectory[])
+    new(grid, sensor, horizon, target_states, prior_trajectories)
   end
 end
 
