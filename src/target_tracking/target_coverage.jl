@@ -2,7 +2,7 @@
 
 using LinearAlgebra
 
-export finite_horizon_coverage
+export finite_horizon_coverage, is_covered, num_covered, target_coverage
 
 # A target is covered if any robot is in range
 function is_covered(sensor::CoverageSensor, target_state::State,
@@ -16,6 +16,14 @@ function is_covered(sensor::CoverageSensor, target_state::State,
   any(robot_states) do robot_state
     is_covered(sensor, target_state, robot_state)
   end
+end
+
+# Number of targets covered
+# This will generally be used to evaluate ground truth coverage
+# (as opposed to finite horizon probabilistic coverage)
+function num_covered(sensor::CoverageSensor, target_states::Vector{State},
+                     robot_states::Vector{State})
+  sum(t -> is_covered(sensor, t, robot_states), target_states)
 end
 
 # Returns coverage for a target state distribution
