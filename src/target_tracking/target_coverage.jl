@@ -93,10 +93,9 @@ function finite_horizon_coverage(grid::Grid, target_state::State,
 end
 
 # Package a single trajectory in an array
-function finite_horizon_coverage(grid, prior, sensor,
-                                    trajectory::Trajectory;
-                                    kwargs...
-                                   )
+function finite_horizon_coverage(grid, target_state, sensor,
+                                 trajectory::Trajectory;
+                                 kwargs...)
 
-  finite_horizon_coverage(grid, prior, sensor, [trajectory]; kwargs...)
+  finite_horizon_coverage(grid, target_state, sensor, [trajectory]; kwargs...)
 end
