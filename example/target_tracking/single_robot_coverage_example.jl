@@ -7,7 +7,7 @@ close()
 
 steps = 100
 grid_size = 10
-horizon = SubmodularMaximization.default_horizon
+horizon = 5
 iterations = 1000
 
 grid = Grid(grid_size, grid_size)
@@ -35,7 +35,8 @@ for ii = 2:steps
   problem = SingleRobotTargetCoverageProblem(grid, sensor, horizon,
                                              [target_state])
   @time solution = solve_single_robot(problem, robot_state,
-                                      n_iterations = iterations)
+                                      n_iterations = iterations,
+                                      exploration_constant = Float64(horizon))
   global robot_state = solution.action
   trajectory = solution.trajectory
   robot_states[ii] = robot_state
