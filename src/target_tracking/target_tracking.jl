@@ -185,7 +185,7 @@ end
 struct CoverageSensor
   range_limit::Float64
 
-  function CoverageSensor(; range_limit=10)
+  function CoverageSensor(; range_limit=5)
     new(range_limit)
   end
 end
