@@ -8,8 +8,6 @@ export Grid, State, get_states, dims, num_states, neighbors, random_state,
   target_dynamics, RangingSensor, CoverageSensor, generate_observation,
   compute_likelihoods, transition_matrix, default_num_targets, continuous
 
-import Distributions.mean
-
 abstract type StateSpace end
 # methods
 #
@@ -140,20 +138,22 @@ end
 
 saturate_range(r::RangingSensor, distance) = min(r.range_limit, distance)
 
-variance(r::RangingSensor, distance) =
+# Sensor forward distribution variance and standard deviation
+sensor_variance(r::RangingSensor, distance) =
   (r.variance_constant
    + r.variance_scaling_factor * saturate_range(r, distance)^2)
 
-stddev(r::RangingSensor, distance) = sqrt(variance(r, distance))
+sensor_stddev(r::RangingSensor, distance) = sqrt(sensor_variance(r, distance))
 
-# Distances in each direction are minimum distances around the grid
-mean(g::Grid, r::RangingSensor, a, b) = saturate_range(r, norm(a .- b))
+# Mean value for the sensor distribution
+# * Saturated distance
+sensor_mean(g::Grid, r::RangingSensor, a, b) = saturate_range(r, norm(a .- b))
 
 # sample a ranging observation
 function generate_observation(g::Grid, r::RangingSensor, a, b;
                               rng=Random.GLOBAL_RNG)
-  m = mean(g, r,a,b)
-  m + randn(rng) * stddev(r, m)
+  m = sensor_mean(g, r,a,b)
+  m + randn(rng) * sensor_stddev(r, m)
 end
 
 const normal_lookup_table = NormalLookup(increment=0.001, max=4.0)
@@ -170,7 +170,7 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
   resize!(buffer, length(target_states))
 
   for (ii, target_state) in enumerate(target_states)
-    distance = mean(grid, sensor, robot_state, target_state)
+    distance = sensor_mean(grid, sensor, robot_state, target_state)
 
     buffer[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
   end
