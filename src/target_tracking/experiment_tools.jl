@@ -7,8 +7,8 @@ using Base.Threads
 using Base.Iterators
 
 export target_tracking_experiment, target_tracking_instance,
-  iterate_target_tracking!, visualize_experiment, visualize_time_step,
-  run_experiments
+  iterate_target_tracking!, iterate_target_coverage!, visualize_experiment,
+  visualize_time_step, run_experiments
 
 # Run a target tracking experiment for a given number of steps
 # By default, keep all data from each step
@@ -110,6 +110,37 @@ function iterate_target_tracking!(;robot_states::Vector{State},
    target_filters=target_filters,
    trajectories=trajectories,
    range_observations=range_observations,
+   objective=solution.value
+  )
+end
+
+function iterate_target_coverage!(;robot_states::Vector{State},
+                                  target_states::Vector{State},
+                                  configs::MultiRobotTargetCoverageConfigs,
+                                  solver=solve_sequential)
+  #
+  # Update robot and target states
+  #
+
+  problem = MultiRobotTargetCoverageProblem(robot_states, target_states,
+                                            configs)
+  solution = solver(problem)
+
+  for (index, trajectory) in solution.elements
+    robot_states[index] = trajectory[1]
+  end
+  trajectories = map(last, solution.elements)
+
+  # Update Target states
+  for (ii, target_state) in enumerate(target_states)
+    target_states[ii] = target_dynamics(configs.grid, target_state)
+  end
+
+  # Note: by default, we do not copy the filters
+  (
+   robot_states=robot_states,
+   target_states=target_states,
+   trajectories=trajectories,
    objective=solution.value
   )
 end
