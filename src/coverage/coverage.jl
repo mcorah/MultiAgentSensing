@@ -97,9 +97,13 @@ function plot_filled_circle(circle::Circle; color = "k", alpha = 0.3)
   ps = circle_points(circle.center, scale = 1, radius = circle.radius)
   full_circle = [ps ps[:,1]]
 
-  fill(ps[1,:][:], ps[2,:][:], color = color, alpha=alpha, linewidth=0.0)
+  ret = []
 
-  plot_circle(circle, color="k", linewidth = 1.0)
+  append!(ret, fill(ps[1,:][:], ps[2,:][:], color = color, alpha=alpha, linewidth=0.0))
+
+  append!(ret, plot_circle(circle, color="k", linewidth = 1.0))
+
+  ret
 end
 
 function visualize_solution(circles::Array{Circle}, colors)
