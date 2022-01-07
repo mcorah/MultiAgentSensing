@@ -138,7 +138,7 @@ end
 #
 # On the plus side, this should be a relatively easy problem for MCTS to solve
 function channel_capacity_mcts(p::MultiRobotTargetTrackingProblem,
-                               filter::AnyFilter; robot_index)
+                               filter::AbstractFilter; robot_index)
   configs=p.configs
 
   # Construct a solver for the individual filter

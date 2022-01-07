@@ -135,10 +135,10 @@ function plot_observation(state, range; linestyle="-", kwargs...)
 end
 
 # Visualize a discrete histogram filter
-function visualize_filter(filter::AnyFilter; kwargs...)
+function visualize_filter(filter::AbstractFilter; kwargs...)
   visualize_filters([filter]; kwargs...)
 end
-function visualize_filters(filters::Vector{<:AnyFilter};
+function visualize_filters(filters::Vector{<:AbstractFilter};
                            show_colorbar = false,
                            alpha=0.75)
   if length(filters) == 0

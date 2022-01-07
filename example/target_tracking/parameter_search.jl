@@ -4,7 +4,7 @@ using Base.Iterators
 using Base.Threads
 using JLD2
 using Statistics
-using Histograms
+using HistogramFilters
 
 close("all")
 

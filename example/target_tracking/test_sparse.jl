@@ -1,7 +1,7 @@
 # Some simple tests to verify the sparse filtering code
 
 using SubmodularMaximization
-using Histograms
+using HistogramFilters
 using SparseArrays
 
 g = Grid(10, 10)

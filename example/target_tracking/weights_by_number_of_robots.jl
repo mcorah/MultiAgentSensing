@@ -9,7 +9,7 @@ using Statistics
 using Printf
 using Random
 using RosDataProcess
-using Histograms
+using HistogramFilters
 
 close("all")
 

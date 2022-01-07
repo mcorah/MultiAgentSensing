@@ -30,11 +30,11 @@ end
 #
 # Coverage (f) is conditional on prior observations:
 # * f(states, prior_states) - f(prior_states)
-function target_coverage(target_state_distribution::AnyFilter,
+function target_coverage(target_state_distribution::AbstractFilter,
                          sensor::CoverageSensor,
                          primary_states::Vector{State};
                          prior_states::Vector{State} = State[])
-  state_distribution_data = Histograms.get_values(target_state_distribution)
+  state_distribution_data = HistogramFilters.get_values(target_state_distribution)
 
   # The coverage value is the sum of probabilities for covered states that are
   # not covered by "prior" states (coverage conditional on prior states)

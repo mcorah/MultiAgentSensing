@@ -7,7 +7,7 @@ using Base.Threads
 using Base.Iterators
 using JLD2
 using Printf
-using Histograms
+using HistogramFilters
 
 close("all")
 

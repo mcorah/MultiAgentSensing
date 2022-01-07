@@ -2,7 +2,7 @@
 
 using SubmodularMaximization
 using LinearAlgebra
-using Histograms
+using HistogramFilters
 
 grid_size = 2
 grid = Grid(grid_size, grid_size)
@@ -13,7 +13,7 @@ sensor = RangingSensor()
 grid_states = get_states(grid)
 histogram_filter = Filter(grid)
 
-@show prior = Histograms.get_data(histogram_filter)
+@show prior = HistogramFilters.get_data(histogram_filter)
 
 if !all(prior .== 1/grid_size^2)
   println("Problem with uniform prior")

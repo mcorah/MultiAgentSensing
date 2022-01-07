@@ -7,7 +7,7 @@ using JLD2
 using Statistics
 using Printf
 using Random
-using Histograms
+using HistogramFilters
 
 close("all")
 

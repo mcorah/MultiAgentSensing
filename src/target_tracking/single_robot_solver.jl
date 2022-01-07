@@ -61,7 +61,7 @@ MDPState(m::MDPState, s::State) = MDPState(s, m.depth + 1, m)
 abstract type AbstractSingleRobotProblem <: MDP{MDPState, State}
 end
 
-struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractSingleRobotProblem
+struct SingleRobotTargetTrackingProblem{F<:AbstractFilter} <: AbstractSingleRobotProblem
   grid::Grid
   sensor::RangingSensor
   horizon::Int64
@@ -76,7 +76,7 @@ struct SingleRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractSingleRobotProb
                                             prior_trajectories = Trajectory[],
                                             num_information_samples =
                                               default_solver_information_samples
-                                           ) where T <: AnyFilter
+                                           ) where T <: AbstractFilter
     new{T}(grid, sensor, horizon, filters, prior_trajectories,
         num_information_samples)
   end

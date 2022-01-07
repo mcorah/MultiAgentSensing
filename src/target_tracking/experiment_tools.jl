@@ -56,7 +56,7 @@ end
 
 function iterate_target_tracking!(;robot_states::Vector{State},
                                   target_states::Vector{State},
-                                  target_filters::Vector{<:AnyFilter},
+                                  target_filters::Vector{<:AbstractFilter},
                                   configs::MultiRobotTargetTrackingConfigs,
                                   solver=solve_sequential)
   #

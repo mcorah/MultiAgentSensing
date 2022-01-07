@@ -74,7 +74,7 @@ end
 #
 # Warning: this "problem" object may become invalid if any of the underlying
 # objects change and may copy some but not of the inputs.
-struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractMultiRobotProblem
+struct MultiRobotTargetTrackingProblem{F<:AbstractFilter} <: AbstractMultiRobotProblem
   # Target tracking problems are defined by vectors of robot states
   partition_matroid::Vector{State}
 
@@ -85,7 +85,7 @@ struct MultiRobotTargetTrackingProblem{F<:AnyFilter} <: AbstractMultiRobotProble
 
   function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
                  target_filters::Vector{F},
-                 configs::MultiRobotTargetTrackingConfigs) where F <: AnyFilter
+                 configs::MultiRobotTargetTrackingConfigs) where F <: AbstractFilter
 
     if length(robot_states) > num_robots_sparse_filtering_threshold
       sparse_filters = map(x->SparseFilter(x, threshold=sparsity_threshold),
@@ -105,7 +105,7 @@ end
 
 # Construct a target tracking problem with configs. I may or may not need this
 function MultiRobotTargetTrackingProblem(robot_states::Vector{State},
-                                         target_filters::Vector{<:AnyFilter};
+                                         target_filters::Vector{<:AbstractFilter};
                                          kwargs...)
   configs = MultiRobotTargetTrackingConfigs(;kwargs...)
   MultiRobotTargetTrackingProblem(robot_states, target_filters, configs)
@@ -177,7 +177,7 @@ function solve_block(p::MultiRobotTargetTrackingProblem, block::Integer,
   (block, solution.trajectory)
 end
 
-function compute_filter_means(target_filters::Vector{<:AnyFilter})
+function compute_filter_means(target_filters::Vector{<:AbstractFilter})
   map(target_filters) do x
     Tuple{Float64, Float64}(weighted_average(x))
   end

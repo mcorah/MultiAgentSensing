@@ -1,29 +1,29 @@
 # General bayesian filtering and updates
 
-using Histograms
+using HistogramFilters
 using LinearAlgebra
 using Base.Iterators
 using StatsBase
 using Random
 
-import Histograms.generate_prior
+import HistogramFilters.generate_prior
 
 export process_update, process_update!, measurement_update, measurement_update!,
   Filter, SparseFilter, get_data, sparsity, drop_below_threshold!
 
-# StatsBase also defines Histogram so we need an alias
-const Filter = Histograms.Histogram
-const SparseFilter = Histograms.SparseHistogram
-const AnyFilter = Histograms.AnyHistogram
+# Alias the histogram filters
+const Filter = HistogramFilters.HistogramFilter
+const SparseFilter = HistogramFilters.SparseHistogramFilter
+const AbstractFilter = HistogramFilters.AbstractHistogramFilter
 
 Filter(g::Grid) = Filter((1:g.width, 1:g.height))
 
 # Provide a more general method to compute the states in a grid
-get_states(g::Grid, _::AnyFilter) = get_states(g)
+get_states(g::Grid, _::AbstractFilter) = get_states(g)
 
 get_states(::Grid, f::SparseFilter) = get_states(f)
 function get_states(f::SparseFilter)
-  vec = Histograms.get_values(f)
+  vec = HistogramFilters.get_values(f)
   states = State[]
 
   # Use the existing machinery to produce the appropriate indices
@@ -60,7 +60,7 @@ function sample_state(grid::Grid, prior::Filter; rng=Random.GLOBAL_RNG)
   index_to_state(grid, ind)
 end
 function sample_state(grid::Grid, prior::SparseFilter; rng=Random.GLOBAL_RNG)
-  vec = Histograms.get_values(prior)
+  vec = HistogramFilters.get_values(prior)
 
   # returns the linear index of the sampled state
   ind = sample(rng, vec.nzind, Weights(vec.nzval))
@@ -83,13 +83,13 @@ end
 function process_update!(prior::SparseFilter, transition_matrix)
   # Note that the values and buffer are vectors that represent the flattened
   # state grid
-  mul!(get_buffer(prior), transition_matrix, Histograms.get_values(prior))
+  mul!(get_buffer(prior), transition_matrix, HistogramFilters.get_values(prior))
 
   swap_buffer!(prior)
 
   prior
 end
-function process_update(prior::AnyFilter, transition_matrix)
+function process_update(prior::AbstractFilter, transition_matrix)
   # Copy
   posterior = duplicate(prior)
 
@@ -103,7 +103,7 @@ end
 # Note: likelihoods should match the positions of the non-zeros for sparse
 # matrices
 function measurement_update!(prior::Filter, likelihoods::Vector{Float64})
-  vals = Histograms.get_values(prior)
+  vals = HistogramFilters.get_values(prior)
 
   # update belief in place
   @inbounds @simd for ii in 1:length(vals)
@@ -119,7 +119,7 @@ function measurement_update!(prior::Filter, likelihoods::Vector{Float64})
   prior
 end
 function measurement_update!(prior::SparseFilter, likelihoods::Vector{Float64})
-  vals = Histograms.get_values(prior).nzval
+  vals = HistogramFilters.get_values(prior).nzval
 
   # update belief in place
   @inbounds @simd for ii in 1:length(vals)
@@ -134,7 +134,7 @@ function measurement_update!(prior::SparseFilter, likelihoods::Vector{Float64})
 
   prior
 end
-function measurement_update(prior::AnyFilter, xs...; kwargs...)
+function measurement_update(prior::AbstractFilter, xs...; kwargs...)
   # Copy
   posterior = duplicate(prior)
 
@@ -143,7 +143,7 @@ function measurement_update(prior::AnyFilter, xs...; kwargs...)
 end
 
 # compute measurement update by computing likelihood
-function measurement_update!(prior::AnyFilter, xs...; kwargs...)
+function measurement_update!(prior::AbstractFilter, xs...; kwargs...)
   likelihoods = compute_likelihoods(xs...; kwargs...)
   measurement_update!(prior, likelihoods)
 end
