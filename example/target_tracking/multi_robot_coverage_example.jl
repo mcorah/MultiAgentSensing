@@ -68,6 +68,13 @@ for ii = 2:steps
   #
 
   plots=[]
+  # Plot covered area
+  for robot in robot_states
+    circle = Circle([robot...], sensor.range_limit)
+    append!(plots, SubmodularMaximization.plot_filled_circle(circle, color=:blue, alpha=0.1))
+  end
+
+  # Plot robots on top
   for robot in robot_states
     append!(plots, plot_quadrotor(robot, color=:blue))
   end
@@ -80,16 +87,6 @@ for ii = 2:steps
   for (prior, current) in zip(prior_robot_states, robot_states)
     append!(plots, plot_states([prior, current], color=:blue, linestyle="-"))
   end
-
-  #=
-  if show_observations
-    for (robot, observations) in zip(robot_states, range_observations)
-      for observation in observations
-        append!(plots, plot_observation(robot, observation, color=:blue))
-      end
-    end
-  end
-  =#
 
   for target in target_states
     covered = is_covered(sensor, target, robot_states)
