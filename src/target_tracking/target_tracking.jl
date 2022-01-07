@@ -172,7 +172,7 @@ function compute_likelihoods(robot_state, target_states, sensor::RangingSensor,
   for (ii, target_state) in enumerate(target_states)
     distance = sensor_mean(grid, sensor, robot_state, target_state)
 
-    buffer[ii] = pdf(Normal(distance, stddev(sensor, distance)), range)
+    buffer[ii] = pdf(Normal(distance, sensor_stddev(sensor, distance)), range)
   end
 
   buffer
