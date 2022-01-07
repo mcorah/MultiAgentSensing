@@ -63,9 +63,9 @@ function plot_quadrotor(p::Vector; scale=0.20,
   ret
 end
 
-function plot_target(p; color="red")
-  [scatter(p[1], p[2], color=color, marker="^", edgecolors=:k,
-           s=object_scale)]
+function plot_target(p; color="red", kwargs...)
+  [scatter(p[1], p[2]; color=color, marker="^", edgecolors=:k,
+           s=object_scale, kwargs...)]
 end
 
 # When a robot or target crosses a boundary of the grid, that creates a
