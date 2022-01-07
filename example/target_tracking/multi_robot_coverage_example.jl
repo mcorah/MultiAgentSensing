@@ -92,7 +92,11 @@ for ii = 2:steps
   =#
 
   for target in target_states
-    append!(plots, plot_target(target))
+    covered = is_covered(sensor, target, robot_states)
+
+    # Dim covered targets
+    alpha = covered ? 0.3 : 1.0
+    append!(plots, plot_target(target, alpha=alpha))
   end
 
   #
