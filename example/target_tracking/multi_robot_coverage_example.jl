@@ -38,6 +38,7 @@ plot_state_space(grid)
 xlim([0, grid.width+1])
 ylim([0, grid.height+1])
 
+global plots = []
 
 for ii = 2:steps
   println("Step ", ii)
@@ -66,6 +67,9 @@ for ii = 2:steps
   #
   # Plot results
   #
+
+  global plots
+  foreach(x->x.remove(), plots)
 
   plots=[]
   # Plot covered area
@@ -109,9 +113,5 @@ for ii = 2:steps
 
   if line == "q"
     break
-  end
-
-  if ii < steps
-    foreach(x->x.remove(), plots)
   end
 end
