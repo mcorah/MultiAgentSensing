@@ -80,6 +80,9 @@ function MultiRobotTargetCoverageProblem(robot_states::Vector{State},
   MultiRobotTargetCoverageProblem(robot_states, target_states, configs)
 end
 
+# Objective function is often used after solving: What was the total objective
+# value after running the solver?
+# X is an Vector of (Int, Trajectory) tuples
 function objective(p::MultiRobotTargetCoverageProblem, X)
   configs = p.configs
 
@@ -92,6 +95,7 @@ function objective(p::MultiRobotTargetCoverageProblem, X)
   end
 end
 
+# Problems requiring specialized solvers define solve block
 function solve_block(p::MultiRobotTargetCoverageProblem, block::Integer,
                      selections::Vector)
   configs = p.configs
