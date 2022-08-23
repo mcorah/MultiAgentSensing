@@ -18,7 +18,7 @@ Then, in order for Julia to find the `SubmodularMaximization` module that this
 package provides, we need to add this to the `LOAD_PATH` variable.
 To do so, edit `.julia/config/startup.jl` and add the line:
 ```
-push!(LOAD_PATH, "$(homedir())/projects/MultiAgentSensing")
+push!(LOAD_PATH, "my_path/MultiAgentSensing")
 ```
 
 ### Dependencies
