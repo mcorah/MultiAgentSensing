@@ -11,12 +11,31 @@ Additionally, we implemented two application scenarios
 * A mutual information based target tracking problem. Agents plan on (short)
   receding horizons via Monte Carlo tree search.
 
-## Dependencies
+## Installation
+
+Clone this repository to `my_path/MultiAgentSensing`.
+Then, in order for Julia to find the `SubmodularMaximization` module that this
+package provides, we need to add this to the `LOAD_PATH` variable.
+To do so, edit `.julia/config/startup.jl` and add the line:
+```
+push!(LOAD_PATH, "$(homedir())/projects/MultiAgentSensing")
+```
+
+### Dependencies
 
 In addition to a number of registered Julia packages, some scripts for plotting
 data from experimental trials rely on
-[RosDataProcess](https://github.com/mcorah/RosDataProcess)
-which is not yet registered with the Julia ecosystem.
+[RosDataProcess](https://github.com/mcorah/RosDataProcess).
+
+Due to the target tracking code, this package also depends on
+[HistogramFilter.jl](https://github.com/mcorah/HistogramFilters.jl).
+
+Neither package is registered with the Julia ecosystem, but both can be
+installed easily `Pkg.add`:
+```
+Pkg.add("https://github.com/mcorah/RosDataProcess")
+Pkg.add("https://github.com/mcorah/HistogramFilters.jl")
+```
 
 ## References
 
