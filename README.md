@@ -28,7 +28,7 @@ data from experimental trials rely on
 [RosDataProcess](https://github.com/mcorah/RosDataProcess).
 
 Due to the target tracking code, this package also depends on
-[HistogramFilter.jl](https://github.com/mcorah/HistogramFilters.jl).
+[HistogramFilters.jl](https://github.com/mcorah/HistogramFilters.jl).
 
 Neither package is registered with the Julia ecosystem, but both can be
 installed easily `Pkg.add`:
