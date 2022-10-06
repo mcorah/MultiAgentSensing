@@ -2,6 +2,7 @@
 
 using SubmodularMaximization
 using PyPlot
+using HistogramFilters
 
 close("all")
 

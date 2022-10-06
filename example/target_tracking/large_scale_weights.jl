@@ -6,7 +6,6 @@ using Base.Iterators
 using Base.Threads
 using JLD2
 using Statistics
-using HistogramFilters
 using RosDataProcess
 
 close("all")

@@ -2,7 +2,6 @@
 
 using SubmodularMaximization
 using LinearAlgebra
-using HistogramFilters
 
 grid_size = 2
 grid = Grid(grid_size, grid_size)
