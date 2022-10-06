@@ -218,7 +218,7 @@ function finite_horizon_information(grid::Grid, prior::AbstractFilter,
     GC.gc()
   end
 
-  prior_buffer = duplicate(prior)
+  prior_buffer = HistogramFilters.duplicate(prior)
   reset_prior() = copy_filter!(prior, out=prior_buffer)
 
   # Compute entropies over the horizon, conditional on the prior trajectories

@@ -150,7 +150,7 @@ function copy_data(x)
   (
    robot_states=Array(x.robot_states),
    target_states=Array(x.target_states),
-   target_filters=map(duplicate, x.target_filters),
+   target_filters=map(HistogramFilters.duplicate, x.target_filters),
    trajectories=x.trajectories,
    range_observations=x.range_observations,
    objective=x.objective

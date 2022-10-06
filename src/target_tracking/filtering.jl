@@ -9,7 +9,7 @@ using Random
 import HistogramFilters.generate_prior
 
 export process_update, process_update!, measurement_update, measurement_update!,
-  Filter, SparseFilter, get_data, sparsity, drop_below_threshold!
+  Filter, SparseFilter, sparsity, drop_below_threshold!
 
 # Alias the histogram filters
 const Filter = HistogramFilters.HistogramFilter
@@ -55,8 +55,8 @@ end
 
 # sample from the prior
 function sample_state(grid::Grid, prior::Filter; rng=Random.GLOBAL_RNG)
-  @views ind = sample(rng, 1:length(get_data(prior)),
-                      Weights(get_data(prior)[:]))
+  @views ind = sample(rng, 1:length(HistogramFilters.get_data(prior)),
+                      Weights(HistogramFilters.get_data(prior)[:]))
   index_to_state(grid, ind)
 end
 function sample_state(grid::Grid, prior::SparseFilter; rng=Random.GLOBAL_RNG)
@@ -72,9 +72,9 @@ end
 # General process update
 function process_update!(prior::Filter, transition_matrix)
 
-  @inbounds @views mul!(get_buffer(prior)[:],
+  @inbounds @views mul!(HistogramFilters.get_buffer(prior)[:],
                         transition_matrix,
-                        get_data(prior)[:])
+                        HistogramFilters.get_data(prior)[:])
 
   swap_buffer!(prior)
 
@@ -83,7 +83,7 @@ end
 function process_update!(prior::SparseFilter, transition_matrix)
   # Note that the values and buffer are vectors that represent the flattened
   # state grid
-  mul!(get_buffer(prior), transition_matrix, HistogramFilters.get_values(prior))
+  mul!(HistogramFilters.get_buffer(prior), transition_matrix, HistogramFilters.get_values(prior))
 
   swap_buffer!(prior)
 
@@ -91,7 +91,7 @@ function process_update!(prior::SparseFilter, transition_matrix)
 end
 function process_update(prior::AbstractFilter, transition_matrix)
   # Copy
-  posterior = duplicate(prior)
+  posterior = HistogramFilters.duplicate(prior)
 
   # Perform the update
   process_update!(posterior, transition_matrix)

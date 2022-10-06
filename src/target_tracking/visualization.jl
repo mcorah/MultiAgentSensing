@@ -145,12 +145,12 @@ function visualize_filters(filters::Vector{<:AbstractFilter};
     error("No filters to visualize")
   end
 
-  range = get_range(filters[1])
+  range = HistogramFilters.get_range(filters[1])
 
   # Adjust bounds because indices are in centers
   limits = [range[1][[1,end]]'; range[2][[1,end]]'] + repeat([-0.5 0.5], 2)
 
-  data = sum(get_data, filters)
+  data = sum(HistogramFilters.get_data, filters)
 
   # Note: visualize filter does not normalize by default
   visualize_pdf(Matrix(data), show_colorbar = show_colorbar, limits=limits,
