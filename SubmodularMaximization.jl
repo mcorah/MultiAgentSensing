@@ -268,16 +268,6 @@ include("src/communications_graphs_solvers.jl")
 include("src/coverage/coverage.jl")
 include("src/coverage/probabilistic_coverage.jl")
 
-include("src/target_tracking/target_tracking.jl")
-include("src/target_tracking/filtering.jl")
-include("src/target_tracking/information.jl")
-include("src/target_tracking/target_coverage.jl")
-include("src/target_tracking/single_robot_solver.jl")
-include("src/target_tracking/multi_robot_solvers.jl")
-include("src/target_tracking/multi_robot_target_tracking_problem.jl")
-include("src/target_tracking/multi_robot_target_coverage_problem.jl")
-include("src/target_tracking/pairwise_weights.jl")
-include("src/target_tracking/experiment_tools.jl")
-include("src/target_tracking/visualization.jl")
+include("src/target_tracking/target_tracking_top.jl")
 
 end
